@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OperaIQ — Intelligent Operations Platform</title>
+  <meta name="description" content="A plataforma empresarial que conecta pessoas, processos, dados e Inteligência Artificial em um único ecossistema." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <style>
+    /* Reset & Base Variables */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --blue-primary: #0052CC;
+      --blue-hover:   #0065FF;
+      --blue-mid:     #2684FF;
+      --blue-dark:    #0747A6;
+      --bg-dark:      #0B1B33;
+      
+      --text-dark:    #172B4D;
+      --text-mid:     #42526E;
+      --text-light:   #6B778C;
+      --text-white:   #FFFFFF;
+      
+      --border:       #DFE1E6;
+      --bg-light:     #F4F5F7;
+      --bg-white:     #FFFFFF;
+      
+      --radius-sm:    3px;
+      --radius-md:    8px;
+      --radius-lg:    12px;
+      
+      --shadow-sm:    0 1px 1px rgba(9,30,66,.25), 0 0 1px 1px rgba(9,30,66,.13);
+      --shadow-md:    0 4px 8px rgba(9,30,66,.15), 0 0 1px rgba(9,30,66,.31);
+      --shadow-lg:    0 12px 24px rgba(9,30,66,.15), 0 0 1px rgba(9,30,66,.31);
+      
+      --max-width:    1200px;
+    }
+
+    html, body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-dark);
+      background: var(--bg-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; transition: color 0.2s; }
+    ul { list-style: none; }
+    
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section { padding: 80px 0; }
+    .section-light { background: var(--bg-white); }
+    .section-gray { background: var(--bg-light); }
+    
+    .section-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+      text-align: center;
+    }
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--text-mid);
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 56px;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 72px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+    }
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo-name {
+      font-size: 22px; font-weight: 800; color: var(--blue-primary); letter-spacing: -0.5px;
+    }
+    
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+    
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 24px; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; border: none;
+    }
+    .btn-outline {
+      background: transparent; color: var(--blue-primary);
+      border: 1px solid var(--blue-primary);
+    }
+    .btn-outline:hover { background: var(--blue-primary); color: var(--text-white); }
+    
+    .btn-primary {
+      background: var(--blue-primary); color: var(--text-white);
+    }
+    .btn-primary:hover { background: var(--blue-hover); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 160px 0 100px;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--blue-dark) 100%);
+      color: var(--text-white);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Simple geometric overlay */
+    .hero::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 40px 40px; opacity: 0.5; pointer-events: none;
+    }
+    
+    .hero-content { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+    
+    .hero h1 {
+      font-size: 52px; font-weight: 800; margin-bottom: 24px; letter-spacing: -1.5px; line-height: 1.1;
+    }
+    .hero p {
+      font-size: 20px; font-weight: 400; color: rgba(255,255,255,0.85); margin-bottom: 40px; line-height: 1.5; max-width: 750px; margin-left: auto; margin-right: auto;
+    }
+    
+    .hero-actions { display: flex; justify-content: center; gap: 16px; }
+    .hero .btn-primary { background: var(--blue-mid); }
+    .hero .btn-primary:hover { background: #4C9AFF; }
+    .hero .btn-outline { border-color: rgba(255,255,255,0.5); color: var(--text-white); }
+    .hero .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--text-white); }
+
+    /* ===== TEXT SECTION (EMPRESAS MODERNAS) ===== */
+    .text-center-block {
+      max-width: 800px; margin: 0 auto; text-align: center;
+    }
+    .text-center-block h2 { font-size: 32px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
+    .text-center-block p { font-size: 18px; color: var(--text-mid); margin-bottom: 32px; }
+    
+    .pill-grid {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 40px;
+    }
+    .pill {
+      background: var(--bg-light); border: 1px solid var(--border);
+      padding: 12px 24px; border-radius: 40px;
+      font-weight: 600; color: var(--text-dark);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ===== FEATURES GRID ===== */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;
+    }
+    .feature-card {
+      background: var(--bg-white); border: 1px solid var(--border);
+      padding: 32px; border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--blue-mid);
+    }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: var(--radius-sm);
+      background: #E6F0FF; color: var(--blue-primary);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .feature-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .feature-card p { color: var(--text-mid); font-size: 15px; }
+
+    /* ===== DEPARTMENTS ===== */
+    .depts-grid {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+    }
+    .dept-tag {
+      padding: 10px 20px; background: var(--bg-white); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 15px; font-weight: 500; color: var(--text-mid);
+    }
+
+    /* ===== SECURITY & RESULTS ===== */
+    .split-section {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    .split-content h2 { font-size: 36px; font-weight: 800; margin-bottom: 24px; letter-spacing: -1px; }
+    .split-content p { font-size: 18px; color: var(--text-mid); margin-bottom: 24px; }
+    
+    .check-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+    .check-list li {
+      display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--text-dark); font-weight: 500;
+    }
+    .check-icon {
+      width: 24px; height: 24px; background: #E3FCEF; color: #006644;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ===== CORPORATE FEATURES (CHECKBOXES) ===== */
+    .corp-features {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;
+    }
+    .corp-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px; background: var(--bg-white); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-weight: 500; color: var(--text-dark);
+    }
+    .corp-item svg { color: var(--blue-primary); flex-shrink: 0; }
+
+    /* ===== CTA BOTTOM ===== */
+    .cta-bottom {
+      background: var(--blue-primary); color: var(--text-white);
+      padding: 100px 0; text-align: center;
+    }
+    .cta-bottom h2 { font-size: 40px; font-weight: 800; margin-bottom: 24px; letter-spacing: -1px; }
+    .cta-bottom p { font-size: 20px; color: rgba(255,255,255,0.9); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    
+    .cta-bottom .btn-outline {
+      border-color: var(--text-white); color: var(--text-white);
+    }
+    .cta-bottom .btn-outline:hover {
+      background: var(--text-white); color: var(--blue-primary);
+    }
+    .cta-bottom .btn-primary {
+      background: var(--text-white); color: var(--blue-primary);
+    }
+    .cta-bottom .btn-primary:hover {
+      background: var(--bg-light);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: var(--bg-dark); color: var(--text-light);
+      padding: 80px 0 40px;
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 60px;
+    }
+    .footer-brand h3 { font-size: 24px; font-weight: 800; color: var(--text-white); margin-bottom: 16px; }
+    .footer-brand p { font-size: 14px; margin-bottom: 24px; max-width: 280px; }
+    
+    .footer-col h4 {
+      font-size: 14px; font-weight: 700; color: var(--text-white);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px;
+    }
+    .footer-col ul { display: flex; flex-direction: column; gap: 12px; }
+    .footer-col a { color: var(--text-light); font-size: 14px; }
+    .footer-col a:hover { color: var(--text-white); text-decoration: underline; }
+    
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1); padding-top: 32px;
+      display: flex; justify-content: space-between; align-items: center; font-size: 13px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+      .split-section { grid-template-columns: 1fr; gap: 40px; }
+      .footer-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .footer-brand { grid-column: span 3; }
+    }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 40px; }
+      .hero p { font-size: 18px; }
+      .check-list { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer-brand { grid-column: span 2; }
+      .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+      .nav-actions { display: none; } /* Could add a hamburger menu here */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="6" fill="#0052CC"/>
+          <path d="M14 5L22 10V18L14 23L6 18V10L14 5Z" fill="url(#g1)" opacity="0.9"/>
+          <path d="M14 9L19 12V17L14 20L9 17V12L14 9Z" fill="white" opacity="0.95"/>
+          <path d="M14 12.5L16.5 14V17L14 18.5L11.5 17V14L14 12.5Z" fill="#0052CC"/>
+          <defs>
+            <linearGradient id="g1" x1="6" y1="5" x2="22" y2="23" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#2684FF"/>
+              <stop offset="1" stop-color="#0052CC"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="nav-logo-name">OperaIQ</span>
+      </a>
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-outline">Entrar</a>
+        <a href="register.html" class="btn btn-primary">Criar Conta</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Transforme operações em resultados.</h1>
+        <p>A plataforma empresarial que conecta pessoas, processos, dados e Inteligência Artificial em um único ecossistema. Centralize toda a sua operação em uma plataforma moderna, segura e preparada para escalar.</p>
+        
+        <div class="hero-actions">
+          <a href="register.html" class="btn btn-primary">Comece gratuitamente</a>
+          <a href="login.html" class="btn btn-outline">Evolua sem limites</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHTS / PILLS -->
+  <section class="section section-light">
+    <div class="container">
+      <div class="text-center-block">
+        <h2>Empresas modernas exigem operações inteligentes.</h2>
+        <p>A competitividade não depende apenas de pessoas talentosas. Ela depende de processos eficientes, informações centralizadas e decisões baseadas em dados. A OperaIQ reúne tudo isso em uma única plataforma.</p>
+        
+        <div class="pill-grid">
+          <div class="pill">Mais produtividade</div>
+          <div class="pill">Mais controle</div>
+          <div class="pill">Mais inteligência</div>
+          <div class="pill">Mais crescimento</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSSIBILITIES (FEATURES) -->
+  <section class="section section-gray">
+    <div class="container">
+      <h2 class="section-title">Uma plataforma. Possibilidades ilimitadas.</h2>
+      <p class="section-subtitle">Tudo o que sua empresa precisa para operar com excelência.</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </div>
+          <h3>Gestão Inteligente de Processos</h3>
+          <p>Padronize operações, elimine retrabalho e automatize fluxos de aprovação, solicitações e atividades entre departamentos.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          </div>
+          <h3>Inteligência Artificial Integrada</h3>
+          <p>Transforme dados em decisões. Utilize IA para gerar insights, automatizar tarefas repetitivas, analisar informações e aumentar a produtividade.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          </div>
+          <h3>Dashboards Executivos</h3>
+          <p>Visualize indicadores estratégicos em tempo real com dashboards altamente personalizáveis. Acompanhe resultados antes que eles se tornem problemas.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </div>
+          <h3>Automação de Fluxos</h3>
+          <p>Crie regras inteligentes que executam tarefas automaticamente. Menos trabalho manual. Mais eficiência.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3>Gestão de Equipes</h3>
+          <p>Organize responsabilidades, acompanhe atividades, monitore produtividade e mantenha toda a comunicação centralizada.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          </div>
+          <h3>Integrações</h3>
+          <p>Conecte a OperaIQ aos sistemas já utilizados pela sua empresa através de APIs modernas e integrações flexíveis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIFFERENTIATORS -->
+  <section class="section section-light">
+    <div class="container">
+      <h2 class="section-title">O que torna a OperaIQ diferente?</h2>
+      
+      <div class="split-section" style="margin-top: 64px;">
+        <div class="split-content">
+          <h2>Plataforma Unificada</h2>
+          <p>Elimine dezenas de sistemas desconectados. Centralize informações, processos e indicadores em um único ambiente.</p>
+          
+          <ul class="check-list" style="grid-template-columns: 1fr;">
+            <li>
+              <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Inteligência Artificial aplicada ao negócio (Automatize. Analise. Preveja. Otimize.)
+            </li>
+            <li>
+              <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Escalabilidade: Cresce junto com sua organização, de pequenas a grandes corporações.
+            </li>
+            <li>
+              <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Arquitetura Moderna: Alta performance, preparada para Cloud, híbridos ou locais.
+            </li>
+            <li>
+              <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+              Interface Intuitiva: Reduz a curva de aprendizado e aumenta a produtividade.
+            </li>
+          </ul>
+        </div>
+        <div>
+          <!-- Placeholder visual for UI representation -->
+          <div style="background: var(--bg-light); border: 1px solid var(--border); border-radius: var(--radius-lg); height: 400px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg);">
+            <svg width="120" height="120" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="28" height="28" rx="6" fill="#0052CC"/>
+              <path d="M14 5L22 10V18L14 23L6 18V10L14 5Z" fill="white" opacity="0.9"/>
+              <path d="M14 9L19 12V17L14 20L9 17V12L14 9Z" fill="#0052CC"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPARTMENTS & RESULTS -->
+  <section class="section section-gray">
+    <div class="container">
+      <div class="text-center-block">
+        <h2>Desenvolvida para qualquer área da empresa.</h2>
+        <p>Tudo funcionando de forma integrada. A OperaIQ foi desenvolvida para ser o centro operacional da sua organização.</p>
+        
+        <div class="depts-grid">
+          <div class="dept-tag">Financeiro</div>
+          <div class="dept-tag">Operações</div>
+          <div class="dept-tag">Comercial</div>
+          <div class="dept-tag">Compras</div>
+          <div class="dept-tag">Produção</div>
+          <div class="dept-tag">Logística</div>
+          <div class="dept-tag">Recursos Humanos</div>
+          <div class="dept-tag">Projetos</div>
+          <div class="dept-tag">Tecnologia</div>
+          <div class="dept-tag">Atendimento</div>
+          <div class="dept-tag">Qualidade</div>
+          <div class="dept-tag">Diretoria</div>
+        </div>
+      </div>
+
+      <div class="text-center-block" style="margin-top: 80px;">
+        <h2>Resultados que fazem diferença.</h2>
+        
+        <div class="pill-grid">
+          <div class="pill">Redução do retrabalho</div>
+          <div class="pill">Maior produtividade</div>
+          <div class="pill">Decisões mais rápidas</div>
+          <div class="pill">Processos padronizados</div>
+          <div class="pill">Informações centralizadas</div>
+          <div class="pill">Equipes conectadas</div>
+          <div class="pill">Maior controle operacional</div>
+          <div class="pill">Escalabilidade empresarial</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORPORATE FEATURES LIST -->
+  <section class="section section-light">
+    <div class="container">
+      <h2 class="section-title">Recursos Corporativos</h2>
+      
+      <div class="corp-features">
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Multiempresa</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Multi Workspace</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Controle de Permissões (RBAC)</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Dashboards Personalizados</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> API REST & Webhooks</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Auditoria Completa</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Histórico de Alterações</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Notificações Inteligentes</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Inteligência Artificial</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Automações</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Monitoramento em Tempo Real</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Exportação de Dados</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Login Google / Microsoft / GitHub</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Passkeys & MFA</div>
+        <div class="corp-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Sessões Ativas</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="section section-gray">
+    <div class="container">
+      <div class="text-center-block" style="max-width: 900px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #E3FCEF; color: #006644; border-radius: 50%; margin-bottom: 24px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <h2>Segurança em primeiro lugar.</h2>
+        <p>Porque confiança é construída todos os dias. Seus dados protegidos por uma arquitetura desenvolvida seguindo as melhores práticas de segurança.</p>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 48px;">
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Criptografia de dados</h4><span style="font-size: 13px; color: var(--text-light);">(ponta a ponta)</span></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Backups automáticos</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Controle de acesso granular</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Monitoramento contínuo</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Logs de auditoria completos</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Conformidade internacional</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Autenticação segura (MFA)</h4></div>
+        </div>
+        <div style="background: var(--bg-white); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; gap: 16px;">
+          <div class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark);">Infraestrutura escalável</h4></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BOTTOM -->
+  <section class="cta-bottom">
+    <div class="container">
+      <h2>Feita para empresas que pensam no futuro.</h2>
+      <p>A transformação digital não começa com tecnologia. Ela começa quando processos deixam de ser obstáculos e passam a impulsionar resultados. Comece em poucos minutos, sem instalações complexas, sem complicação.</p>
+      
+      <div style="display: flex; justify-content: center; gap: 16px; margin-top: 40px;">
+        <a href="register.html" class="btn btn-primary" style="padding: 14px 32px; font-size: 16px;">Criar sua conta gratuitamente</a>
+        <a href="login.html" class="btn btn-outline" style="padding: 14px 32px; font-size: 16px;">Faça login e continue sua jornada</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>OperaIQ</h3>
+          <p>Mais do que um software. Uma plataforma para acelerar empresas. Uma tecnologia para conectar pessoas.</p>
+          <p style="color: var(--blue-mid); font-weight: 600;">Inteligência para Operar. Tecnologia para Crescer.</p>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Produto</h4>
+          <ul>
+            <li><a href="#">Plataforma</a></li>
+            <li><a href="#">Recursos</a></li>
+            <li><a href="#">Inteligência Artificial</a></li>
+            <li><a href="#">Automações</a></li>
+            <li><a href="#">Integrações & API</a></li>
+            <li><a href="#">Roadmap</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Soluções</h4>
+          <ul>
+            <li><a href="#">Pequenas Empresas</a></li>
+            <li><a href="#">Médias Empresas</a></li>
+            <li><a href="#">Grandes Organizações</a></li>
+            <li><a href="#">Indústria</a></li>
+            <li><a href="#">Varejo & Logística</a></li>
+            <li><a href="#">Serviços & Tecnologia</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Desenvolvedores</h4>
+          <ul>
+            <li><a href="#">Documentação</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">SDKs</a></li>
+            <li><a href="#">Status da Plataforma</a></li>
+            <li><a href="#">Changelog</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Empresa & Suporte</h4>
+          <ul>
+            <li><a href="#">Sobre a OperaIQ</a></li>
+            <li><a href="#">Carreiras & Blog</a></li>
+            <li><a href="#">Central de Ajuda</a></li>
+            <li><a href="#">Política de Privacidade</a></li>
+            <li><a href="#">Segurança</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div>© 2026 OperaIQ. Todos os direitos reservados.</div>
+        <div>Transformando operações em resultados através da tecnologia e da Inteligência Artificial.</div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OperaIQ — Criar Conta Empresarial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-primary: #0052CC;
+      --blue-hover:   #0065FF;
+      --blue-mid:     #2684FF;
+      --text-dark:    #172B4D;
+      --text-mid:     #42526E;
+      --text-light:   #6B778C;
+      --border:       #DFE1E6;
+      --bg:           #F4F5F7;
+      --white:        #FFFFFF;
+      --red:          #DE350B;
+      --green:        #36B37E;
+      --radius:       3px;
+      --shadow-lg:    0 8px 16px rgba(9,30,66,.15), 0 0 1px rgba(9,30,66,.31);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-dark);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      height: 56px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .topbar-logo-name { font-size: 18px; font-weight: 700; color: var(--blue-primary); letter-spacing: -0.3px; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--white);
+      border-radius: 3px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 600px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--blue-primary);
+      padding: 24px;
+      text-align: center;
+      color: var(--white);
+    }
+    .card-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .card-header p { font-size: 13px; color: rgba(255,255,255,0.8); }
+
+    .card-body { padding: 32px 40px; }
+
+    /* ===== FORM ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .full-width { grid-column: span 2; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 600; color: var(--text-mid);
+      margin-bottom: 6px; text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%; height: 40px; padding: 0 12px;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      font-size: 14px; font-family: inherit; color: var(--text-dark);
+      transition: border-color 0.15s; outline: none;
+    }
+    .form-input:focus { border-color: var(--blue-mid); }
+    .form-input[readonly] { background: var(--bg); color: var(--text-mid); cursor: not-allowed; }
+    .form-input.error { border-color: var(--red); }
+
+    .field-error { font-size: 12px; color: var(--red); margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; height: 44px; background: var(--blue-primary); color: var(--white);
+      border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s; margin-top: 24px;
+    }
+    .btn-primary:hover { background: var(--blue-hover); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .card-footer {
+      border-top: 1px solid var(--border); padding: 20px 40px;
+      text-align: center; background: #FAFBFC; font-size: 13px; color: var(--text-light);
+    }
+    .card-footer a { color: var(--blue-primary); text-decoration: none; font-weight: 600; }
+    .card-footer a:hover { text-decoration: underline; }
+
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Loading CEP state */
+    .cep-loading { font-size: 12px; color: var(--blue-mid); margin-top: 4px; display: none; }
+    
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .full-width { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <a href="login.html" class="topbar-logo">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="6" fill="#0052CC"/>
+        <path d="M14 5L22 10V18L14 23L6 18V10L14 5Z" fill="white" opacity="0.9"/>
+      </svg>
+      <span class="topbar-logo-name">OperaIQ</span>
+    </a>
+  </header>
+
+  <main class="main">
+    <div class="card">
+      <div class="card-header">
+        <h1>Criar Conta Empresarial</h1>
+        <p>Junte-se ao OperaIQ e otimize a gestão do seu negócio.</p>
+      </div>
+
+      <div class="card-body">
+        <form id="register-form" novalidate>
+          <div class="form-grid">
+            
+            <!-- Dados Básicos -->
+            <div class="form-group full-width">
+              <label class="form-label">Nome da Empresa</label>
+              <input class="form-input" type="text" id="empresa" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CNPJ</label>
+              <input class="form-input" type="text" id="cnpj" placeholder="00.000.000/0000-00" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">E-mail Corporativo</label>
+              <input class="form-input" type="email" id="email" required />
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Senha</label>
+              <input class="form-input" type="password" id="password" required />
+              <p class="field-error" id="pw-error">Mínimo de 6 caracteres.</p>
+            </div>
+
+            <!-- Endereço -->
+            <div class="form-group full-width" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <h3 style="font-size: 14px; color: var(--text-dark);">Endereço da Empresa</h3>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CEP</label>
+              <input class="form-input" type="text" id="cep" placeholder="00000-000" maxlength="9" required />
+              <div class="cep-loading" id="cep-loading">Buscando endereço...</div>
+              <p class="field-error" id="cep-error">CEP inválido ou não encontrado.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Logradouro</label>
+              <input class="form-input" type="text" id="logradouro" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Número</label>
+              <input class="form-input" type="text" id="numero" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Complemento</label>
+              <input class="form-input" type="text" id="complemento" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Bairro</label>
+              <input class="form-input" type="text" id="bairro" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Cidade</label>
+              <input class="form-input" type="text" id="cidade" readonly required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Estado (UF)</label>
+              <input class="form-input" type="text" id="uf" readonly required />
+            </div>
+
+          </div>
+
+          <button class="btn-primary" type="submit" id="btn-submit">
+            <span class="spinner" id="spinner"></span>
+            <span id="btn-text">Criar Conta</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="card-footer">
+        Já tem uma conta? <a href="login.html">Fazer login</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // VIA CEP integration
+  const cepInput = document.getElementById('cep');
+  const logradouro = document.getElementById('logradouro');
+  const bairro = document.getElementById('bairro');
+  const cidade = document.getElementById('cidade');
+  const uf = document.getElementById('uf');
+  const numero = document.getElementById('numero');
+  const cepLoading = document.getElementById('cep-loading');
+  const cepError = document.getElementById('cep-error');
+
+  cepInput.addEventListener('input', (e) => {
+    // Format CEP 00000-000
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
+    e.target.value = v;
+  });
+
+  cepInput.addEventListener('blur', async () => {
+    const cepVal = cepInput.value.replace(/\D/g, '');
+    if (cepVal.length !== 8) return;
+
+    cepLoading.style.display = 'block';
+    cepError.classList.remove('visible');
+    logradouro.value = ''; bairro.value = ''; cidade.value = ''; uf.value = '';
+
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
+      const data = await res.json();
+
+      if (data.erro) {
+        cepError.classList.add('visible');
+      } else {
+        logradouro.value = data.logradouro;
+        bairro.value = data.bairro;
+        cidade.value = data.localidade;
+        uf.value = data.uf;
+        numero.focus();
+      }
+    } catch (err) {
+      cepError.classList.add('visible');
+    } finally {
+      cepLoading.style.display = 'none';
+    }
+  });
+
+  // CNPJ mask
+  const cnpjInput = document.getElementById('cnpj');
+  cnpjInput.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 14) v = v.slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    e.target.value = v;
+  });
+
+  // Form submit
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById('password').value;
+    const pwErr = document.getElementById('pw-error');
+    if (pw.length < 6) {
+      pwErr.classList.add('visible');
+      return;
+    }
+    pwErr.classList.remove('visible');
+
+    const emailInput = document.getElementById('email').value.trim();
+    const empresaInput = document.getElementById('empresa').value.trim();
+    const cnpjInput = document.getElementById('cnpj').value.trim();
+    
+    // Pegar dados do endereço
+    const cepInput = document.getElementById('cep').value.trim();
+    const logradouroInput = document.getElementById('logradouro').value.trim();
+    const numeroInput = document.getElementById('numero').value.trim();
+    const complementoInput = document.getElementById('complemento').value.trim();
+    const bairroInput = document.getElementById('bairro').value.trim();
+    const cidadeInput = document.getElementById('cidade').value.trim();
+    const ufInput = document.getElementById('uf').value.trim();
+
+    const btn = document.getElementById('btn-submit');
+    const spinner = document.getElementById('spinner');
+    const text = document.getElementById('btn-text');
+
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    text.textContent = 'Criando conta...';
+
+    // Chamada oficial para a API do Supabase
+    const { data, error } = await window.supabaseClient.auth.signUp({
+      email: emailInput,
+      password: pw,
+      options: {
+        data: {
+          empresa: empresaInput,
+          cnpj: cnpjInput,
+          cep: cepInput,
+          logradouro: logradouroInput,
+          numero: numeroInput,
+          complemento: complementoInput,
+          bairro: bairroInput,
+          cidade: cidadeInput,
+          uf: ufInput
+        }
+      }
+    });
+
+    if (error) {
+      spinner.style.display = 'none';
+      btn.disabled = false;
+      text.textContent = 'Criar conta corporativa';
+      
+      let msg = error.message;
+      if (error.status === 422 || msg.toLowerCase().includes('already registered')) {
+        msg = 'Este e-mail já está em uso por outra conta corporativa.';
+      }
+      alert(msg);
+      return;
+    }
+
+    // Se a conta for criada com sucesso (com ou sem auto-confirm ativado)
+    alert('Conta criada com sucesso! Você será redirecionado.');
+    window.location.href = 'login.html';
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+</body>
+</html>

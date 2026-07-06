@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OperaIQ — Entrar</title>
+  <meta name="description" content="Faça login na plataforma OperaIQ e gerencie seus projetos com inteligência." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-primary: #0052CC;
+      --blue-hover:   #0065FF;
+      --blue-light:   #E6F0FF;
+      --blue-mid:     #2684FF;
+      --text-dark:    #172B4D;
+      --text-mid:     #42526E;
+      --text-light:   #6B778C;
+      --border:       #DFE1E6;
+      --bg:           #F4F5F7;
+      --white:        #FFFFFF;
+      --red:          #DE350B;
+      --green:        #36B37E;
+      --radius:       3px;
+      --shadow:       0 1px 1px rgba(9,30,66,.25), 0 0 1px 1px rgba(9,30,66,.13);
+      --shadow-lg:    0 8px 16px rgba(9,30,66,.15), 0 0 1px rgba(9,30,66,.31);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-dark);
+    }
+
+    /* ===== LAYOUT ===== */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      height: 56px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .topbar-logo svg { flex-shrink: 0; }
+
+    .topbar-logo-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--blue-primary);
+      letter-spacing: -0.3px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--white);
+      border-radius: 3px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--blue-primary);
+      padding: 32px 40px 28px;
+      text-align: center;
+    }
+
+    .card-header-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .card-header-logo-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.5px;
+    }
+
+    .card-header-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 6px;
+      font-weight: 400;
+    }
+
+    /* Divider wave */
+    .wave {
+      display: block;
+      width: 100%;
+      height: 20px;
+      background: var(--blue-primary);
+      clip-path: ellipse(55% 100% at 50% 0%);
+    }
+
+    .card-body {
+      padding: 32px 40px 36px;
+    }
+
+    /* ===== FORM ===== */
+    .form-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 4px;
+    }
+
+    .form-subtitle {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap > svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+      pointer-events: none;
+      transition: color 0.15s;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px 0 40px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-dark);
+      background: var(--white);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    .form-input::placeholder { color: var(--text-light); }
+
+    .form-input:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 2px rgba(38,132,255,0.2);
+    }
+
+    .form-input:focus + svg,
+    .input-wrap:focus-within > svg {
+      color: var(--blue-mid);
+    }
+
+    /* Eye toggle */
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+    .toggle-pw:hover { color: var(--blue-primary); }
+
+    .input-wrap .form-input.has-toggle { padding-right: 40px; }
+
+    /* Error state */
+    .form-input.error { border-color: var(--red); }
+    .field-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* Remember row */
+    .row-remember {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-mid);
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue-primary);
+      cursor: pointer;
+    }
+
+    .link-forgot {
+      font-size: 13px;
+      color: var(--blue-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s, text-decoration 0.15s;
+    }
+    .link-forgot:hover { color: var(--blue-hover); text-decoration: underline; }
+
+    /* Submit button */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 44px;
+      background: var(--blue-primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 2px 4px rgba(0,82,204,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-hover);
+      box-shadow: 0 4px 12px rgba(0,82,204,0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(0,82,204,0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider-text {
+      font-size: 12px;
+      color: var(--text-light);
+      white-space: nowrap;
+    }
+
+    /* Google SSO button */
+    .btn-sso {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      height: 44px;
+      background: var(--white);
+      color: var(--text-dark);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn-sso:hover {
+      border-color: #aaa;
+      background: var(--bg);
+      box-shadow: var(--shadow);
+    }
+
+    /* Wrapper centralizado para o botão Google oficial */
+    #google-btn-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      min-height: 44px;
+    }
+    #google-btn-wrap > div {
+      width: 100% !important;
+    }
+
+    /* Footer */
+    .card-footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      text-align: center;
+      background: #FAFBFC;
+    }
+
+    .card-footer p {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .card-footer a {
+      color: var(--blue-primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .card-footer a:hover { color: var(--blue-hover); text-decoration: underline; }
+
+    /* Alert banner */
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.5;
+      animation: slideDown 0.25s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .alert-error {
+      background: #FFEBE6;
+      border: 1px solid #FF8F73;
+      color: #BF2600;
+    }
+    .alert-success {
+      background: #E3FCEF;
+      border: 1px solid #57D9A3;
+      color: #006644;
+    }
+    .alert svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* Bottom page links */
+    .page-footer {
+      padding: 24px;
+      text-align: center;
+    }
+    .page-footer a {
+      font-size: 12px;
+      color: var(--text-light);
+      text-decoration: none;
+      margin: 0 8px;
+      transition: color 0.15s;
+    }
+    .page-footer a:hover { color: var(--blue-primary); text-decoration: underline; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 440px) {
+      .card-body, .card-footer { padding-left: 24px; padding-right: 24px; }
+      .card-header { padding-left: 24px; padding-right: 24px; }
+    }
+
+    /* ===== FOCUS RING FOR ACCESSIBILITY ===== */
+    *:focus-visible { outline: 2px solid var(--blue-mid); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <a href="#" class="topbar-logo" aria-label="OperaIQ">
+      <!-- Logo icon -->
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="6" fill="#0052CC"/>
+        <path d="M14 5L22 10V18L14 23L6 18V10L14 5Z" fill="url(#g1)" opacity="0.9"/>
+        <path d="M14 9L19 12V17L14 20L9 17V12L14 9Z" fill="white" opacity="0.95"/>
+        <path d="M14 12.5L16.5 14V17L14 18.5L11.5 17V14L14 12.5Z" fill="#0052CC"/>
+        <defs>
+          <linearGradient id="g1" x1="6" y1="5" x2="22" y2="23" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#2684FF"/>
+            <stop offset="1" stop-color="#0052CC"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="topbar-logo-name">OperaIQ</span>
+    </a>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="card" role="main">
+
+      <!-- Card header com brand -->
+      <div class="card-header">
+        <div class="card-header-logo">
+          <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="28" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+            <path d="M14 5L22 10V18L14 23L6 18V10L14 5Z" fill="rgba(255,255,255,0.9)"/>
+            <path d="M14 9L19 12V17L14 20L9 17V12L14 9Z" fill="#0052CC" opacity="0.8"/>
+            <path d="M14 12.5L16.5 14V17L14 18.5L11.5 17V14L14 12.5Z" fill="white"/>
+          </svg>
+          <span class="card-header-logo-name">OperaIQ</span>
+        </div>
+        <p class="card-header-sub">Plataforma de Gestão Inteligente</p>
+      </div>
+
+      <!-- Card body -->
+      <div class="card-body">
+        <h1 class="form-title">Entrar na sua conta</h1>
+        <p class="form-subtitle">Use o e-mail e senha cadastrados.</p>
+
+        <!-- Alert (hidden by default) -->
+        <div class="alert alert-error" id="alert-box" style="display:none;" role="alert" aria-live="polite">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#BF2600" stroke-width="1.5"/>
+            <path d="M8 4.5V8.5M8 11H8.01" stroke="#BF2600" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span id="alert-msg">E-mail ou senha incorretos. Verifique seus dados.</span>
+        </div>
+
+        <!-- Form -->
+        <form id="login-form" novalidate>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">E-mail</label>
+            <div class="input-wrap">
+              <input
+                class="form-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="voce@empresa.com"
+                autocomplete="email"
+                aria-required="true"
+              />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M1.5 5l6.5 4.5L14.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="field-error" id="email-error">Insira um e-mail válido.</p>
+          </div>
+
+          <!-- Senha -->
+          <div class="form-group">
+            <label class="form-label" for="password">Senha</label>
+            <div class="input-wrap">
+              <input
+                class="form-input has-toggle"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                aria-required="true"
+              />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="3" y="7" width="10" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <button type="button" class="toggle-pw" id="toggle-pw" aria-label="Mostrar senha" tabindex="0">
+                <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </button>
+            </div>
+            <p class="field-error" id="password-error">A senha deve ter pelo menos 6 caracteres.</p>
+          </div>
+
+          <!-- Lembrar / Esqueci -->
+          <div class="row-remember">
+            <label class="checkbox-label">
+              <input type="checkbox" id="remember" name="remember" />
+              Lembrar de mim
+            </label>
+            <a href="forgot-password.html" class="link-forgot" id="link-forgot">Esqueci a senha</a>
+          </div>
+
+          <!-- Botão entrar -->
+          <button class="btn-primary" type="submit" id="btn-login">
+            <span class="spinner" id="spinner" aria-hidden="true"></span>
+            <span id="btn-text">Entrar</span>
+          </button>
+
+        </form>
+
+        <!-- SSO Divider -->
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">ou continue com</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <!-- Google Identity Services (botão oficial) -->
+        <div id="google-btn-wrap"></div>
+
+      </div><!-- /.card-body -->
+
+      <!-- Card footer -->
+      <div class="card-footer">
+        <p>Não tem uma conta? <a href="register.html" id="link-signup">Criar conta grátis</a></p>
+      </div>
+
+    </div><!-- /.card -->
+  </main>
+
+  <!-- Page footer -->
+  <footer class="page-footer">
+    <a href="#">Privacidade</a>
+    <a href="#">Termos de Uso</a>
+    <a href="#">Suporte</a>
+    <a href="#">Status</a>
+  </footer>
+
+</div><!-- /.page -->
+
+<script>
+  // ============================================================
+  // CONFIGURAÇÃO GOOGLE OAUTH
+  // ============================================================
+  const GOOGLE_CLIENT_ID = '843008727895-ffod3mj19ii0v392is9vd10ocmum3e78.apps.googleusercontent.com';
+
+  // Callback chamado após autenticação Google bem-sucedida
+  function handleGoogleCredential(response) {
+    try {
+      // Decodifica o JWT retornado pelo Google (payload)
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+
+      // Salva dados do usuário na sessão
+      sessionStorage.setItem('operaiq_user', JSON.stringify({
+        name:    payload.name,
+        email:   payload.email,
+        picture: payload.picture,
+        sub:     payload.sub,
+        loginAt: new Date().toISOString(),
+        method:  'google'
+      }));
+
+      // Redireciona para o dashboard
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      showAlert('error', 'Erro ao processar autenticação Google. Tente novamente.');
+    }
+  }
+
+  // Inicializa Google Identity Services após o script carregar
+  window.addEventListener('load', () => {
+    if (typeof google !== 'undefined' && google.accounts) {
+      initGoogleSSO();
+    } else {
+      // Aguarda o script GSI carregar
+      const gsiScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+      if (gsiScript) {
+        gsiScript.addEventListener('load', initGoogleSSO);
+      }
+    }
+  });
+
+  function initGoogleSSO() {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback:  handleGoogleCredential,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
+
+    // Renderiza o botão Google oficial no wrapper
+    google.accounts.id.renderButton(
+      document.getElementById('google-btn-wrap'),
+      {
+        theme: 'outline',
+        size:  'large',
+        shape: 'rectangular',
+        width: 320,
+        logo_alignment: 'left',
+        text: 'signin_with',
+        locale: 'pt-BR'
+      }
+    );
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  const form       = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const pwInput    = document.getElementById('password');
+  const emailErr   = document.getElementById('email-error');
+  const pwErr      = document.getElementById('password-error');
+  const alertBox   = document.getElementById('alert-box');
+  const alertMsg   = document.getElementById('alert-msg');
+  const btnLogin   = document.getElementById('btn-login');
+  const btnText    = document.getElementById('btn-text');
+  const spinner    = document.getElementById('spinner');
+  const togglePw   = document.getElementById('toggle-pw');
+  const eyeIcon    = document.getElementById('eye-icon');
+
+  function showAlert(type, msg) {
+    alertBox.style.display = 'flex';
+    alertBox.className = `alert alert-${type}`;
+    alertMsg.textContent = msg;
+    const iconPath = type === 'error'
+      ? `<circle cx="8" cy="8" r="7" stroke="#BF2600" stroke-width="1.5"/><path d="M8 4.5V8.5M8 11H8.01" stroke="#BF2600" stroke-width="1.5" stroke-linecap="round"/>`
+      : `<path d="M2 8l4 4 8-8" stroke="#006644" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+    alertBox.querySelector('svg').innerHTML = iconPath;
+  }
+
+  // ---- Toggle senha ----
+  let pwVisible = false;
+  togglePw.addEventListener('click', () => {
+    pwVisible = !pwVisible;
+    pwInput.type = pwVisible ? 'text' : 'password';
+    togglePw.setAttribute('aria-label', pwVisible ? 'Ocultar senha' : 'Mostrar senha');
+    eyeIcon.innerHTML = pwVisible
+      ? `<path d="M17.94 12c-.33.73-.74 1.42-1.22 2.04M12 18c-1-.1-1.95-.38-2.82-.82M3 3l18 18M10.73 10.73A3 3 0 0012 12m-3-3c.76-.56 1.65-.93 2.6-1.06M9.88 4.12A9.07 9.07 0 0112 4c4.48 0 8.27 2.94 9.5 7a9.08 9.08 0 01-4.07 5.19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+      : `<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>`;
+  });
+
+  // ---- Validação inline ----
+  function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  emailInput.addEventListener('blur', () => {
+    if (!validateEmail(emailInput.value.trim())) {
+      emailInput.classList.add('error'); emailErr.classList.add('visible');
+    } else {
+      emailInput.classList.remove('error'); emailErr.classList.remove('visible');
+    }
+  });
+  emailInput.addEventListener('input', () => {
+    if (validateEmail(emailInput.value.trim())) {
+      emailInput.classList.remove('error'); emailErr.classList.remove('visible');
+    }
+  });
+  pwInput.addEventListener('blur', () => {
+    if (pwInput.value.length < 6) {
+      pwInput.classList.add('error'); pwErr.classList.add('visible');
+    } else {
+      pwInput.classList.remove('error'); pwErr.classList.remove('visible');
+    }
+  });
+  pwInput.addEventListener('input', () => {
+    if (pwInput.value.length >= 6) {
+      pwInput.classList.remove('error'); pwErr.classList.remove('visible');
+    }
+  });
+
+  // ---- Submit email/senha ----
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.style.display = 'none';
+
+    const email = emailInput.value.trim();
+    const pw    = pwInput.value;
+    let valid = true;
+
+    if (!validateEmail(email)) {
+      emailInput.classList.add('error'); emailErr.classList.add('visible'); valid = false;
+    }
+    if (pw.length < 6) {
+      pwInput.classList.add('error'); pwErr.classList.add('visible'); valid = false;
+    }
+    if (!valid) return;
+
+    // Simula loading
+    btnLogin.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Entrando...';
+
+    await new Promise(r => setTimeout(r, 1400));
+
+    // Chamada oficial para a API do Supabase
+    const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: pw
+    });
+
+    if (error) {
+      spinner.style.display = 'none';
+      btnLogin.disabled = false;
+      btnText.textContent = 'Entrar';
+      
+      let msg = error.message;
+      if (msg.toLowerCase().includes('invalid login credentials')) {
+        msg = 'E-mail ou senha incorretos. Verifique seus dados e tente novamente.';
+      } else if (msg.toLowerCase().includes('email not confirmed')) {
+        msg = 'Por favor, confirme seu e-mail antes de fazer o login.';
+      }
+      showAlert('error', msg);
+    } else {
+      // Login bem-sucedido
+      window.location.href = 'dashboard.html';
+    }
+  });
+
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+</body>
+</html>

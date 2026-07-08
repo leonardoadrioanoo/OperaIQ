@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getModulosGerenciaveis } from '@/lib/modules';
 
 // Esquema Zod simplificado para edição
 const updateColaboradorSchema = z.object({
@@ -18,8 +19,11 @@ const updateColaboradorSchema = z.object({
   departamento: z.string().optional().or(z.literal('')),
   filial: z.string().optional().or(z.literal('')),
   telefone_direto: z.string().optional().or(z.literal('')),
+  equipe: z.string().optional().or(z.literal('')),
+  matricula: z.string().optional().or(z.literal('')),
+  gestor_id: z.string().uuid().optional().or(z.literal('')),
   status_conta: z.string(),
-  is_admin: z.boolean(),
+  is_admin: z.any(),
   permissoes: z.any().optional(), // mantendo flexível aqui para simplificar
 });
 
@@ -65,10 +69,21 @@ export default function ColaboradorDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [data, setData] = useState<any>(null);
+  const [companyUsers, setCompanyUsers] = useState<any[]>([]);
+  const [departamentos, setDepartamentos] = useState<any[]>([]);
+  const [cargos, setCargos] = useState<any[]>([]);
+  const [equipes, setEquipes] = useState<any[]>([]);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<UpdateColaboradorForm>({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<UpdateColaboradorForm>({
     resolver: zodResolver(updateColaboradorSchema)
   });
+
+  const selectedDepartamentoNome = watch('departamento');
+  const selectedDepartamento = departamentos.find(d => d.nome === selectedDepartamentoNome);
+  const selectedDepartamentoId = selectedDepartamento?.id;
+
+  const filteredCargos = selectedDepartamentoId ? cargos.filter(c => c.departamento_id === selectedDepartamentoId) : [];
+  const filteredEquipes = selectedDepartamentoId ? equipes.filter(e => e.departamento_id === selectedDepartamentoId) : [];
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -97,11 +112,34 @@ export default function ColaboradorDetailPage() {
         setData(json);
         reset({
           ...json,
-          permissoes: permissoesObj
+          permissoes: permissoesObj,
+          is_admin: json.is_admin ? "true" : "false" // ensuring correct select binding
         });
+        
+        // Fetch users for gestor select
+        const resUsers = await fetch(`http://localhost:3002/api/colaboradores`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (resUsers.ok) {
+          const usersJson = await resUsers.json();
+          // Filter out current user from being their own manager
+          setCompanyUsers(usersJson.filter((u: any) => u.id !== id));
+        }
+
+        // Fetch organizational structures
+        const [resDept, resCargo, resEquipe] = await Promise.all([
+          fetch('http://localhost:3002/api/departamentos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+          fetch('http://localhost:3002/api/cargos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+          fetch('http://localhost:3002/api/equipes', { headers: { Authorization: `Bearer ${session.access_token}` } })
+        ]);
+
+        if (resDept.ok) setDepartamentos(await resDept.json());
+        if (resCargo.ok) setCargos(await resCargo.json());
+        if (resEquipe.ok) setEquipes(await resEquipe.json());
+
       } else {
         toast.error('Colaborador não encontrado.');
-        router.push('/dashboard/administracao/usuarios');
+        router.push('/dashboard/administracao/perfis/usuarios');
       }
     } catch (err) {
       toast.error('Falha na comunicação.');
@@ -124,7 +162,11 @@ export default function ColaboradorDetailPage() {
         modulo, ...perms
       })) : [];
 
-      const payload = { ...formData, permissoes: permissoesArray };
+      const payload = { 
+        ...formData, 
+        permissoes: permissoesArray,
+        is_admin: formData.is_admin === "true" || formData.is_admin === true
+      };
 
       const res = await fetch(`http://localhost:3002/api/colaboradores/${id}`, {
         method: 'PUT',
@@ -149,6 +191,11 @@ export default function ColaboradorDetailPage() {
     }
   };
 
+  const onError = (errors: any) => {
+    console.error("Erros de validação do formulário:", errors);
+    toast.error("Preencha todos os campos corretamente. Verifique todas as abas.");
+  };
+
   if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><Loader2 className="w-8 h-8 text-violet-500 animate-spin" /></div>;
   if (!data) return null;
 
@@ -157,7 +204,7 @@ export default function ColaboradorDetailPage() {
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-8">
       <div className="mb-6">
-        <Link href="/dashboard/administracao/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
+        <Link href="/dashboard/administracao/perfis/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </Link>
         <div className="flex items-start justify-between">
@@ -181,7 +228,7 @@ export default function ColaboradorDetailPage() {
               <button onClick={() => { setIsEditing(false); reset(); }} className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white rounded-lg text-sm font-medium transition-colors" disabled={isSaving}>
                 Cancelar
               </button>
-              <button onClick={handleSubmit(onSubmit)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20" disabled={isSaving}>
+              <button onClick={handleSubmit(onSubmit, onError)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20" disabled={isSaving}>
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
               </button>
             </div>
@@ -220,16 +267,77 @@ export default function ColaboradorDetailPage() {
         ))}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-[#0c0c16] border border-white/5 rounded-2xl p-6 md:p-8">
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="bg-[#0c0c16] border border-white/5 rounded-2xl p-6 md:p-8">
         
         {activeTab === 'info' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            <Field label="Nome Completo" value={data.nome_completo} isEditing={isEditing} register={register} name="nome_completo" error={errors.nome_completo?.message} />
-            <Field label="E-mail" value={data.email} isEditing={isEditing} register={register} name="email" error={errors.email?.message} />
-            <Field label="Cargo" value={data.cargo} isEditing={isEditing} register={register} name="cargo" />
-            <Field label="Departamento" value={data.departamento} isEditing={isEditing} register={register} name="departamento" />
-            <Field label="Filial" value={data.filial} isEditing={isEditing} register={register} name="filial" />
-            <Field label="Telefone" value={data.telefone_direto} isEditing={isEditing} register={register} name="telefone_direto" />
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">Dados Pessoais</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                <Field label="Nome Completo" value={data.nome_completo} isEditing={isEditing} register={register} name="nome_completo" error={errors.nome_completo?.message} />
+                <Field label="E-mail" value={data.email} isEditing={isEditing} register={register} name="email" error={errors.email?.message} />
+                <Field label="Telefone" value={data.telefone_direto} isEditing={isEditing} register={register} name="telefone_direto" />
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-white/5" />
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">Dados Organizacionais</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+                <Field label="Empresa" value={data.empresas?.nome_fantasia || 'N/A'} isEditing={false} />
+                <Field 
+                  label="Departamento" 
+                  value={data.departamento} 
+                  isEditing={isEditing} 
+                  register={register} 
+                  name="departamento" 
+                  type="select"
+                  options={[
+                    { value: '', label: 'Selecione um departamento...' },
+                    ...departamentos.map(d => ({ value: d.nome, label: d.nome }))
+                  ]}
+                />
+                <Field 
+                  label="Cargo" 
+                  value={data.cargo} 
+                  isEditing={isEditing} 
+                  register={register} 
+                  name="cargo" 
+                  type="select"
+                  options={[
+                    { value: '', label: selectedDepartamentoId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro' },
+                    ...filteredCargos.map(c => ({ value: c.nome, label: c.nome }))
+                  ]}
+                />
+                <Field label="Filial / Unidade" value={data.filial} isEditing={isEditing} register={register} name="filial" />
+                <Field 
+                  label="Equipe / Squad" 
+                  value={data.equipe} 
+                  isEditing={isEditing} 
+                  register={register} 
+                  name="equipe" 
+                  type="select"
+                  options={[
+                    { value: '', label: selectedDepartamentoId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro' },
+                    ...filteredEquipes.map(e => ({ value: e.nome, label: e.nome }))
+                  ]}
+                />
+                <Field label="Matrícula / ID Interno" value={data.matricula} isEditing={isEditing} register={register} name="matricula" />
+                <Field 
+                  label="Gestor Imediato" 
+                  value={data.gestor?.nome_completo || 'Sem gestor'} 
+                  isEditing={isEditing} 
+                  register={register} 
+                  name="gestor_id" 
+                  type="select"
+                  options={[
+                    { value: '', label: 'Selecione um gestor...' },
+                    ...companyUsers.map(u => ({ value: u.id, label: u.nome_completo }))
+                  ]}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -253,35 +361,52 @@ export default function ColaboradorDetailPage() {
         )}
 
         {activeTab === 'permissoes' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-400">
-              <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
-                <tr>
-                  <th className="px-4 py-3">Módulo</th>
-                  <th className="px-4 py-3 text-center">Visualizar</th>
-                  <th className="px-4 py-3 text-center">Criar</th>
-                  <th className="px-4 py-3 text-center">Editar</th>
-                  <th className="px-4 py-3 text-center">Excluir</th>
-                  <th className="px-4 py-3 text-center">Aprovar</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {['Dashboard', 'Projetos', 'Tarefas', 'Equipes', 'Calendário', 'Documentos', 'Financeiro', 'Relatórios', 'Configurações', 'Administração'].map(mod => (
-                  <tr key={mod} className="hover:bg-white/[0.02]">
-                    <td className="px-4 py-3 font-medium text-white">{mod}</td>
-                    {['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar'].map(perm => (
-                      <td key={perm} className="px-4 py-3 text-center">
-                        {isEditing ? (
-                          <input type="checkbox" {...register(`permissoes.${mod}.${perm}` as any)} className="w-4 h-4 rounded border-white/20 bg-[#13131f]" />
-                        ) : (
-                          <div className={`w-2 h-2 rounded-full mx-auto ${(data.perfil_permissoes?.find((p:any) => p.modulo === mod)?.[perm]) ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
-                        )}
-                      </td>
+          <div className="space-y-6">
+            <p className="text-sm text-zinc-500">
+              Configure quais módulos e ações este colaborador pode acessar. Administradores têm acesso total e irrestrito.
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-white/5">
+              <table className="w-full text-left text-sm text-zinc-400">
+                <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
+                  <tr>
+                    <th className="px-4 py-3 min-w-[160px]">Módulo</th>
+                    {['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar', 'p_importar', 'p_gerenciar'].map(col => (
+                      <th key={col} className="px-3 py-3 text-center whitespace-nowrap">{col.replace('p_', '')}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {getModulosGerenciaveis().map(mod => {
+                    const dbPerm = data.perfil_permissoes?.find((p: any) => p.modulo === mod.key);
+                    return (
+                      <tr key={mod.key} className="hover:bg-white/[0.02]">
+                        <td className="px-4 py-3 font-medium text-white">{mod.title}</td>
+                        {['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar', 'p_importar', 'p_gerenciar'].map(perm => {
+                          const isSupported = mod.acoes.includes(perm as any);
+                          return (
+                            <td key={perm} className="px-3 py-3 text-center">
+                              {isSupported ? (
+                                isEditing ? (
+                                  <input
+                                    type="checkbox"
+                                    {...register(`permissoes.${mod.key}.${perm}` as any)}
+                                    className="w-4 h-4 rounded border-white/20 bg-[#13131f] accent-violet-500"
+                                  />
+                                ) : (
+                                  <div className={`w-2 h-2 rounded-full mx-auto ${dbPerm?.[perm] ? 'bg-emerald-400' : 'bg-zinc-700'}`} />
+                                )
+                              ) : (
+                                <span className="text-zinc-800">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

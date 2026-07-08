@@ -21,6 +21,10 @@ export class UserRepository {
           bairro: data.bairro,
           cidade: data.cidade,
           uf: data.uf,
+          inscricao_estadual: data.inscricao_estadual,
+          inscricao_municipal: data.inscricao_municipal,
+          ramo_atividade: data.ramo_atividade,
+          porte_empresa: data.porte_empresa,
         }
       ])
       .select('id')

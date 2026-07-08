@@ -18,6 +18,9 @@ export interface Profile {
     p_editar: boolean
     p_excluir: boolean
     p_aprovar: boolean
+    p_exportar: boolean
+    p_importar: boolean
+    p_gerenciar: boolean
   }>
 }
 

@@ -16,7 +16,6 @@ const cargoSchema = z.object({
   nome: z.string().min(2, 'Obrigatório'),
   descricao: z.string().optional(),
   nivel_hierarquico: z.coerce.number().min(1).default(1),
-  cargo_superior_id: z.string().optional().or(z.literal('')),
   status: z.string().default('ativo'),
 });
 
@@ -34,7 +33,7 @@ export default function CargosPage() {
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CargoForm>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(cargoSchema)
   });
 
@@ -73,12 +72,11 @@ export default function CargosPage() {
         departamento_id: cargo.departamento_id,
         descricao: cargo.descricao || '',
         nivel_hierarquico: cargo.nivel_hierarquico || 1,
-        cargo_superior_id: cargo.cargo_superior_id || '',
         status: cargo.status || 'ativo'
       });
     } else {
       setEditingId(null);
-      reset({ status: 'ativo', cargo_superior_id: '', nome: '', descricao: '', nivel_hierarquico: 1, departamento_id: '' });
+      reset({ status: 'ativo', nome: '', descricao: '', nivel_hierarquico: 1, departamento_id: '' });
     }
     setIsModalOpen(true);
   };
@@ -200,7 +198,6 @@ export default function CargosPage() {
                   <th className="px-4 py-3 rounded-tl-lg">Cargo</th>
                   <th className="px-4 py-3">Departamento</th>
                   <th className="px-4 py-3 text-center">Nível Hierárquico</th>
-                  <th className="px-4 py-3">Reporta para</th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
                 </tr>
@@ -220,7 +217,6 @@ export default function CargosPage() {
                         Nível {cargo.nivel_hierarquico}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{cargo.superior?.nome || '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                         cargo.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'
@@ -244,7 +240,7 @@ export default function CargosPage() {
                 ))}
                 {filteredCargos.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
                       Nenhum cargo encontrado.
                     </td>
                   </tr>
@@ -289,19 +285,10 @@ export default function CargosPage() {
                 <textarea {...register('descricao')} rows={2} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500/50" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Nível Hierárquico (1 = Mais Alto)</label>
                   <input type="number" min="1" {...register('nivel_hierarquico')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500/50" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Reporta para (Cargo Superior)</label>
-                  <select {...register('cargo_superior_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500/50">
-                    <option value="">Nenhum</option>
-                    {cargos.filter(c => c.id !== editingId).map(c => (
-                      <option key={c.id} value={c.id}>{c.nome} ({c.departamento?.nome})</option>
-                    ))}
-                  </select>
                 </div>
               </div>
 

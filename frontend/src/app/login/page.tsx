@@ -73,7 +73,7 @@ function DashboardPreview() {
       <div className="absolute -inset-4 bg-violet-500/20 blur-3xl rounded-3xl auth-glow-pulse" />
       <div className="relative bg-[#0d0d1e]/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
         {/* header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-slate-900/30">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
               <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
@@ -85,7 +85,7 @@ function DashboardPreview() {
         {/* stats */}
         <div className="grid grid-cols-4 gap-2 p-3">
           {stats.map((s) => (
-            <div key={s.label} className="bg-white/[0.04] rounded-lg p-2">
+            <div key={s.label} className="bg-slate-900/40 rounded-lg p-2 border border-white/10">
               <p className="text-slate-400 text-[8px] mb-0.5">{s.label}</p>
               <p className="text-white text-sm font-bold leading-none">{s.value}</p>
               <p className="text-emerald-400 text-[8px] mt-0.5">{s.delta} este mês</p>
@@ -93,7 +93,7 @@ function DashboardPreview() {
           ))}
         </div>
         {/* chart */}
-        <div className="mx-3 mb-3 bg-white/[0.04] rounded-lg p-3">
+        <div className="mx-3 mb-3 bg-slate-900/40 rounded-lg p-3 border border-white/10">
           <p className="text-slate-400 text-[8px] mb-2">Desempenho — últimos 7 dias</p>
           <svg viewBox="0 0 200 40" className="w-full h-10">
             <defs>
@@ -115,7 +115,7 @@ function DashboardPreview() {
         {/* activities */}
         <div className="mx-3 mb-3 space-y-1.5">
           {activities.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 bg-white/[0.04] rounded-lg px-2 py-1.5">
+            <div key={i} className="flex items-center gap-2 bg-slate-900/40 rounded-lg px-2 py-1.5 border border-white/10">
               <div className="w-1 h-1 rounded-full bg-violet-400 shrink-0"/>
               <p className="text-slate-300 text-[8px] truncate">{item}</p>
               <span className="text-slate-500 text-[7px] ml-auto shrink-0">Agora</span>
@@ -205,7 +205,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => handleOAuth(p.id)}
                   disabled={!!oauthLoading || isLoading}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-slate-200 text-sm font-medium hover:bg-white/[0.08] hover:border-white/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-slate-900/40 text-slate-200 text-sm font-medium hover:bg-slate-800/50 hover:border-white/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {oauthLoading === p.id ? (
                     <Loader2 className="w-4 h-4 animate-spin"/>
@@ -219,9 +219,9 @@ export default function LoginPage() {
 
             {/* Divider */}
             <div className="auth-animate auth-delay-3 flex items-center gap-3">
-              <div className="flex-1 h-px bg-white/10"/>
-              <span className="text-xs text-slate-500">ou continue com e-mail</span>
-              <div className="flex-1 h-px bg-white/10"/>
+                <div className="flex-1 h-px bg-slate-700/50"/>
+                <span className="text-xs text-slate-400">ou continue com e-mail</span>
+                <div className="flex-1 h-px bg-slate-700/50"/>
             </div>
 
             {/* Email/password form */}
@@ -239,7 +239,7 @@ export default function LoginPage() {
                     placeholder="seu@email.com"
                     autoComplete="email"
                     {...register("email")}
-                    className="w-full rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-slate-600 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                    className="w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
                   />
                 </div>
                 {errors.email && (
@@ -265,7 +265,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     autoComplete="current-password"
                     {...register("password")}
-                    className="w-full rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-slate-600 pl-10 pr-10 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                    className="w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 pl-10 pr-10 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
                   />
                   <button
                     type="button"
@@ -341,7 +341,7 @@ export default function LoginPage() {
               { icon: <Users className="w-3 h-3"/>, text: "Gestão de equipes" },
               { icon: <Zap className="w-3 h-3"/>, text: "Automações com IA" },
             ].map((f) => (
-              <div key={f.text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-slate-200 text-xs font-medium">
+              <div key={f.text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/40 border border-white/10 text-slate-200 text-xs font-medium">
                 <span className="text-violet-400">{f.icon}</span>
                 {f.text}
               </div>

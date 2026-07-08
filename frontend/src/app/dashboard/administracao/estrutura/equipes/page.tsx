@@ -51,7 +51,7 @@ export default function EquipesPage() {
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<EquipeForm>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(equipeSchema)
   });
 

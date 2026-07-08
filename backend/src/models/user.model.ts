@@ -12,6 +12,10 @@ export interface RegisterCompanyDTO {
   bairro: string;
   cidade: string;
   uf: string;
+  inscricao_estadual?: string;
+  inscricao_municipal?: string;
+  ramo_atividade?: string;
+  porte_empresa?: string;
 }
 
 export interface RegisterUserDTO {

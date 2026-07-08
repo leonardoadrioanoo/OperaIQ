@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-slate-50 antialiased`}>
+      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <ReactQueryProvider>
           <AuthProvider>
             {children}

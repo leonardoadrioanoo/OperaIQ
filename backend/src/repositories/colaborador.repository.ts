@@ -5,8 +5,14 @@ export class ColaboradorRepository {
   async findByEmpresaId(empresaId: string) {
     const { data, error } = await supabaseAdmin
       .from('perfis')
-      .select('id, nome_completo, cargo, filial, status_conta, email, foto_url')
+      .select(`
+        id, nome_completo, cargo, filial, status_conta, email, foto_url, is_admin,
+        departamento, equipe, matricula, gestor_id,
+        empresas(nome_fantasia),
+        gestor:perfis!gestor_id(nome_completo)
+      `)
       .eq('empresa_id', empresaId)
+      .eq('is_admin', false)
       .order('nome_completo', { ascending: true });
 
     if (error) throw new Error(`Erro ao buscar colaboradores: ${error.message}`);
@@ -18,6 +24,8 @@ export class ColaboradorRepository {
       .from('perfis')
       .select(`
         *,
+        empresas (nome_fantasia),
+        gestor:perfis!gestor_id (id, nome_completo),
         perfil_permissoes (*),
         colaborador_projetos (*)
       `)

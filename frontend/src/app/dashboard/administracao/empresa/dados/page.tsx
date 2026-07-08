@@ -27,6 +27,10 @@ const updateEmpresaSchema = z.object({
   cidade: z.string().optional(),
   uf: z.string().max(2).optional(),
   pais: z.string().optional(),
+  inscricao_estadual: z.string().optional(),
+  inscricao_municipal: z.string().optional(),
+  ramo_atividade: z.string().optional(),
+  porte_empresa: z.string().optional(),
   idioma: z.string().optional(),
   fuso_horario: z.string().optional(),
   moeda: z.string().optional(),
@@ -35,16 +39,26 @@ const updateEmpresaSchema = z.object({
 type UpdateEmpresaForm = z.infer<typeof updateEmpresaSchema>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function Field({ label, value, isEditing, register, name, error }: { label: string, value: any, isEditing: boolean, register?: any, name?: string, error?: string }) {
+function Field({ label, value, isEditing, register, name, error, options }: { label: string, value: any, isEditing: boolean, register?: any, name?: string, error?: string, options?: {value: string, label: string}[] }) {
   return (
     <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5">
       <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</span>
       {isEditing && register && name ? (
         <div className="relative">
-          <input 
-            {...register(name)} 
-            className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50"
-          />
+          {options ? (
+            <select 
+              {...register(name)} 
+              className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 appearance-none"
+            >
+              <option value="">Selecione...</option>
+              {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+          ) : (
+            <input 
+              {...register(name)} 
+              className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50"
+            />
+          )}
           {error && <span className="text-xs text-red-400 absolute -bottom-5 left-0">{error}</span>}
         </div>
       ) : (
@@ -210,7 +224,7 @@ export default function OrganizacaoPage() {
         
         {activeTab === 'info' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
               <Field label="Nome Fantasia" value={data?.nome_fantasia} isEditing={isEditing} register={register} name="nome_fantasia" error={errors.nome_fantasia?.message} />
               <Field label="Razão Social" value={data?.razao_social} isEditing={isEditing} register={register} name="razao_social" error={errors.razao_social?.message} />
               <Field label="CNPJ" value={data?.cnpj} isEditing={false} /> {/* CNPJ não editável aqui por segurança/faturamento */}
@@ -219,7 +233,7 @@ export default function OrganizacaoPage() {
 
             <div className="w-full h-px bg-white/5" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-x-8 gap-y-4">
               <Field label="Telefone Principal" value={data?.telefone} isEditing={isEditing} register={register} name="telefone" error={errors.telefone?.message} />
               <Field label="Telefone Secundário" value={data?.telefone_secundario} isEditing={isEditing} register={register} name="telefone_secundario" error={errors.telefone_secundario?.message} />
               <Field label="E-mail Corporativo" value={data?.email_corporativo} isEditing={isEditing} register={register} name="email_corporativo" error={errors.email_corporativo?.message} />
@@ -228,7 +242,37 @@ export default function OrganizacaoPage() {
 
             <div className="w-full h-px bg-white/5" />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-x-8 gap-y-4">
+              <Field label="Inscrição Estadual" value={data?.inscricao_estadual} isEditing={isEditing} register={register} name="inscricao_estadual" error={errors.inscricao_estadual?.message} />
+              <Field label="Inscrição Municipal" value={data?.inscricao_municipal} isEditing={isEditing} register={register} name="inscricao_municipal" error={errors.inscricao_municipal?.message} />
+              <Field label="Ramo de Atividade" value={data?.ramo_atividade} isEditing={isEditing} register={register} name="ramo_atividade" error={errors.ramo_atividade?.message} />
+              <Field 
+                label="Porte da Empresa" 
+                value={
+                  data?.porte_empresa === 'MEI' ? 'MEI' :
+                  data?.porte_empresa === 'ME' ? 'Microempresa (ME)' :
+                  data?.porte_empresa === 'EPP' ? 'Empresa de Pequeno Porte (EPP)' :
+                  data?.porte_empresa === 'Medio' ? 'Média Empresa' :
+                  data?.porte_empresa === 'Grande' ? 'Grande Empresa' :
+                  data?.porte_empresa
+                }
+                isEditing={isEditing} 
+                register={register} 
+                name="porte_empresa" 
+                error={errors.porte_empresa?.message} 
+                options={[
+                  { value: "MEI", label: "MEI" },
+                  { value: "ME", label: "Microempresa (ME)" },
+                  { value: "EPP", label: "Empresa de Pequeno Porte (EPP)" },
+                  { value: "Medio", label: "Média Empresa" },
+                  { value: "Grande", label: "Grande Empresa" }
+                ]}
+              />
+            </div>
+
+            <div className="w-full h-px bg-white/5" />
+
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-x-8 gap-y-4">
               <Field label="Responsável Legal" value={data?.responsavel_legal} isEditing={isEditing} register={register} name="responsavel_legal" error={errors.responsavel_legal?.message} />
               <Field label="Data de Cadastro" value={new Date(data?.criado_em).toLocaleDateString('pt-BR')} isEditing={false} />
             </div>
@@ -237,19 +281,68 @@ export default function OrganizacaoPage() {
 
         {activeTab === 'address' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
-              <Field label="CEP" value={data?.cep} isEditing={isEditing} register={register} name="cep" />
-              <div className="md:col-span-2">
-                <Field label="Logradouro" value={data?.logradouro} isEditing={isEditing} register={register} name="logradouro" />
-              </div>
-              <Field label="Número" value={data?.numero} isEditing={isEditing} register={register} name="numero" />
-              <div className="md:col-span-2">
-                <Field label="Complemento" value={data?.complemento} isEditing={isEditing} register={register} name="complemento" />
-              </div>
-              <Field label="Bairro" value={data?.bairro} isEditing={isEditing} register={register} name="bairro" />
-              <Field label="Cidade" value={data?.cidade} isEditing={isEditing} register={register} name="cidade" />
-              <Field label="Estado (UF)" value={data?.uf} isEditing={isEditing} register={register} name="uf" />
-              <Field label="País" value={data?.pais} isEditing={isEditing} register={register} name="pais" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Linha 1 */}
+              <Field
+                label="CEP"
+                value={data?.cep}
+                isEditing={isEditing}
+                register={register}
+                name="cep"
+              />
+              <Field
+                label="Logradouro"
+                value={data?.logradouro}
+                isEditing={isEditing}
+                register={register}
+                name="logradouro"
+              />
+              <Field
+                label="Número"
+                value={data?.numero}
+                isEditing={isEditing}
+                register={register}
+                name="numero"
+              />
+              {/* Linha 2 */}
+              <Field
+                label="Complemento"
+                value={data?.complemento}
+                isEditing={isEditing}
+                register={register}
+                name="complemento"
+              />
+              <Field
+                label="Bairro"
+                value={data?.bairro}
+                isEditing={isEditing}
+                register={register}
+                name="bairro"
+              />
+              <Field
+                label="Cidade"
+                value={data?.cidade}
+                isEditing={isEditing}
+                register={register}
+                name="cidade"
+              />
+              {/* Linha 3 */}
+              <Field
+                label="Estado (UF)"
+                value={data?.uf}
+                isEditing={isEditing}
+                register={register}
+                name="uf"
+              />
+              <Field
+                label="País"
+                value={data?.pais}
+                isEditing={isEditing}
+                register={register}
+                name="pais"
+              />
+              {/* Campo vazio para completar a terceira linha */}
+              <div></div>
             </div>
           </div>
         )}

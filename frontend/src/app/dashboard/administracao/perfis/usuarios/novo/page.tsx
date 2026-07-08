@@ -106,7 +106,7 @@ export default function NovoUsuarioWizard() {
     }
   };
 
-  const { register, handleSubmit, watch, control, setValue, formState: { errors } } = useForm<WizardForm>({
+  const { register, handleSubmit, watch, control, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(wizardSchema),
     defaultValues: {
       idioma: 'pt-BR', fuso_horario: 'America/Sao_Paulo', status_conta: 'Ativo', is_admin: false,
@@ -167,7 +167,7 @@ export default function NovoUsuarioWizard() {
       
       if (res.ok) {
         toast.success('Colaborador criado com sucesso!');
-        router.push('/dashboard/administracao/usuarios');
+        router.push('/dashboard/administracao/perfis/usuarios');
       } else {
         const json = await res.json();
         toast.error(json.error || 'Erro ao criar colaborador.');
@@ -183,7 +183,7 @@ export default function NovoUsuarioWizard() {
     <div className="max-w-5xl mx-auto p-6 md:p-8">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/dashboard/administracao/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
+        <Link href="/dashboard/administracao/perfis/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
           <ArrowLeft className="w-4 h-4" /> Voltar para lista
         </Link>
         <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -472,7 +472,7 @@ export default function NovoUsuarioWizard() {
                   <h3 className="text-sm font-semibold text-violet-400 uppercase tracking-wider mb-3">Acesso</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-zinc-500 w-24 inline-block">Perfil:</span> <span className="text-white">{formValues.is_admin === 'true' || formValues.is_admin === true ? 'Administrador' : 'Colaborador'}</span></p>
-                    <p><span className="text-zinc-500 w-24 inline-block">Cargo:</span> <span className="text-white">{formValues.cargo || '-'}</span></p>
+                    <p><span className="text-zinc-500 w-24 inline-block">Cargo:</span> <span className="text-white">{formValues.cargo_id || '-'}</span></p>
                     <p><span className="text-zinc-500 w-24 inline-block">Status:</span> <span className="text-emerald-400">{formValues.status_conta}</span></p>
                   </div>
                 </div>

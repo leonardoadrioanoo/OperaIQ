@@ -10,7 +10,10 @@ const updatePerfilSchema = z.object({
   formato_data: z.string().optional(),
   formato_hora: z.string().optional(),
   notificacoes_email: z.boolean().optional(),
+  notificacoes_plataforma: z.boolean().optional(),
   notificacoes_push: z.boolean().optional(),
+  resumo_diario: z.boolean().optional(),
+  resumo_semanal: z.boolean().optional(),
 });
 
 export class PerfilService {

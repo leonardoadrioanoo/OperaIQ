@@ -1,32 +1,8 @@
 import { Profile } from '@/store/authStore';
+import { MODULOS, Acao } from '@/lib/modules';
 
-// Tipo de ação que mapeia para as colunas do banco em perfil_permissoes
-export type Acao = 'p_visualizar' | 'p_criar' | 'p_editar' | 'p_excluir' | 'p_aprovar';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// REGRAS DE VISIBILIDADE DE MENU POR PERFIL
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Menus visíveis para COLABORADORES (não-admins sem configuração especial).
- * Conforme especificação oficial: apenas estes menus são exibidos no menu lateral.
- */
-export const COLABORADOR_VISIBLE_MENUS: string[] = [
-  'Início',
-  'Execuções',
-  'Projetos',
-  'Recursos',
-  'Documentos',
-  'IA & Insights',
-  'Notificações',
-  'Meu Perfil',
-];
-
-/**
- * Menus pessoais que sempre estão visíveis,
- * sem precisar de permissão explícita no banco.
- */
-const ALWAYS_VISIBLE_MENUS: string[] = ['Início', 'Notificações', 'Meu Perfil'];
+// Re-exportar Acao para compatibilidade com importações existentes
+export type { Acao };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISIBILIDADE DO MENU LATERAL
@@ -35,28 +11,31 @@ const ALWAYS_VISIBLE_MENUS: string[] = ['Início', 'Notificações', 'Meu Perfil
 /**
  * Determina se um menu deve ser exibido na Sidebar para o usuário logado.
  *
- * Lógica:
- * - Admins: sempre true (acesso total)
- * - Menus pessoais (Início, Notificações, Meu Perfil): sempre true
- * - Demais menus: deve estar em COLABORADOR_VISIBLE_MENUS
- *   E ter p_visualizar=true no banco (se houver entrada; sem entrada = permitido por padrão)
+ * Lógica (em ordem de precedência):
+ * 1. Sem perfil → false
+ * 2. adminOnly + não é admin → false
+ * 3. alwaysVisible → true (independente de permissões)
+ * 4. is_admin → true (acesso total)
+ * 5. Senão → verificar p_visualizar no banco
  */
-export function canViewMenu(profile: Profile | null, menuTitle: string): boolean {
+export function canViewMenu(profile: Profile | null, moduleKey: string): boolean {
   if (!profile) return false;
+
+  const modulo = MODULOS.find(m => m.key === moduleKey);
+  if (!modulo) return false;
+
+  // Módulo exclusivo de admin → bloqueia colaboradores
+  if (modulo.adminOnly && !profile.is_admin) return false;
+
+  // Módulo sempre visível (Início, Notificações, Meu Perfil)
+  if (modulo.alwaysVisible) return true;
+
+  // Admins têm acesso a tudo
   if (profile.is_admin) return true;
 
-  // Menus pessoais sempre visíveis para qualquer usuário autenticado
-  if (ALWAYS_VISIBLE_MENUS.includes(menuTitle)) return true;
-
-  // Se o menu não está na lista base de colaboradores, bloqueia
-  if (!COLABORADOR_VISIBLE_MENUS.includes(menuTitle)) return false;
-
-  // Verifica no banco se há permissão explícita de visualização
-  const perm = profile.permissoes?.find(p => p.modulo === menuTitle);
-
-  // Sem entrada no banco → está na lista base → permite
-  if (!perm) return true;
-
+  // Colaboradores: verificar p_visualizar no banco
+  const perm = profile.permissoes?.find(p => p.modulo === moduleKey);
+  if (!perm) return false; // sem entrada = sem acesso
   return perm.p_visualizar === true;
 }
 
@@ -66,11 +45,10 @@ export function canViewMenu(profile: Profile | null, menuTitle: string): boolean
 
 /**
  * Verifica se o usuário pode executar uma ação específica em um módulo.
- * Use esta função para proteger botões, formulários e chamadas de API.
  *
  * @example
- * hasPermission(profile, 'Execuções', 'p_criar')   // pode criar execução?
- * hasPermission(profile, 'Projetos',  'p_excluir')  // pode excluir projeto?
+ * hasPermission(profile, 'Projetos', 'p_criar')   // pode criar projeto?
+ * hasPermission(profile, 'Documentos', 'p_exportar') // pode exportar?
  */
 export function hasPermission(
   profile: Profile | null,
@@ -81,7 +59,7 @@ export function hasPermission(
   if (profile.is_admin) return true;
 
   const perm = profile.permissoes?.find(p => p.modulo === modulo);
-  return perm ? perm[acao] === true : false;
+  return perm ? (perm as any)[acao] === true : false;
 }
 
 /**
@@ -93,19 +71,34 @@ export function hasPermission(
  * if (perms.p_criar) { <BotaoCriar /> }
  */
 export function getModulePermissions(profile: Profile | null, modulo: string) {
-  if (!profile) {
-    return { p_visualizar: false, p_criar: false, p_editar: false, p_excluir: false, p_aprovar: false };
-  }
+  const empty = {
+    p_visualizar: false,
+    p_criar:      false,
+    p_editar:     false,
+    p_excluir:    false,
+    p_aprovar:    false,
+    p_exportar:   false,
+    p_importar:   false,
+    p_gerenciar:  false,
+  };
+
+  if (!profile) return empty;
+
   if (profile.is_admin) {
-    return { p_visualizar: true, p_criar: true, p_editar: true, p_excluir: true, p_aprovar: true };
+    return Object.fromEntries(Object.keys(empty).map(k => [k, true])) as typeof empty;
   }
 
   const perm = profile.permissoes?.find(p => p.modulo === modulo);
+  if (!perm) return empty;
+
   return {
-    p_visualizar: perm?.p_visualizar ?? false,
-    p_criar:      perm?.p_criar      ?? false,
-    p_editar:     perm?.p_editar     ?? false,
-    p_excluir:    perm?.p_excluir    ?? false,
-    p_aprovar:    perm?.p_aprovar    ?? false,
+    p_visualizar: (perm as any).p_visualizar ?? false,
+    p_criar:      (perm as any).p_criar      ?? false,
+    p_editar:     (perm as any).p_editar     ?? false,
+    p_excluir:    (perm as any).p_excluir    ?? false,
+    p_aprovar:    (perm as any).p_aprovar    ?? false,
+    p_exportar:   (perm as any).p_exportar   ?? false,
+    p_importar:   (perm as any).p_importar   ?? false,
+    p_gerenciar:  (perm as any).p_gerenciar  ?? false,
   };
 }

@@ -64,6 +64,10 @@ const registerSchema = z.object({
   telefone_empresa: z.string().min(14, "Telefone inválido."),
   email_empresa:    z.string().email("E-mail inválido."),
   site:             z.string().optional(),
+  inscricao_estadual: z.string().optional(),
+  inscricao_municipal: z.string().optional(),
+  ramo_atividade:     z.string().optional(),
+  porte_empresa:      z.string().optional(),
 
   nome_admin:       z.string().min(2, "Nome é obrigatório."),
   email:            z.string().email("E-mail inválido."),
@@ -89,7 +93,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 type FieldName = keyof RegisterForm;
 const stepsFields: FieldName[][] = [
-  ["empresa", "cnpj", "setor", "telefone_empresa", "email_empresa", "site"],
+  ["empresa", "cnpj", "setor", "telefone_empresa", "email_empresa", "site", "inscricao_estadual", "inscricao_municipal", "ramo_atividade", "porte_empresa"],
   ["nome_admin", "email", "cargo_admin", "telefone_admin"],
   ["cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf"],
   ["password", "confirmPassword", "terms"]
@@ -340,6 +344,29 @@ export default function RegisterPage() {
                     <Field label="E-mail Corporativo" id="email_empresa" error={errors.email_empresa?.message} icon={<Mail className="w-4 h-4 text-slate-500"/>}>
                       <input id="email_empresa" type="email" placeholder="contato@empresa.com" {...register("email_empresa")} className={`${INPUT_CLS} pl-10 pr-4`}/>
                     </Field>
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <Field label="Inscrição Estadual (Opcional)" id="inscricao_estadual" error={errors.inscricao_estadual?.message}>
+                        <input id="inscricao_estadual" placeholder="IE" {...register("inscricao_estadual")} className={`${INPUT_CLS} px-4`}/>
+                      </Field>
+                      <Field label="Inscrição Municipal (Opcional)" id="inscricao_municipal" error={errors.inscricao_municipal?.message}>
+                        <input id="inscricao_municipal" placeholder="IM" {...register("inscricao_municipal")} className={`${INPUT_CLS} px-4`}/>
+                      </Field>
+                    </div>
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <Field label="Ramo de Atividade (Opcional)" id="ramo_atividade" error={errors.ramo_atividade?.message}>
+                        <input id="ramo_atividade" placeholder="CNAE ou Ramo" {...register("ramo_atividade")} className={`${INPUT_CLS} px-4`}/>
+                      </Field>
+                      <Field label="Porte da Empresa (Opcional)" id="porte_empresa" error={errors.porte_empresa?.message}>
+                        <select id="porte_empresa" {...register("porte_empresa")} className={`${INPUT_CLS} px-4 appearance-none`}>
+                          <option value="">Selecione o porte...</option>
+                          <option value="MEI">MEI</option>
+                          <option value="ME">Microempresa (ME)</option>
+                          <option value="EPP">Empresa de Pequeno Porte (EPP)</option>
+                          <option value="Medio">Média Empresa</option>
+                          <option value="Grande">Grande Empresa</option>
+                        </select>
+                      </Field>
+                    </div>
                     <div className="sm:col-span-2">
                       <Field label="Site (Opcional)" id="site" error={errors.site?.message} icon={<Globe className="w-4 h-4 text-slate-500"/>}>
                         <input id="site" type="url" placeholder="https://www.empresa.com.br" {...register("site")} className={`${INPUT_CLS} pl-10 pr-4`}/>

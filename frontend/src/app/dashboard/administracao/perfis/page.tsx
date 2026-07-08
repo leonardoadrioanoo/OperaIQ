@@ -3,10 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { 
-  Shield, Users, Key, Settings2, Plus, ListChecks
+  Shield, Users, Key, Settings2, Plus, ListChecks, UserCog
 } from 'lucide-react';
 
 const PERFIS_CARDS = [
+  { title: "Gerenciar Usuários", description: "Consulte, crie e gerencie colaboradores", icon: UserCog, color: "text-rose-400", bg: "bg-rose-400/10", href: "/dashboard/administracao/perfis/usuarios" },
   { title: "Gerenciar Perfis", description: "Crie ou edite perfis de acesso", icon: Users, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/administracao/perfis/lista" },
   { title: "Matriz de Permissões", description: "Visão global de acessos por módulo", icon: ListChecks, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/administracao/perfis/matriz" },
   { title: "Papéis do Sistema", description: "Regras de hierarquia avançadas", icon: Key, color: "text-amber-400", bg: "bg-amber-400/10", href: "/dashboard/administracao/perfis/papeis" },

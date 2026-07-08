@@ -13,7 +13,7 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
   return res.status(403).json({ error: 'Acesso negado: Requer privilégios de administrador.' });
 }
 
-type Acao = 'p_visualizar' | 'p_criar' | 'p_editar' | 'p_excluir' | 'p_aprovar';
+type Acao = 'p_visualizar' | 'p_criar' | 'p_editar' | 'p_excluir' | 'p_aprovar' | 'p_exportar' | 'p_importar' | 'p_gerenciar';
 
 export function requirePermission(modulo: string, acao: Acao) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {

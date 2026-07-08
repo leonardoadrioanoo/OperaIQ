@@ -46,7 +46,7 @@ const resetSchema = z.object({
 type ResetForm = z.infer<typeof resetSchema>
 
 const INPUT_CLS =
-  "w-full rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-slate-600 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+  "w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
 
 // ─── Estado: link inválido / expirado ──────────────────────────────────────────
 function InvalidTokenState() {
@@ -63,7 +63,7 @@ function InvalidTokenState() {
           Este link de redefinição não é válido ou já expirou. Os links são válidos por apenas <strong className="text-slate-200">1 hora</strong>.
         </p>
       </div>
-      <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 text-left space-y-2">
+      <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 text-left space-y-2">
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">O que fazer?</p>
         {[
           "Solicite um novo link de recuperação",
@@ -97,7 +97,7 @@ function SuccessState() {
             <CheckCircle2 className="w-9 h-9 text-emerald-400"/>
           </div>
           <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#07070f] flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-white"/>
+            <div className="w-2 h-2 rounded-full bg-[#07070f]"/>
           </div>
         </div>
       </div>
@@ -164,7 +164,7 @@ function RightPanel() {
 
         <div className="space-y-3">
           {tips.map((tip) => (
-            <div key={tip.title} className="flex items-start gap-3 bg-white/[0.04] rounded-xl p-3 border border-white/5">
+            <div key={tip.title} className="flex items-start gap-3 bg-slate-900/40 rounded-xl p-3 border border-white/10">
               <span className="text-lg leading-none mt-0.5">{tip.icon}</span>
               <div>
                 <p className="text-sm font-semibold text-white">{tip.title}</p>
@@ -331,7 +331,7 @@ function ResetPasswordInner() {
                       <div className="flex gap-1">
                         {[1,2,3,4,5].map(i => (
                           <div key={i}
-                            className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i <= strength.score ? strength.color : "bg-white/10"}`}/>
+                            className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i <= strength.score ? strength.color : "bg-slate-700/40"}`}/>
                         ))}
                       </div>
                       <p className="text-xs text-slate-500">
@@ -370,7 +370,7 @@ function ResetPasswordInner() {
                   </div>
 
                   {/* Requisitos visuais */}
-                  <div className="bg-white/[0.03] border border-white/10 rounded-xl p-3 space-y-2">
+                  <div className="bg-slate-900/40 border border-white/10 rounded-xl p-3 space-y-2">
                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                       Requisitos da senha
                     </p>

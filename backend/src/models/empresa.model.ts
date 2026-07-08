@@ -11,6 +11,10 @@ export interface EmpresaResponseDTO {
   logo_url: string | null;
   status: string;
   plano: string;
+  inscricao_estadual: string | null;
+  inscricao_municipal: string | null;
+  ramo_atividade: string | null;
+  porte_empresa: string | null;
   // Endereço
   cep: string | null;
   logradouro: string | null;
@@ -41,6 +45,10 @@ export interface UpdateEmpresaDTO {
   email_corporativo?: string;
   site?: string;
   responsavel_legal?: string;
+  inscricao_estadual?: string;
+  inscricao_municipal?: string;
+  ramo_atividade?: string;
+  porte_empresa?: string;
   cep?: string;
   logradouro?: string;
   numero?: string;

@@ -21,6 +21,10 @@ const registerSchema = z.object({
   bairro: z.string().min(2),
   cidade: z.string().min(2),
   uf: z.string().length(2),
+  inscricao_estadual: z.string().optional(),
+  inscricao_municipal: z.string().optional(),
+  ramo_atividade: z.string().optional(),
+  porte_empresa: z.string().optional(),
 });
 
 export class AuthController {

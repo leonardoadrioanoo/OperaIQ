@@ -55,7 +55,7 @@ export default function UsuariosPage() {
         
         <div className="flex items-center gap-3">
           <Link 
-            href="/dashboard/administracao/usuarios/novo"
+            href="/dashboard/administracao/perfis/usuarios/novo"
             className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
           >
             <Plus className="w-4 h-4" />
@@ -87,6 +87,7 @@ export default function UsuariosPage() {
               <tr>
                 <th className="px-6 py-4 rounded-tl-xl">Colaborador</th>
                 <th className="px-6 py-4">Cargo / Filial</th>
+                <th className="px-6 py-4">Departamento / Equipe</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right rounded-tr-xl">Ações</th>
               </tr>
@@ -117,7 +118,10 @@ export default function UsuariosPage() {
                           )}
                         </div>
                         <div>
-                          <div className="text-white font-medium">{user.nome_completo}</div>
+                          <div className="text-white font-medium">
+                            {user.nome_completo}
+                            {user.matricula && <span className="ml-2 text-[10px] font-normal text-zinc-500 uppercase">#{user.matricula}</span>}
+                          </div>
                           <div className="text-xs text-zinc-500 mt-0.5">{user.email}</div>
                         </div>
                       </div>
@@ -125,6 +129,10 @@ export default function UsuariosPage() {
                     <td className="px-6 py-4">
                       <div className="text-zinc-300">{user.cargo || '-'}</div>
                       <div className="text-xs text-zinc-500 mt-0.5">{user.filial || 'Matriz'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-zinc-300">{user.departamento || '-'}</div>
+                      <div className="text-xs text-zinc-500 mt-0.5">{user.equipe || 'Sem equipe'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
@@ -138,7 +146,7 @@ export default function UsuariosPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
-                        onClick={() => router.push(`/dashboard/administracao/usuarios/${user.id}`)}
+                        onClick={() => router.push(`/dashboard/administracao/perfis/usuarios/${user.id}`)}
                         className="inline-flex items-center justify-center p-2 text-zinc-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
                         title="Ver / Editar Perfil"
                       >

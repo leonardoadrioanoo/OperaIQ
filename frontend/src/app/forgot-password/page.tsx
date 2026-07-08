@@ -128,8 +128,8 @@ export default function ForgotPasswordPage() {
                     <div className="w-20 h-20 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
                       <MailCheck className="w-9 h-9 text-violet-400"/>
                     </div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#07070f] flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-white"/>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 border-2 border-[#07070f] flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-[#07070f]"/>
                     </div>
                   </div>
                 </div>
@@ -139,13 +139,13 @@ export default function ForgotPasswordPage() {
                   <p className="text-slate-400 text-sm leading-relaxed">
                     Enviamos as instruções de redefinição para:
                   </p>
-                  <div className="inline-block px-4 py-2 rounded-xl bg-white/[0.05] border border-white/10">
+                  <div className="inline-block px-4 py-2 rounded-xl bg-slate-900/40 border border-white/10">
                     <span className="text-violet-300 font-semibold text-sm">{sentEmail}</span>
                   </div>
                 </div>
 
                 {/* Instructions */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3">
+                <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Próximos passos</p>
                   {[
                     "Acesse sua caixa de entrada (e spam)",
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                   type="button"
                   onClick={handleResend}
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-white/[0.04] text-slate-200 text-sm font-medium hover:bg-white/[0.08] hover:border-white/20 transition-all duration-200 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-slate-900/40 text-slate-200 text-sm font-medium hover:bg-slate-800/60 hover:border-white/20 transition-all duration-200 disabled:opacity-50"
                 >
                   {isLoading
                     ? <Loader2 className="w-4 h-4 animate-spin"/>
@@ -243,7 +243,7 @@ export default function ForgotPasswordPage() {
 
         {/* Footer */}
         <div className="p-8 auth-animate auth-delay-5">
-          <div className="flex items-center justify-center gap-2 text-slate-600">
+          <div className="flex items-center justify-center gap-2 text-slate-400">
             <Shield className="w-3.5 h-3.5 shrink-0"/>
             <p className="text-xs">Seus dados estão protegidos com criptografia de ponta a ponta.</p>
           </div>

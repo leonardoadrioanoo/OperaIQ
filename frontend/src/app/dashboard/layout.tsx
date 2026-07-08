@@ -82,15 +82,15 @@ export default function DashboardLayout({
   }, [pathname, profile, isCheckingAccess, router]);
 
   if (isCheckingAccess) {
-    return <div className="flex h-screen items-center justify-center bg-[#07070f] text-white">Carregando permissões...</div>;
+    return <div className="flex h-screen items-center justify-center bg-background text-foreground">Carregando permissões...</div>;
   }
 
   return (
-    <div className="flex h-screen bg-[#07070f] overflow-hidden selection:bg-violet-500/30">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden selection:bg-violet-500/30 transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-[#07070f] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <main className="flex-1 overflow-y-auto bg-background scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="p-6 h-full">
             {children}
           </div>

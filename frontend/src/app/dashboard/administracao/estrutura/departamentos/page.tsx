@@ -15,9 +15,8 @@ const departamentoSchema = z.object({
   nome: z.string().min(2, 'Obrigatório'),
   sigla: z.string().optional(),
   descricao: z.string().optional(),
-  gestor_id: z.string().optional().or(z.literal('')),
-  centro_custo: z.string().optional(),
-  departamento_superior_id: z.string().optional().or(z.literal('')),
+  gestor_nome: z.string().optional().or(z.literal('')),
+  departamento_superior_nome: z.string().optional().or(z.literal('')),
   status: z.string().default('ativo'),
 });
 
@@ -31,11 +30,12 @@ export default function DepartamentosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gestorNome, setGestorNome] = useState('');
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<DepartamentoForm>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(departamentoSchema)
   });
 
@@ -73,18 +73,19 @@ export default function DepartamentosPage() {
   const openModal = (dept?: any) => {
     if (dept) {
       setEditingId(dept.id);
+      setGestorNome(dept.gestor?.nome_completo || '');
       reset({
         nome: dept.nome,
         sigla: dept.sigla || '',
         descricao: dept.descricao || '',
-        gestor_id: dept.gestor_id || '',
-        centro_custo: dept.centro_custo || '',
-        departamento_superior_id: dept.departamento_superior_id || '',
+        gestor_nome: dept.gestor?.nome_completo || '',
+        departamento_superior_nome: dept.superior?.nome || '',
         status: dept.status || 'ativo'
       });
     } else {
       setEditingId(null);
-      reset({ status: 'ativo', gestor_id: '', departamento_superior_id: '', nome: '', sigla: '', descricao: '', centro_custo: '' });
+      setGestorNome('');
+      reset({ status: 'ativo', gestor_nome: '', departamento_superior_nome: '', nome: '', sigla: '', descricao: '' });
     }
     setIsModalOpen(true);
   };
@@ -100,6 +101,67 @@ export default function DepartamentosPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Resolver gestor_id a partir do nome digitado
+      let gestor_id = '';
+      if (data.gestor_nome) {
+        const gestorMatch = gestores.find(
+          g => g.nome_completo.toLowerCase() === data.gestor_nome!.toLowerCase()
+        );
+        if (!gestorMatch) {
+          toast.error(`Gestor "${data.gestor_nome}" não encontrado. Selecione um nome da lista.`);
+          setIsSaving(false);
+          return;
+        }
+        if (!gestorMatch.is_admin) {
+          toast.error('O colaborador selecionado não possui perfil de administrador e não pode ser gestor.');
+          setIsSaving(false);
+          return;
+        }
+        gestor_id = gestorMatch.id;
+      }
+
+      // Resolver departamento_superior_id a partir do nome digitado
+      let departamento_superior_id = '';
+      if (data.departamento_superior_nome) {
+        const superior = departamentos.find(
+          d => d.nome.toLowerCase() === data.departamento_superior_nome!.toLowerCase()
+        );
+        if (superior) {
+          departamento_superior_id = superior.id;
+        } else {
+          if (window.confirm(`O departamento "${data.departamento_superior_nome}" não foi encontrado. Deseja criá-lo como um Departamento Raiz?`)) {
+            const resNew = await fetch('http://localhost:3002/api/departamentos', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}` 
+              },
+              body: JSON.stringify({ nome: data.departamento_superior_nome, status: 'ativo' })
+            });
+            if (!resNew.ok) {
+              const errData = await resNew.json();
+              toast.error(errData.error || 'Erro ao criar departamento raiz.');
+              setIsSaving(false);
+              return;
+            }
+            const newDept = await resNew.json();
+            departamento_superior_id = newDept.id;
+          } else {
+            setIsSaving(false);
+            return;
+          }
+        }
+      }
+
+      const payload = {
+        nome: data.nome,
+        sigla: data.sigla,
+        descricao: data.descricao,
+        status: data.status,
+        gestor_id,
+        departamento_superior_id
+      };
+
       const url = editingId 
         ? `http://localhost:3002/api/departamentos/${editingId}`
         : `http://localhost:3002/api/departamentos`;
@@ -111,7 +173,7 @@ export default function DepartamentosPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}` 
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -206,7 +268,6 @@ export default function DepartamentosPage() {
                   <th className="px-4 py-3 rounded-tl-lg">Departamento</th>
                   <th className="px-4 py-3">Sigla</th>
                   <th className="px-4 py-3">Gestor</th>
-                  <th className="px-4 py-3">Dept. Superior</th>
                   <th className="px-4 py-3 text-center">Status</th>
                   <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
                 </tr>
@@ -217,7 +278,6 @@ export default function DepartamentosPage() {
                     <td className="px-4 py-3 font-medium text-white">{dept.nome}</td>
                     <td className="px-4 py-3">{dept.sigla || '-'}</td>
                     <td className="px-4 py-3">{dept.gestor?.nome_completo || '-'}</td>
-                    <td className="px-4 py-3">{dept.superior?.nome || '-'}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                         dept.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'
@@ -241,7 +301,7 @@ export default function DepartamentosPage() {
                 ))}
                 {filteredDepartamentos.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
                       Nenhum departamento encontrado.
                     </td>
                   </tr>
@@ -285,26 +345,21 @@ export default function DepartamentosPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Gestor Responsável</label>
-                  <select {...register('gestor_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500/50">
-                    <option value="">Selecione...</option>
-                    {gestores.map(g => <option key={g.id} value={g.id}>{g.nome_completo}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Departamento Superior</label>
-                  <select {...register('departamento_superior_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500/50">
-                    <option value="">Nenhum (Raiz)</option>
-                    {departamentos.filter(d => d.id !== editingId).map(d => (
-                      <option key={d.id} value={d.id}>{d.nome}</option>
+                  <input 
+                    {...register('gestor_nome')}
+                    value={gestorNome}
+                    onChange={e => { setGestorNome(e.target.value); register('gestor_nome').onChange(e); }}
+                    list="gestores-list"
+                    placeholder="Pesquisar por nome..."
+                    className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500/50"
+                    autoComplete="off"
+                  />
+                  <datalist id="gestores-list">
+                    {gestores.filter(g => g.is_admin).map(g => (
+                      <option key={g.id} value={g.nome_completo} />
                     ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Centro de Custo</label>
-                  <input {...register('centro_custo')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500/50" />
+                  </datalist>
+                  <p className="text-[10px] text-zinc-600 mt-0.5">Apenas administradores podem ser gestores</p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Status</label>

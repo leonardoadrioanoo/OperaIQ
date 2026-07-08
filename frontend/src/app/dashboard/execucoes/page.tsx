@@ -3,13 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { 
-  Rocket, Trello, ListTodo, CalendarClock, Calendar, 
+  Rocket, LayoutGrid, ListTodo, CalendarClock, Calendar, 
   BarChart, GitCommit, CheckSquare, MessageSquare, 
   Paperclip, Clock, ShieldCheck, Zap
 } from 'lucide-react';
 
 const EXECUCOES_CARDS = [
-  { title: "Quadro Kanban", description: "Gerencie fluxos e etapas visuais", icon: Trello, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/execucoes/kanban" },
+  { title: "Quadro Kanban", description: "Gerencie fluxos e etapas visuais", icon: LayoutGrid, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/execucoes/kanban" },
   { title: "Lista de Tarefas", description: "Visão detalhada e estruturada", icon: ListTodo, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/execucoes/lista" },
   { title: "Timeline", description: "Acompanhe prazos temporalmente", icon: CalendarClock, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/execucoes/timeline" },
   { title: "Calendário", description: "Visão mensal das entregas", icon: Calendar, color: "text-orange-400", bg: "bg-orange-400/10", href: "/dashboard/execucoes/calendario" },

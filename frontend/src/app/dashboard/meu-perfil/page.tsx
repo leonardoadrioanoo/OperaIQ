@@ -11,7 +11,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { Checkbox, Input, Readonly, Select } from '@/components/ui';
+import { Checkbox, Input, Readonly, Breadcrumb } from '@/components/ui';
+import { InlineField, InlineSelect } from '@/components/ui/inline-field';
 
 const profileSchema = z.object({
   nome_completo: z.string().min(2, 'Obrigatório'),
@@ -40,54 +41,12 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">{children}</h3>;
 }
 
+/** Campo somente leitura estático (para abas sem edição como Acesso, Auditoria) */
 function DisplayField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex flex-col gap-2 w-full">
       <span className="text-sm font-semibold text-white">{label}</span>
       <Readonly>{value || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
-    </div>
-  );
-}
-
-/** Campo que exibe Readonly quando não edita e Input quando edita — layout idêntico */
-function InlineField({
-  label, name, register, type = 'text', error, isEditing, readonlyValue,
-}: {
-  label: string; name: string; register: any; type?: string; error?: string;
-  isEditing: boolean; readonlyValue?: string | null;
-}) {
-  return (
-    <div className="flex flex-col gap-2 w-full">
-      <span className="text-sm font-semibold text-white">{label}</span>
-      {isEditing ? (
-        <>
-          <Input {...register(name)} type={type} className="w-full h-[46px] rounded-xl" />
-          {error && <span className="text-xs text-red-400">{error}</span>}
-        </>
-      ) : (
-        <Readonly>{readonlyValue || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
-      )}
-    </div>
-  );
-}
-
-/** Select que exibe Readonly quando não edita — layout idêntico */
-function InlineSelect({
-  label, name, register, isEditing, readonlyValue, children, disabled,
-}: {
-  label: string; name: string; register: any; isEditing: boolean;
-  readonlyValue?: string | null; children: React.ReactNode; disabled?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-2 w-full">
-      <span className="text-sm font-semibold text-white">{label}</span>
-      {isEditing ? (
-        <Select {...register(name)} disabled={disabled} className="h-[46px] rounded-xl bg-transparent">
-          {children}
-        </Select>
-      ) : (
-        <Readonly>{readonlyValue || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
-      )}
     </div>
   );
 }
@@ -270,6 +229,14 @@ export default function MeuPerfilPage() {
         </div>
 
         <div className="flex-1 min-w-0">
+          <div className="mb-2">
+            <Breadcrumb 
+              items={[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Meu Perfil' },
+              ]} 
+            />
+          </div>
           <h1 className="text-2xl font-bold text-foreground truncate">{data?.nome_completo}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
@@ -375,26 +342,26 @@ export default function MeuPerfilPage() {
               </div>
 
               <InlineSelect label="Departamento" name="departamento" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.departamento}>
-                <option value="">Selecione um departamento...</option>
-                {departamentos.map(d => <option key={d.id} value={d.nome}>{d.nome}</option>)}
+                <option value="" className="bg-[#06112a] text-white">Selecione um departamento...</option>
+                {departamentos.map(d => <option key={d.id} value={d.nome} className="bg-[#06112a] text-white">{d.nome}</option>)}
               </InlineSelect>
 
               <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.cargo} disabled={!selectedDeptId}>
-                <option value="">{selectedDeptId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
-                {filteredCargos.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                <option value="" className="bg-[#06112a] text-white">{selectedDeptId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
+                {filteredCargos.map(c => <option key={c.id} value={c.nome} className="bg-[#06112a] text-white">{c.nome}</option>)}
               </InlineSelect>
 
               <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.equipe} disabled={!selectedDeptId}>
-                <option value="">{selectedDeptId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro'}</option>
-                {filteredEquipes.map(e => <option key={e.id} value={e.nome}>{e.nome}</option>)}
+                <option value="" className="bg-[#06112a] text-white">{selectedDeptId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro'}</option>
+                {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
               </InlineSelect>
 
               <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.filial} />
               <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.matricula} />
 
               <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.gestor?.nome_completo}>
-                <option value="">Selecione um gestor...</option>
-                {companyUsers.map(u => <option key={u.id} value={u.id}>{u.nome_completo}</option>)}
+                <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
+                {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-[#06112a] text-white">{u.nome_completo}</option>)}
               </InlineSelect>
             </div>
           </div>
@@ -421,29 +388,29 @@ export default function MeuPerfilPage() {
           <div className="space-y-8">
             <div className="space-y-4">
               <SectionTitle>Alterar Senha</SectionTitle>
-              <div className="max-w-md space-y-4">
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-white">Senha Atual</span>
-                  <Input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} placeholder="Digite sua senha atual" className="w-full h-[46px] rounded-xl" />
+              <div className="bg-background border border-border/60 rounded-xl p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold text-white">Senha Atual</span>
+                    <Input type="password" value={oldPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOldPassword(e.target.value)} placeholder="Digite sua senha atual" className="w-full" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-semibold text-white">Nova Senha</span>
+                    <Input type="password" value={newPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full" />
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-white">Nova Senha</span>
-                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full h-[46px] rounded-xl" />
-                </div>
-                <div className="flex justify-end">
+                <div className="flex justify-center mt-6">
                   <button
                     onClick={handleChangePassword}
                     disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
-                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-[200px]"
                   >
                     {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                    Alterar Senha
+                    ALTERAR SENHA
                   </button>
                 </div>
               </div>
             </div>
-
-            <div className="w-full h-px bg-white/5" />
 
             <div className="space-y-4">
               <SectionTitle>Sessões Ativas</SectionTitle>

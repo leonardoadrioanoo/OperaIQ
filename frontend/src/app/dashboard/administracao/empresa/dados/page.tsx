@@ -8,7 +8,7 @@ import { Building2, MapPin, CreditCard, Settings, Edit2, Save, X, Loader2, Check
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
-import { Input, Select, Readonly } from '@/components/ui';
+import { Input, Select, Readonly, Breadcrumb } from '@/components/ui';
 
 const updateEmpresaSchema = z.object({
   nome_fantasia: z.string().min(2, 'Obrigatório'),
@@ -154,6 +154,13 @@ export default function OrganizacaoPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
+          <Breadcrumb 
+            items={[
+              { label: 'Administração', href: '/dashboard/administracao' },
+              { label: 'Empresa', href: '/dashboard/administracao/empresa' },
+              { label: 'Dados da Empresa' },
+            ]} 
+          />
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
             Perfil da Empresa
             {data?.status === 'ativo' && (
@@ -203,7 +210,6 @@ export default function OrganizacaoPage() {
         {[
           { id: 'info', label: 'Informações Gerais', icon: Building2 },
           { id: 'address', label: 'Endereço', icon: MapPin },
-          { id: 'settings', label: 'Configurações Regionais', icon: Settings },
         ].map(tab => (
           <button
             key={tab.id}
@@ -348,45 +354,6 @@ export default function OrganizacaoPage() {
           </div>
         )}
 
-        {activeTab === 'settings' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-              {isEditing ? (
-                <>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Idioma Padrão</span>
-                    <Select {...register('idioma')} className="focus:border-violet-500/50">
-                      <option value="pt-BR">Português (Brasil)</option>
-                      <option value="en-US">Inglês (US)</option>
-                      <option value="es-ES">Espanhol (ES)</option>
-                    </Select>
-                  </div>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Fuso Horário</span>
-                    <Select {...register('fuso_horario')} className="focus:border-violet-500/50">
-                      <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
-                      <option value="UTC">UTC</option>
-                    </Select>
-                  </div>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
-                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Moeda Padrão</span>
-                    <Select {...register('moeda')} className="focus:border-violet-500/50">
-                      <option value="BRL">Real (R$)</option>
-                      <option value="USD">Dólar (US$)</option>
-                      <option value="EUR">Euro (€)</option>
-                    </Select>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Field label="Idioma Padrão" value={data?.idioma === 'en-US' ? 'Inglês (US)' : data?.idioma === 'es-ES' ? 'Espanhol' : 'Português (Brasil)'} isEditing={false} />
-                  <Field label="Fuso Horário" value={data?.fuso_horario || 'America/Sao_Paulo'} isEditing={false} />
-                  <Field label="Moeda Padrão" value={data?.moeda === 'USD' ? 'Dólar (US$)' : data?.moeda === 'EUR' ? 'Euro (€)' : 'Real (R$)'} isEditing={false} />
-                </>
-              )}
-            </div>
-          </div>
-        )}
 
       </form>
     </div>

@@ -385,12 +385,16 @@ export default function ColaboradorDetailPage() {
                             <td key={perm} className="px-3 py-3 text-center">
                               {isSupported ? (
                                 isEditing ? (
-                                  <Checkbox
+                                  <input
+                                    type="checkbox"
                                     {...register(`permissoes.${mod.key}.${perm}` as any)}
-                                    className="w-4 h-4"
+                                    className="w-4 h-4 appearance-none rounded-[4px] border border-white/20 bg-transparent hover:bg-white/5 checked:bg-transparent checked:border-emerald-500 relative cursor-pointer transition-colors
+                                    checked:after:absolute checked:after:inset-0 checked:after:content-['✓'] checked:after:text-emerald-500 checked:after:flex checked:after:justify-center checked:after:items-center checked:after:text-[12px] checked:after:font-bold"
                                   />
                                 ) : (
-                                  <div className={`w-2 h-2 rounded-full mx-auto ${dbPerm?.[perm] ? 'bg-emerald-400' : 'bg-zinc-700'}`} />
+                                  <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center mx-auto ${dbPerm?.[perm] ? 'border-emerald-500' : 'border-white/20'}`}>
+                                    {dbPerm?.[perm] && <span className="text-emerald-500 text-[12px] font-bold">✓</span>}
+                                  </div>
                                 )
                               ) : (
                                 <span className="text-zinc-800">—</span>

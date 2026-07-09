@@ -348,7 +348,7 @@ export default function EquipesPage() {
                 <FormField label="Departamento" isEditing register={register} name="departamento_id" options={departamentos.map(d => ({ value: d.id, label: d.nome }))} />
               </div>
               <FormField label="Descrição" isEditing register={register} name="descricao" type="textarea" textareaRows={2} />
-              <div className="pt-4 flex justify-end gap-3 border-t border-white/5">
+              <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
                 <button type="button" onClick={() => setIsEquipeModalOpen(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">Cancelar</button>
                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}

@@ -267,23 +267,25 @@ export default function CargosPage() {
             </div>
             
             <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto p-5 space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <FormField
-                  label="Departamento *"
-                  isEditing={true}
-                  register={register}
-                  name="departamento_id"
-                  options={departamentos.map(d => ({ value: d.id, label: d.nome }))}
-                  error={errors.departamento_id?.message}
-                />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="Departamento *"
+                    isEditing={true}
+                    register={register}
+                    name="departamento_id"
+                    options={departamentos.map(d => ({ value: d.id, label: d.nome }))}
+                    error={errors.departamento_id?.message}
+                  />
 
-                <FormField
-                  label="Nome do Cargo *"
-                  isEditing={true}
-                  register={register}
-                  name="nome"
-                  error={errors.nome?.message}
-                />
+                  <FormField
+                    label="Nome do Cargo *"
+                    isEditing={true}
+                    register={register}
+                    name="nome"
+                    error={errors.nome?.message}
+                  />
+                </div>
 
                 <FormField
                   label="Descrição"
@@ -294,24 +296,26 @@ export default function CargosPage() {
                   textareaRows={2}
                 />
 
-                <FormField
-                  label="Nível Hierárquico (1 = Mais Alto)"
-                  isEditing={true}
-                  register={register}
-                  name="nivel_hierarquico"
-                  type="number"
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="Nível Hierárquico (1 = Mais Alto)"
+                    isEditing={true}
+                    register={register}
+                    name="nivel_hierarquico"
+                    type="number"
+                  />
 
-                <FormField
-                  label="Status"
-                  isEditing={true}
-                  register={register}
-                  name="status"
-                  options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]}
-                />
+                  <FormField
+                    label="Status"
+                    isEditing={true}
+                    register={register}
+                    name="status"
+                    options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]}
+                  />
+                </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-white/5">
+              <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
                   Cancelar
                 </button>

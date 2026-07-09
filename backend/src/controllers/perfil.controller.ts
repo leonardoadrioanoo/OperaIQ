@@ -25,8 +25,10 @@ export class PerfilController {
       res.json({ message: 'Perfil atualizado com sucesso.', data: updated });
     } catch (err: any) {
       if (err instanceof z.ZodError) {
+        console.error("Zod Error in updateMe:", err.errors);
         return res.status(400).json({ error: 'Validação inválida.', details: err.errors });
       }
+      console.error("Error in updateMe:", err);
       res.status(500).json({ error: err.message });
     }
   };

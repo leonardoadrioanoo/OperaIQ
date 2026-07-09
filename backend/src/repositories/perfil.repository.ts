@@ -5,7 +5,12 @@ export class PerfilRepository {
   async findById(userId: string): Promise<PerfilResponseDTO | null> {
     const { data, error } = await supabaseAdmin
       .from('perfis')
-      .select('*, perfil_permissoes (*)')
+      .select(`
+        *,
+        empresas (id, nome_fantasia, razao_social),
+        gestor:perfis!gestor_id (id, nome_completo),
+        perfil_permissoes (*)
+      `)
       .eq('id', userId)
       .single();
 

@@ -8,11 +8,11 @@ const ctrl = new ColaboradorController();
 
 // Todas as rotas de colaboradores exigem autenticação + admin
 router.use(authMiddleware);
-router.use(requireAdmin);
+router.get('/', ctrl.listar);
 
-// CRUD básico
-router.get('/',    ctrl.listar);
-router.post('/',   ctrl.criar);
+// Apenas administradores gerenciam a estrutura
+router.use(requireAdmin);
+router.post('/', ctrl.criar);
 router.get('/:id', ctrl.obterPorId);
 router.put('/:id', ctrl.atualizar);
 router.delete('/:id', ctrl.deletar);

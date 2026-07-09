@@ -372,7 +372,7 @@ export default function DepartamentosPage() {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-white/5">
+              <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
                   Cancelar
                 </button>

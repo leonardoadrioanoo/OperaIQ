@@ -42,9 +42,15 @@ export class PerfilService {
   async update(userId: string, payload: unknown) {
     const validated = updatePerfilSchema.parse(payload);
     
-    // Tratamento para uuid vazio no banco
+    // Tratamentos para strings vazias que devem ser null no banco
     if (validated.gestor_id === '') {
       (validated as any).gestor_id = null;
+    }
+    if (validated.data_nascimento === '') {
+      (validated as any).data_nascimento = null;
+    }
+    if (validated.cpf === '') {
+      (validated as any).cpf = null;
     }
 
     return this.repo.update(userId, validated);

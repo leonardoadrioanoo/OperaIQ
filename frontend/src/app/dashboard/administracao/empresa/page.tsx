@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { 
   Building2, MapPin, Building, FileText
 } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui';
 
 const EMPRESA_CARDS = [
   { 
@@ -39,6 +40,12 @@ export default function EmpresaPage() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <Breadcrumb 
+            items={[
+              { label: 'Administração', href: '/dashboard/administracao' },
+              { label: 'Empresa', href: '/dashboard/administracao/empresa' },
+            ]} 
+          />
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             <Building2 className="w-8 h-8 text-blue-500" />
             Empresa

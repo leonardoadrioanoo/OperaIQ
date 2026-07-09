@@ -22,6 +22,7 @@ export interface ColaboradorDTO {
   nome_completo: string;
   nome_exibicao?: string;
   email: string;
+  cpf?: string;
   telefone_direto?: string;
   foto_url?: string;
   data_nascimento?: string;
@@ -39,7 +40,8 @@ export interface ColaboradorDTO {
   
   // Etapa 3: Acesso
   senha_temporaria?: string; // apenas criação
-  is_admin?: boolean; // perfil_acesso simplificado por enquanto
+  is_admin?: boolean;
+  perfil_acesso?: string;
   status_conta?: string;
   dois_fatores_ativo?: boolean;
   

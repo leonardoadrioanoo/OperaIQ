@@ -11,21 +11,21 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
+import { Checkbox, Input, Readonly, Select } from '@/components/ui';
 
 const profileSchema = z.object({
   nome_completo: z.string().min(2, 'Obrigatório'),
+  cpf: z.string().optional().or(z.literal('')),
   nome_exibicao: z.string().optional().or(z.literal('')),
   email: z.string().email(),
   telefone_direto: z.string().optional().or(z.literal('')),
   data_nascimento: z.string().optional().or(z.literal('')),
-  // Organizacional
   departamento: z.string().optional().or(z.literal('')),
   cargo: z.string().optional().or(z.literal('')),
   equipe: z.string().optional().or(z.literal('')),
   filial: z.string().optional().or(z.literal('')),
   matricula: z.string().optional().or(z.literal('')),
   gestor_id: z.string().optional().or(z.literal('')),
-  // Notificações
   notificacoes_email: z.boolean().optional(),
   notificacoes_plataforma: z.boolean().optional(),
   notificacoes_push: z.boolean().optional(),
@@ -34,34 +34,60 @@ const profileSchema = z.object({
 });
 
 type ProfileForm = z.infer<typeof profileSchema>;
-
 type Tab = 'pessoal' | 'organizacional' | 'acesso' | 'seguranca' | 'auditoria';
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">{children}</h3>;
 }
 
-function InfoRow({ label, value }: { label: string; value?: string | null }) {
+function DisplayField({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex flex-col gap-1 p-3 rounded-lg border border-transparent hover:border-white/5 hover:bg-white/[0.02] transition-colors">
-      <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</span>
-      <span className="text-sm text-zinc-300 font-medium">
-        {value || <span className="text-zinc-600 italic">Não informado</span>}
-      </span>
+    <div className="flex flex-col gap-2 w-full">
+      <span className="text-sm font-semibold text-white">{label}</span>
+      <Readonly>{value || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
     </div>
   );
 }
 
-function EditField({ label, name, register, type = 'text', error }: any) {
+/** Campo que exibe Readonly quando não edita e Input quando edita — layout idêntico */
+function InlineField({
+  label, name, register, type = 'text', error, isEditing, readonlyValue,
+}: {
+  label: string; name: string; register: any; type?: string; error?: string;
+  isEditing: boolean; readonlyValue?: string | null;
+}) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</label>
-      <input
-        {...register(name)}
-        type={type}
-        className="w-full bg-[#13131f] border border-white/10 rounded-md py-2 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 transition-colors"
-      />
-      {error && <span className="text-xs text-red-400">{error}</span>}
+    <div className="flex flex-col gap-2 w-full">
+      <span className="text-sm font-semibold text-white">{label}</span>
+      {isEditing ? (
+        <>
+          <Input {...register(name)} type={type} className="w-full h-[46px] rounded-xl" />
+          {error && <span className="text-xs text-red-400">{error}</span>}
+        </>
+      ) : (
+        <Readonly>{readonlyValue || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
+      )}
+    </div>
+  );
+}
+
+/** Select que exibe Readonly quando não edita — layout idêntico */
+function InlineSelect({
+  label, name, register, isEditing, readonlyValue, children, disabled,
+}: {
+  label: string; name: string; register: any; isEditing: boolean;
+  readonlyValue?: string | null; children: React.ReactNode; disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <span className="text-sm font-semibold text-white">{label}</span>
+      {isEditing ? (
+        <Select {...register(name)} disabled={disabled} className="h-[46px] rounded-xl bg-transparent">
+          {children}
+        </Select>
+      ) : (
+        <Readonly>{readonlyValue || <span className="text-zinc-500 italic">Não informado</span>}</Readonly>
+      )}
     </div>
   );
 }
@@ -73,13 +99,13 @@ function ToggleField({ label, description, name, register }: any) {
         <p className="text-sm font-medium text-zinc-200">{label}</p>
         {description && <p className="text-xs text-zinc-500 mt-0.5">{description}</p>}
       </div>
-      <input type="checkbox" {...register(name)} className="mt-0.5 w-4 h-4 accent-violet-500 flex-shrink-0" />
+      <Checkbox {...register(name)} className="mt-0.5" />
     </label>
   );
 }
 
 export default function MeuPerfilPage() {
-  const { profile, fetchUserData } = useAuthStore();
+  const { profile, company, fetchUserData } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('pessoal');
   const [fullData, setFullData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,23 +114,23 @@ export default function MeuPerfilPage() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [originalProfile, setOriginalProfile] = useState<ProfileForm | null>(null);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
+    shouldUnregister: false,
   });
 
-  // Estado das listas organizacionais
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
   const [companyUsers, setCompanyUsers] = useState<any[]>([]);
 
-  // Filtro cascata: cargo/equipe dependem do departamento selecionado
   const selectedDeptNome = watch('departamento');
   const selectedDept = departamentos.find(d => d.nome === selectedDeptNome);
   const selectedDeptId = selectedDept?.id;
-  const filteredCargos = selectedDeptId ? cargos.filter(c => c.departamento_id === selectedDeptId) : [];
-  const filteredEquipes = selectedDeptId ? equipes.filter(e => e.departamento_id === selectedDeptId) : [];
+  const filteredCargos = selectedDeptId ? cargos.filter(c => c.departamento_id === selectedDeptId) : cargos;
+  const filteredEquipes = selectedDeptId ? equipes.filter(e => e.departamento_id === selectedDeptId) : equipes;
 
   const fetchProfile = async () => {
     if (!profile?.id) return;
@@ -112,14 +138,15 @@ export default function MeuPerfilPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const res = await fetch(`http://localhost:3002/api/colaboradores/${profile.id}`, {
+      const res = await fetch('http://localhost:3002/api/perfil/me', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.ok) {
         const json = await res.json();
         setFullData(json);
-        reset({
+        const formValues: ProfileForm = {
           nome_completo: json.nome_completo || '',
+          cpf: json.cpf || '',
           nome_exibicao: json.nome_exibicao || '',
           email: json.email || '',
           telefone_direto: json.telefone_direto || '',
@@ -135,9 +162,10 @@ export default function MeuPerfilPage() {
           notificacoes_push: json.notificacoes_push ?? false,
           resumo_diario: json.resumo_diario ?? false,
           resumo_semanal: json.resumo_semanal ?? true,
-        });
+        };
+        setOriginalProfile(formValues);
+        reset(formValues);
 
-        // Buscar listas organizacionais em paralelo
         const [resDept, resCargo, resEquipe, resUsers] = await Promise.all([
           fetch('http://localhost:3002/api/departamentos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
           fetch('http://localhost:3002/api/cargos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
@@ -165,7 +193,7 @@ export default function MeuPerfilPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const res = await fetch(`http://localhost:3002/api/colaboradores/${profile.id}`, {
+      const res = await fetch('http://localhost:3002/api/perfil/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify(formData),
@@ -184,34 +212,17 @@ export default function MeuPerfilPage() {
   };
 
   const handleChangePassword = async () => {
-    if (!oldPassword || !newPassword) {
-      toast.error('Informe a senha antiga e a nova senha.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
-
+    if (!oldPassword || !newPassword) { toast.error('Informe a senha antiga e a nova senha.'); return; }
+    if (newPassword.length < 6) { toast.error('A senha deve ter pelo menos 6 caracteres.'); return; }
     setIsSavingPassword(true);
     try {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: fullData?.email || profile?.email || '',
         password: oldPassword,
       });
-
-      if (signInError || !signInData.user) {
-        toast.error('A senha antiga está incorreta.');
-        return;
-      }
-
+      if (signInError || !signInData.user) { toast.error('A senha antiga está incorreta.'); return; }
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) {
-        toast.error(updateError.message || 'Não foi possível alterar a senha.');
-        return;
-      }
-
+      if (updateError) { toast.error(updateError.message || 'Não foi possível alterar a senha.'); return; }
       toast.success('Senha alterada com sucesso!');
       setOldPassword('');
       setNewPassword('');
@@ -240,12 +251,14 @@ export default function MeuPerfilPage() {
   }
 
   const data = fullData || profile;
+  const isAdmin = !!profile?.is_admin;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
+
       {/* Header Card */}
       <div className="bg-background border border-border/60 rounded-2xl p-6 flex items-center gap-6">
-          <div className="relative group flex-shrink-0">
+        <div className="relative group flex-shrink-0">
           <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center text-3xl text-card-foreground font-bold ring-4 ring-violet-500/20 overflow-hidden">
             {data?.foto_url
               ? <img src={data.foto_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -255,19 +268,21 @@ export default function MeuPerfilPage() {
             <Camera className="w-5 h-5 text-white" />
           </button>
         </div>
+
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-foreground truncate">{data?.nome_completo}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {data?.cargo || 'Cargo não definido'} {data?.empresas?.nome_fantasia ? `• ${data.empresas.nome_fantasia}` : ''}
+            {data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
+            {company?.nome_fantasia ? ` • ${company.nome_fantasia}` : ''}
           </p>
           <div className="flex items-center gap-2 mt-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-              data?.is_admin
+              isAdmin
                 ? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
             }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${data?.is_admin ? 'bg-violet-400' : 'bg-emerald-400'}`} />
-              {data?.is_admin ? 'Administrador' : 'Colaborador'}
+              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-violet-400' : 'bg-emerald-400'}`} />
+              {isAdmin ? 'Administrador' : 'Colaborador'}
             </span>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
               data?.status_conta === 'Ativo'
@@ -278,6 +293,7 @@ export default function MeuPerfilPage() {
             </span>
           </div>
         </div>
+
         <div>
           {!isEditing ? (
             <button
@@ -289,7 +305,7 @@ export default function MeuPerfilPage() {
           ) : (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setIsEditing(false); reset(); }}
+                onClick={() => { setIsEditing(false); if (originalProfile) reset(originalProfile); }}
                 className="px-3 py-2 text-muted-foreground hover:text-foreground rounded-lg text-sm transition-colors"
                 disabled={isSaving}
               >
@@ -314,12 +330,13 @@ export default function MeuPerfilPage() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as Tab)}
+              onClick={() => { if (!isEditing) setActiveTab(tab.id as Tab); }}
+              disabled={isEditing}
               className={`flex items-center gap-2 px-4 pb-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 relative top-[1px] ${
                 activeTab === tab.id
                   ? 'text-violet-400 border-violet-500'
                   : 'text-muted-foreground border-transparent hover:text-foreground'
-              }`}
+              } ${isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
@@ -335,23 +352,14 @@ export default function MeuPerfilPage() {
         {activeTab === 'pessoal' && (
           <div className="space-y-6">
             <SectionTitle>Dados Pessoais</SectionTitle>
-            {isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <EditField label="Nome Completo" name="nome_completo" register={register} error={errors.nome_completo?.message} />
-                <EditField label="Nome de Exibição" name="nome_exibicao" register={register} />
-                <EditField label="E-mail" name="email" register={register} error={errors.email?.message} />
-                <EditField label="Telefone" name="telefone_direto" register={register} />
-                <EditField label="Data de Nascimento" name="data_nascimento" register={register} type="date" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                <InfoRow label="Nome Completo" value={data?.nome_completo} />
-                <InfoRow label="Nome de Exibição" value={data?.nome_exibicao} />
-                <InfoRow label="E-mail" value={data?.email} />
-                <InfoRow label="Telefone" value={data?.telefone_direto} />
-                <InfoRow label="Data de Nascimento" value={data?.data_nascimento ? new Date(data.data_nascimento).toLocaleDateString('pt-BR') : null} />
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InlineField label="Nome Completo" name="nome_completo" register={register} error={errors.nome_completo?.message} isEditing={isEditing} readonlyValue={data?.nome_completo} />
+              <InlineField label="Nome de Exibição" name="nome_exibicao" register={register} isEditing={isEditing} readonlyValue={data?.nome_exibicao} />
+              <InlineField label="CPF" name="cpf" register={register} isEditing={isEditing} readonlyValue={data?.cpf} />
+              <InlineField label="E-mail" name="email" register={register} error={errors.email?.message} isEditing={isEditing} readonlyValue={data?.email} />
+              <InlineField label="Telefone" name="telefone_direto" register={register} isEditing={isEditing} readonlyValue={data?.telefone_direto} />
+              <InlineField label="Data de Nascimento" name="data_nascimento" register={register} type="date" isEditing={isEditing} readonlyValue={data?.data_nascimento ? new Date(data.data_nascimento).toLocaleDateString('pt-BR') : null} />
+            </div>
           </div>
         )}
 
@@ -359,69 +367,36 @@ export default function MeuPerfilPage() {
         {activeTab === 'organizacional' && (
           <div className="space-y-6">
             <SectionTitle>Dados Organizacionais</SectionTitle>
-            {isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {/* Empresa — somente leitura */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Empresa</label>
-                    <div className="w-full bg-background border border-border/60 rounded-md py-2 px-3 text-sm text-muted-foreground cursor-not-allowed">
-                    {fullData?.empresas?.nome_fantasia || 'N/A'}
-                  </div>
-                </div>
-
-                {/* Departamento */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Departamento</label>
-                  <select {...register('departamento')} className="w-full bg-muted/70 border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50">
-                    <option value="">Selecione um departamento...</option>
-                    {departamentos.map(d => <option key={d.id} value={d.nome}>{d.nome}</option>)}
-                  </select>
-                </div>
-
-                {/* Cargo — filtrado pelo departamento */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Cargo</label>
-                  <select {...register('cargo')} className="w-full bg-muted/70 border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50" disabled={!selectedDeptId}>
-                    <option value="">{selectedDeptId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
-                    {filteredCargos.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                  </select>
-                </div>
-
-                {/* Equipe — filtrada pelo departamento */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Equipe / Squad</label>
-                  <select {...register('equipe')} className="w-full bg-muted/70 border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50" disabled={!selectedDeptId}>
-                    <option value="">{selectedDeptId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro'}</option>
-                    {filteredEquipes.map(e => <option key={e.id} value={e.nome}>{e.nome}</option>)}
-                  </select>
-                </div>
-
-                {/* Filial */}
-                <EditField label="Filial / Unidade" name="filial" register={register} />
-
-                {/* Matrícula */}
-                <EditField label="Matrícula / ID Interno" name="matricula" register={register} />
-
-                {/* Gestor Imediato */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Gestor Imediato</label>
-                  <select {...register('gestor_id')} className="w-full bg-muted/70 border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50">
-                    <option value="">Selecione um gestor...</option>
-                    {companyUsers.map(u => <option key={u.id} value={u.id}>{u.nome_completo}</option>)}
-                  </select>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Empresa sempre readonly */}
+              <div className="flex flex-col gap-2 w-full">
+                <span className="text-sm font-semibold text-white">Empresa</span>
+                <Readonly>{company?.nome_fantasia || fullData?.empresas?.nome_fantasia || 'N/A'}</Readonly>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                <InfoRow label="Empresa" value={fullData?.empresas?.nome_fantasia} />
-                <InfoRow label="Departamento" value={fullData?.departamento} />
-                <InfoRow label="Cargo" value={fullData?.cargo} />
-                <InfoRow label="Gestor Imediato" value={fullData?.gestor?.nome_completo} />
-                <InfoRow label="Equipe / Squad" value={fullData?.equipe} />
-                <InfoRow label="Filial / Unidade" value={fullData?.filial} />
-                <InfoRow label="Matrícula / ID Interno" value={fullData?.matricula} />
-              </div>
-            )}
+
+              <InlineSelect label="Departamento" name="departamento" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.departamento}>
+                <option value="">Selecione um departamento...</option>
+                {departamentos.map(d => <option key={d.id} value={d.nome}>{d.nome}</option>)}
+              </InlineSelect>
+
+              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.cargo} disabled={!selectedDeptId}>
+                <option value="">{selectedDeptId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
+                {filteredCargos.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+              </InlineSelect>
+
+              <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.equipe} disabled={!selectedDeptId}>
+                <option value="">{selectedDeptId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro'}</option>
+                {filteredEquipes.map(e => <option key={e.id} value={e.nome}>{e.nome}</option>)}
+              </InlineSelect>
+
+              <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.filial} />
+              <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.matricula} />
+
+              <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.gestor?.nome_completo}>
+                <option value="">Selecione um gestor...</option>
+                {companyUsers.map(u => <option key={u.id} value={u.id}>{u.nome_completo}</option>)}
+              </InlineSelect>
+            </div>
           </div>
         )}
 
@@ -429,11 +404,14 @@ export default function MeuPerfilPage() {
         {activeTab === 'acesso' && (
           <div className="space-y-6">
             <SectionTitle>Dados de Acesso</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <InfoRow label="Perfil de Acesso" value={data?.is_admin ? 'Administrador' : 'Colaborador'} />
-              <InfoRow label="Status da Conta" value={data?.status_conta} />
-              <InfoRow label="Autenticação 2FA" value={data?.dois_fatores_ativo ? 'Ativado' : 'Desativado'} />
-              <InfoRow label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Sem registro'} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DisplayField
+                label="Perfil de Acesso"
+                value={data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
+              />
+              <DisplayField label="Status da Conta" value={data?.status_conta} />
+              <DisplayField label="Autenticação 2FA" value={data?.dois_fatores_ativo ? 'Ativado' : 'Desativado'} />
+              <DisplayField label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Sem registro'} />
             </div>
           </div>
         )}
@@ -443,35 +421,25 @@ export default function MeuPerfilPage() {
           <div className="space-y-8">
             <div className="space-y-4">
               <SectionTitle>Alterar Senha</SectionTitle>
-              <div className="max-w-md space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Senha Antiga</label>
-                  <input
-                    type="password"
-                    value={oldPassword}
-                    onChange={e => setOldPassword(e.target.value)}
-                    placeholder="Digite sua senha atual"
-                    className="w-full bg-background border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50"
-                  />
+              <div className="max-w-md space-y-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-white">Senha Atual</span>
+                  <Input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} placeholder="Digite sua senha atual" className="w-full h-[46px] rounded-xl" />
                 </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1.5">Nova Senha</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="w-full bg-background border border-border/60 rounded-md py-2 px-3 text-sm text-foreground focus:outline-none focus:border-violet-500/50"
-                  />
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-white">Nova Senha</span>
+                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full h-[46px] rounded-xl" />
                 </div>
-                <button
-                  onClick={handleChangePassword}
-                  disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
-                  className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                  Alterar Senha
-                </button>
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                    Alterar Senha
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -489,9 +457,7 @@ export default function MeuPerfilPage() {
                 </div>
                 <span className="ml-auto text-xs text-emerald-400 font-medium">Ativa</span>
               </div>
-              <p className="text-xs text-zinc-600">
-                O histórico completo de dispositivos e sessões estará disponível em breve.
-              </p>
+              <p className="text-xs text-zinc-600">O histórico completo de dispositivos e sessões estará disponível em breve.</p>
             </div>
           </div>
         )}
@@ -500,19 +466,11 @@ export default function MeuPerfilPage() {
         {activeTab === 'auditoria' && (
           <div className="space-y-6">
             <SectionTitle>Histórico da Conta</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <InfoRow
-                label="Data de Criação"
-                value={data?.criado_em ? new Date(data.criado_em).toLocaleString('pt-BR') : null}
-              />
-              <InfoRow
-                label="Última Atualização"
-                value={data?.atualizado_em ? new Date(data.atualizado_em).toLocaleString('pt-BR') : null}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DisplayField label="Data de Criação" value={data?.criado_em ? new Date(data.criado_em).toLocaleString('pt-BR') : null} />
+              <DisplayField label="Última Atualização" value={data?.atualizado_em ? new Date(data.atualizado_em).toLocaleString('pt-BR') : null} />
             </div>
-            <p className="text-xs text-zinc-600">
-              O histórico detalhado de alterações realizadas pelo usuário estará disponível em breve.
-            </p>
+            <p className="text-xs text-zinc-600">O histórico detalhado de alterações realizadas pelo usuário estará disponível em breve.</p>
           </div>
         )}
 

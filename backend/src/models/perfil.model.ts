@@ -3,6 +3,7 @@ export interface PerfilResponseDTO {
   empresa_id: string | null;
   nome_completo: string;
   email: string;
+  cpf?: string | null;
   cargo: string | null;
   telefone_direto: string | null;
   is_admin: boolean;
@@ -24,6 +25,7 @@ export interface PerfilResponseDTO {
 
 export interface UpdatePerfilDTO {
   nome_completo?: string;
+  cpf?: string;
   cargo?: string;
   telefone_direto?: string;
   idioma?: string;

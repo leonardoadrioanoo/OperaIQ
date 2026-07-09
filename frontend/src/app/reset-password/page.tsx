@@ -12,6 +12,7 @@ import {
   CheckCircle2, XCircle, KeyRound, ArrowLeft,
 } from "lucide-react"
 import Link from "next/link"
+import { Input } from '@/components/ui';
 
 // ─── Senha forte — mesma lógica da tela de cadastro ────────────────────────────
 function getStrength(pw: string) {
@@ -304,13 +305,13 @@ function ResetPasswordInner() {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none"/>
-                      <input
+                      <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         autoComplete="new-password"
                         {...register("password")}
-                        className={`${INPUT_CLS} pl-10 pr-10`}
+                        className="pl-10 pr-10"
                       />
                       <button
                         type="button"
@@ -348,13 +349,13 @@ function ResetPasswordInner() {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none"/>
-                      <input
+                      <Input
                         id="confirmPassword"
                         type={showConfirm ? "text" : "password"}
                         placeholder="••••••••"
                         autoComplete="new-password"
                         {...register("confirmPassword")}
-                        className={`${INPUT_CLS} pl-10 pr-10`}
+                        className="pl-10 pr-10"
                       />
                       <button
                         type="button"

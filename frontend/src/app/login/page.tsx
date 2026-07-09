@@ -9,6 +9,7 @@ import * as z from "zod"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { Mail, Lock, Loader2, Eye, EyeOff, Shield, TrendingUp, Users, Zap } from "lucide-react"
+import { Input } from "@/components/ui"
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
 const loginSchema = z.object({
@@ -233,13 +234,13 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none"/>
-                  <input
+                  <Input
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
                     autoComplete="email"
                     {...register("email")}
-                    className="w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                    className="pl-10 pr-4"
                   />
                 </div>
                 {errors.email && (
@@ -259,13 +260,13 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none"/>
-                  <input
+                  <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     {...register("password")}
-                    className="w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 pl-10 pr-10 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+                    className="pl-10 pr-10"
                   />
                   <button
                     type="button"

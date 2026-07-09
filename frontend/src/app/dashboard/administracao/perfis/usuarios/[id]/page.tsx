@@ -10,11 +10,13 @@ import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getModulosGerenciaveis } from '@/lib/modules';
+import { Input, Select, Readonly, Checkbox, FormField } from '@/components/ui';
 
 // Esquema Zod simplificado para edição
 const updateColaboradorSchema = z.object({
   nome_completo: z.string().min(2, 'Obrigatório'),
   email: z.string().email(),
+  cpf: z.string().optional().or(z.literal('')),
   cargo: z.string().optional().or(z.literal('')),
   departamento: z.string().optional().or(z.literal('')),
   filial: z.string().optional().or(z.literal('')),
@@ -30,31 +32,26 @@ const updateColaboradorSchema = z.object({
 type UpdateColaboradorForm = z.infer<typeof updateColaboradorSchema>;
 
 function Field({ label, value, isEditing, register, name, error, type = 'text', options = [] }: any) {
+  if (isEditing && register && name) {
+    return (
+      <FormField
+        label={label}
+        isEditing
+        register={register}
+        name={name}
+        error={error}
+        type={type}
+        options={options}
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5">
+    <div className="flex flex-col gap-1.5">
       <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</span>
-      {isEditing && register && name ? (
-        <div className="relative">
-          {type === 'select' ? (
-            <select {...register(name)} className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50">
-              {options.map((opt: any) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          ) : (
-            <input 
-              {...register(name)} 
-              type={type}
-              className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50"
-            />
-          )}
-          {error && <span className="text-xs text-red-400 absolute -bottom-5 left-0">{error}</span>}
-        </div>
-      ) : (
-        <span className="text-sm text-zinc-300 font-medium">
-          {value === true ? 'Sim' : value === false ? 'Não' : value || <span className="text-zinc-600 italic">Não informado</span>}
-        </span>
-      )}
+      <Readonly>
+        {value === true ? 'Sim' : value === false ? 'Não' : value || <span className="text-zinc-600 italic">Não informado</span>}
+      </Readonly>
     </div>
   );
 }
@@ -276,6 +273,7 @@ export default function ColaboradorDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 <Field label="Nome Completo" value={data.nome_completo} isEditing={isEditing} register={register} name="nome_completo" error={errors.nome_completo?.message} />
                 <Field label="E-mail" value={data.email} isEditing={isEditing} register={register} name="email" error={errors.email?.message} />
+                <Field label="CPF" value={data.cpf} isEditing={isEditing} register={register} name="cpf" />
                 <Field label="Telefone" value={data.telefone_direto} isEditing={isEditing} register={register} name="telefone_direto" />
               </div>
             </div>
@@ -387,10 +385,9 @@ export default function ColaboradorDetailPage() {
                             <td key={perm} className="px-3 py-3 text-center">
                               {isSupported ? (
                                 isEditing ? (
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     {...register(`permissoes.${mod.key}.${perm}` as any)}
-                                    className="w-4 h-4 rounded border-white/20 bg-[#13131f] accent-violet-500"
+                                    className="w-4 h-4"
                                   />
                                 ) : (
                                   <div className={`w-2 h-2 rounded-full mx-auto ${dbPerm?.[perm] ? 'bg-emerald-400' : 'bg-zinc-700'}`} />

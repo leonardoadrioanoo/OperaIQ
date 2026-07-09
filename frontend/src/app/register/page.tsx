@@ -12,6 +12,7 @@ import {
   Building2, MapPin, Mail, Lock, Loader2, Eye, EyeOff,
   Shield, CheckCircle2, Users, Zap, TrendingUp, User, Briefcase, Phone, Globe
 } from "lucide-react"
+import { Checkbox, Input, Select } from "@/components/ui"
 
 // ─── Masks ─────────────────────────────────────────────────────────────────────
 function formatCNPJ(v: string) {
@@ -116,9 +117,6 @@ function Field({
     </div>
   )
 }
-
-const INPUT_CLS =
-  "w-full rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder:text-slate-600 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
 
 // ─── Right column preview ───────────────────────────────────────────────────────
 function RightPanel() {
@@ -323,53 +321,61 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="sm:col-span-2">
                       <Field label="Nome da Empresa (Razão social ou Fantasia)" id="empresa" error={errors.empresa?.message}>
-                        <input id="empresa" placeholder="Sua Empresa Ltda" {...register("empresa")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="empresa" placeholder="Sua Empresa Ltda" {...register("empresa")} className="px-4" />
                       </Field>
                     </div>
                     <Field label="CNPJ" id="cnpj" error={errors.cnpj?.message}>
-                      <input id="cnpj" placeholder="00.000.000/0000-00" inputMode="numeric"
+                      <Input
+                        id="cnpj"
+                        placeholder="00.000.000/0000-00"
+                        inputMode="numeric"
                         {...register("cnpj")}
                         onChange={e => { e.target.value = formatCNPJ(e.target.value); register("cnpj").onChange(e) }}
-                        className={`${INPUT_CLS} px-4`}/>
+                        className="px-4"
+                      />
                     </Field>
                     <Field label="Setor / Segmento" id="setor" error={errors.setor?.message}>
-                      <input id="setor" placeholder="Ex: Tecnologia, Imobiliário..." {...register("setor")} className={`${INPUT_CLS} px-4`}/>
+                      <Input id="setor" placeholder="Ex: Tecnologia, Imobiliário..." {...register("setor")} className="px-4" />
                     </Field>
                     <Field label="Telefone Principal" id="telefone_empresa" error={errors.telefone_empresa?.message} icon={<Phone className="w-4 h-4 text-slate-500"/>}>
-                      <input id="telefone_empresa" placeholder="(00) 0000-0000" inputMode="numeric"
+                      <Input
+                        id="telefone_empresa"
+                        placeholder="(00) 0000-0000"
+                        inputMode="numeric"
                         {...register("telefone_empresa")}
                         onChange={e => { e.target.value = formatPhone(e.target.value); register("telefone_empresa").onChange(e) }}
-                        className={`${INPUT_CLS} pl-10 pr-4`}/>
+                        className="pl-10 pr-4"
+                      />
                     </Field>
                     <Field label="E-mail Corporativo" id="email_empresa" error={errors.email_empresa?.message} icon={<Mail className="w-4 h-4 text-slate-500"/>}>
-                      <input id="email_empresa" type="email" placeholder="contato@empresa.com" {...register("email_empresa")} className={`${INPUT_CLS} pl-10 pr-4`}/>
+                      <Input id="email_empresa" type="email" placeholder="contato@empresa.com" {...register("email_empresa")} className="pl-10 pr-4" />
                     </Field>
                     <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <Field label="Inscrição Estadual (Opcional)" id="inscricao_estadual" error={errors.inscricao_estadual?.message}>
-                        <input id="inscricao_estadual" placeholder="IE" {...register("inscricao_estadual")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="inscricao_estadual" placeholder="IE" {...register("inscricao_estadual")} className="px-4" />
                       </Field>
                       <Field label="Inscrição Municipal (Opcional)" id="inscricao_municipal" error={errors.inscricao_municipal?.message}>
-                        <input id="inscricao_municipal" placeholder="IM" {...register("inscricao_municipal")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="inscricao_municipal" placeholder="IM" {...register("inscricao_municipal")} className="px-4" />
                       </Field>
                     </div>
                     <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <Field label="Ramo de Atividade (Opcional)" id="ramo_atividade" error={errors.ramo_atividade?.message}>
-                        <input id="ramo_atividade" placeholder="CNAE ou Ramo" {...register("ramo_atividade")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="ramo_atividade" placeholder="CNAE ou Ramo" {...register("ramo_atividade")} className="px-4" />
                       </Field>
                       <Field label="Porte da Empresa (Opcional)" id="porte_empresa" error={errors.porte_empresa?.message}>
-                        <select id="porte_empresa" {...register("porte_empresa")} className={`${INPUT_CLS} px-4 appearance-none`}>
+                        <Select id="porte_empresa" {...register("porte_empresa")} className="px-4">
                           <option value="">Selecione o porte...</option>
                           <option value="MEI">MEI</option>
                           <option value="ME">Microempresa (ME)</option>
                           <option value="EPP">Empresa de Pequeno Porte (EPP)</option>
                           <option value="Medio">Média Empresa</option>
                           <option value="Grande">Grande Empresa</option>
-                        </select>
+                        </Select>
                       </Field>
                     </div>
                     <div className="sm:col-span-2">
                       <Field label="Site (Opcional)" id="site" error={errors.site?.message} icon={<Globe className="w-4 h-4 text-slate-500"/>}>
-                        <input id="site" type="url" placeholder="https://www.empresa.com.br" {...register("site")} className={`${INPUT_CLS} pl-10 pr-4`}/>
+                        <Input id="site" type="url" placeholder="https://www.empresa.com.br" {...register("site")} className="pl-10 pr-4" />
                       </Field>
                     </div>
                   </div>
@@ -380,22 +386,26 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div className="sm:col-span-2">
                       <Field label="Nome Completo" id="nome_admin" error={errors.nome_admin?.message} icon={<User className="w-4 h-4 text-slate-500"/>}>
-                        <input id="nome_admin" placeholder="João da Silva" {...register("nome_admin")} className={`${INPUT_CLS} pl-10 pr-4`}/>
+                        <Input id="nome_admin" placeholder="João da Silva" {...register("nome_admin")} className="pl-10 pr-4" />
                       </Field>
                     </div>
                     <div className="sm:col-span-2">
                       <Field label="E-mail (do Administrador)" id="email" error={errors.email?.message} icon={<Mail className="w-4 h-4 text-slate-500"/>}>
-                        <input id="email" type="email" placeholder="joao@empresa.com" autoComplete="email" {...register("email")} className={`${INPUT_CLS} pl-10 pr-4`}/>
+                        <Input id="email" type="email" placeholder="joao@empresa.com" autoComplete="email" {...register("email")} className="pl-10 pr-4" />
                       </Field>
                     </div>
                     <Field label="Cargo" id="cargo_admin" error={errors.cargo_admin?.message} icon={<Briefcase className="w-4 h-4 text-slate-500"/>}>
-                      <input id="cargo_admin" placeholder="Ex: CEO, Gerente de TI" {...register("cargo_admin")} className={`${INPUT_CLS} pl-10 pr-4`}/>
+                      <Input id="cargo_admin" placeholder="Ex: CEO, Gerente de TI" {...register("cargo_admin")} className="pl-10 pr-4" />
                     </Field>
                     <Field label="Telefone Direto" id="telefone_admin" error={errors.telefone_admin?.message} icon={<Phone className="w-4 h-4 text-slate-500"/>}>
-                      <input id="telefone_admin" placeholder="(00) 90000-0000" inputMode="numeric"
+                      <Input
+                        id="telefone_admin"
+                        placeholder="(00) 90000-0000"
+                        inputMode="numeric"
                         {...register("telefone_admin")}
                         onChange={e => { e.target.value = formatPhone(e.target.value); register("telefone_admin").onChange(e) }}
-                        className={`${INPUT_CLS} pl-10 pr-4`}/>
+                        className="pl-10 pr-4"
+                      />
                     </Field>
                   </div>
                 </div>
@@ -406,46 +416,54 @@ export default function RegisterPage() {
                     <div className="col-span-6 sm:col-span-2">
                       <Field label="CEP" id="cep" error={errors.cep?.message}>
                         <div className="relative">
-                          <input id="cep" placeholder="00000-000" inputMode="numeric"
+                          <Input
+                            id="cep"
+                            placeholder="00000-000"
+                            inputMode="numeric"
                             {...register("cep")}
                             onChange={e => { e.target.value = formatCEP(e.target.value); register("cep").onChange(e) }}
                             onBlur={handleCepBlur}
-                            className={`${INPUT_CLS} px-4`}/>
+                            className="px-4"
+                          />
                           {fetchingCep && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-slate-500"/>}
                         </div>
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-4">
                       <Field label="Logradouro" id="logradouro" error={errors.logradouro?.message}>
-                        <input id="logradouro" placeholder="Rua, Avenida..." {...register("logradouro")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="logradouro" placeholder="Rua, Avenida..." {...register("logradouro")} className="px-4" />
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-2">
                       <Field label="Número" id="numero" error={errors.numero?.message}>
-                        <input id="numero" placeholder="123" {...register("numero")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="numero" placeholder="123" {...register("numero")} className="px-4" />
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-4">
                       <Field label="Complemento" id="complemento">
-                        <input id="complemento" placeholder="Sala, Andar (Opcional)" {...register("complemento")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="complemento" placeholder="Sala, Andar (Opcional)" {...register("complemento")} className="px-4" />
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-2">
                       <Field label="Bairro" id="bairro" error={errors.bairro?.message}>
-                        <input id="bairro" placeholder="Bairro" {...register("bairro")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="bairro" placeholder="Bairro" {...register("bairro")} className="px-4" />
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-3">
                       <Field label="Cidade" id="cidade" error={errors.cidade?.message}>
-                        <input id="cidade" placeholder="Cidade" {...register("cidade")} className={`${INPUT_CLS} px-4`}/>
+                        <Input id="cidade" placeholder="Cidade" {...register("cidade")} className="px-4" />
                       </Field>
                     </div>
                     <div className="col-span-6 sm:col-span-1">
                       <Field label="UF" id="uf" error={errors.uf?.message}>
-                        <input id="uf" placeholder="SP" maxLength={2}
+                        <Input
+                          id="uf"
+                          placeholder="SP"
+                          maxLength={2}
                           {...register("uf")}
                           onChange={e => { e.target.value = e.target.value.toUpperCase(); register("uf").onChange(e) }}
-                          className={`${INPUT_CLS} px-4 uppercase text-center`}/>
+                          className="px-4 uppercase text-center"
+                        />
                       </Field>
                     </div>
                   </div>
@@ -456,10 +474,14 @@ export default function RegisterPage() {
                   <div className="space-y-4">
                     <Field label="Senha segura" id="password" error={errors.password?.message}
                       icon={<Lock className="w-4 h-4 text-slate-500"/>}>
-                      <input id="password" type={showPassword ? "text" : "password"}
-                        placeholder="••••••••" autoComplete="new-password"
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
                         {...register("password")}
-                        className={`${INPUT_CLS} pl-10 pr-10`}/>
+                        className="pl-10 pr-10"
+                      />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
                         {showPassword ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
@@ -468,10 +490,14 @@ export default function RegisterPage() {
 
                     <Field label="Confirmar senha" id="confirmPassword" error={errors.confirmPassword?.message}
                       icon={<Lock className="w-4 h-4 text-slate-500"/>}>
-                      <input id="confirmPassword" type={showConfirm ? "text" : "password"}
-                        placeholder="••••••••" autoComplete="new-password"
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirm ? "text" : "password"}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
                         {...register("confirmPassword")}
-                        className={`${INPUT_CLS} pl-10 pr-10`}/>
+                        className="pl-10 pr-10"
+                      />
                       <button type="button" onClick={() => setShowConfirm(!showConfirm)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
                         {showConfirm ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
@@ -494,16 +520,12 @@ export default function RegisterPage() {
 
                   <div className="pt-2">
                     <label className="flex items-start gap-3 cursor-pointer group">
-                      <div className="relative mt-0.5 shrink-0">
-                        <input id="terms" type="checkbox"
-                          {...register("terms")}
-                          onChange={e => setValue("terms", e.target.checked, { shouldValidate: true })}
-                          className="sr-only peer"/>
-                        <div className="w-4 h-4 rounded border border-white/20 bg-white/[0.05] peer-checked:bg-violet-600 peer-checked:border-violet-600 transition-all flex items-center justify-center">
-                          <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 hidden"/>
-                        </div>
-                        <CheckCircle2 className="absolute inset-0 w-4 h-4 text-white hidden peer-checked:block"/>
-                      </div>
+                      <Checkbox
+                        id="terms"
+                        {...register("terms")}
+                        className="mt-0.5 shrink-0"
+                        onCheckedChange={checked => setValue("terms", checked, { shouldValidate: true })}
+                      />
                       <span className="text-sm text-slate-400 leading-relaxed">
                         Eu concordo com os <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Termos de Serviço</a> e a <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Política de Privacidade</a>.
                       </span>

@@ -7,6 +7,7 @@ const colaboradorSchema = z.object({
   nome_completo: z.string().min(2),
   nome_exibicao: z.string().optional(),
   email: z.string().email(),
+  cpf: z.string().optional().or(z.literal('')),
   telefone_direto: z.string().optional(),
   foto_url: z.string().optional(),
   data_nascimento: z.string().optional().or(z.literal('')),
@@ -22,6 +23,7 @@ const colaboradorSchema = z.object({
 
   senha_temporaria: z.string().optional(),
   is_admin: z.boolean().optional(),
+  perfil_acesso: z.string().optional(),
   status_conta: z.string().optional(),
   dois_fatores_ativo: z.boolean().optional(),
 

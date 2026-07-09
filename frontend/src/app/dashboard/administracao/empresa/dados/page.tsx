@@ -8,6 +8,7 @@ import { Building2, MapPin, CreditCard, Settings, Edit2, Save, X, Loader2, Check
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
+import { Input, Select, Readonly } from '@/components/ui';
 
 const updateEmpresaSchema = z.object({
   nome_fantasia: z.string().min(2, 'Obrigatório'),
@@ -41,31 +42,31 @@ type UpdateEmpresaForm = z.infer<typeof updateEmpresaSchema>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Field({ label, value, isEditing, register, name, error, options }: { label: string, value: any, isEditing: boolean, register?: any, name?: string, error?: string, options?: {value: string, label: string}[] }) {
   return (
-    <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02] transition-colors border border-transparent hover:border-white/5">
-      <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</span>
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
       {isEditing && register && name ? (
-        <div className="relative">
+        <div className="rounded-lg border border-white/10 bg-[#13131f]">
           {options ? (
-            <select 
-              {...register(name)} 
-              className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 appearance-none"
+            <Select
+              {...register(name)}
+              className="w-full bg-[#13131f] border-white/10 focus:border-violet-500/50"
             >
               <option value="">Selecione...</option>
               {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
+            </Select>
           ) : (
-            <input 
-              {...register(name)} 
-              className="w-full bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50"
+            <Input
+              {...register(name)}
+              className="w-full bg-[#13131f] border-white/10 focus:border-violet-500/50"
             />
           )}
-          {error && <span className="text-xs text-red-400 absolute -bottom-5 left-0">{error}</span>}
         </div>
       ) : (
-        <span className="text-sm text-zinc-300 font-medium">
+        <Readonly>
           {value || <span className="text-zinc-600 italic">Não informado</span>}
-        </span>
+        </Readonly>
       )}
+      {error && <span className="text-xs text-red-400">{error}</span>}
     </div>
   );
 }
@@ -153,7 +154,7 @@ export default function OrganizacaoPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
             Perfil da Empresa
             {data?.status === 'ativo' && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
@@ -162,7 +163,7 @@ export default function OrganizacaoPage() {
               </span>
             )}
           </h1>
-          <p className="text-zinc-400 text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1">
             Gerencie as informações cadastrais e configurações da organização.
           </p>
         </div>
@@ -170,7 +171,7 @@ export default function OrganizacaoPage() {
         {!isEditing ? (
           <button 
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5"
+            className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-foreground rounded-lg text-sm font-medium transition-colors border border-border/60"
           >
             <Edit2 className="w-4 h-4 text-violet-400" />
             Editar informações
@@ -179,7 +180,7 @@ export default function OrganizacaoPage() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => { setIsEditing(false); reset(data); }}
-              className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground rounded-lg text-sm font-medium transition-colors"
               disabled={isSaving}
             >
               <X className="w-4 h-4" />
@@ -198,7 +199,7 @@ export default function OrganizacaoPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-6 border-b border-white/5 mb-8">
+      <div className="flex items-center gap-6 border-b border-border/60 mb-8">
         {[
           { id: 'info', label: 'Informações Gerais', icon: Building2 },
           { id: 'address', label: 'Endereço', icon: MapPin },
@@ -210,7 +211,7 @@ export default function OrganizacaoPage() {
             className={`flex items-center gap-2 pb-4 text-sm font-medium transition-colors border-b-2 relative top-[1px] ${
               activeTab === tab.id 
                 ? 'text-violet-400 border-violet-500' 
-                : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-white/10'
+                : 'text-muted-foreground border-transparent hover:text-foreground hover:border-border/60'
             }`}
           >
             <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-violet-500' : 'opacity-70'}`} />
@@ -220,7 +221,7 @@ export default function OrganizacaoPage() {
       </div>
 
       {/* Content */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-[#0c0c16] border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/20">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-background border border-border/60 rounded-2xl p-6 md:p-8 shadow-sm">
         
         {activeTab === 'info' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -352,28 +353,28 @@ export default function OrganizacaoPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
               {isEditing ? (
                 <>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02]">
-                    <span className="text-[11px] font-semibold text-zinc-500 uppercase">Idioma Padrão</span>
-                    <select {...register('idioma')} className="bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white">
+                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Idioma Padrão</span>
+                    <Select {...register('idioma')} className="focus:border-violet-500/50">
                       <option value="pt-BR">Português (Brasil)</option>
                       <option value="en-US">Inglês (US)</option>
                       <option value="es-ES">Espanhol (ES)</option>
-                    </select>
+                    </Select>
                   </div>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02]">
-                    <span className="text-[11px] font-semibold text-zinc-500 uppercase">Fuso Horário</span>
-                    <select {...register('fuso_horario')} className="bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white">
+                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Fuso Horário</span>
+                    <Select {...register('fuso_horario')} className="focus:border-violet-500/50">
                       <option value="America/Sao_Paulo">America/Sao_Paulo (GMT-3)</option>
                       <option value="UTC">UTC</option>
-                    </select>
+                    </Select>
                   </div>
-                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-white/[0.02]">
-                    <span className="text-[11px] font-semibold text-zinc-500 uppercase">Moeda Padrão</span>
-                    <select {...register('moeda')} className="bg-[#13131f] border border-white/10 rounded-md py-1.5 px-3 text-sm text-white">
+                  <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/50">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase">Moeda Padrão</span>
+                    <Select {...register('moeda')} className="focus:border-violet-500/50">
                       <option value="BRL">Real (R$)</option>
                       <option value="USD">Dólar (US$)</option>
                       <option value="EUR">Euro (€)</option>
-                    </select>
+                    </Select>
                   </div>
                 </>
               ) : (

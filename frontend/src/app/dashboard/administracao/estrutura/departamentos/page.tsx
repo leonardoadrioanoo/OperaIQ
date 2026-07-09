@@ -231,7 +231,7 @@ export default function DepartamentosPage() {
             <span>/</span>
             <span className="text-zinc-300">Departamentos</span>
           </div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Component className="w-6 h-6 text-indigo-500" />
             Departamentos
           </h1>
@@ -244,17 +244,19 @@ export default function DepartamentosPage() {
         )}
       </div>
 
-      <div className="bg-[#0c0c16] border border-white/5 rounded-2xl p-4 md:p-6 shadow-xl shadow-black/20">
+      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input 
-              type="text" 
-              placeholder="Buscar por nome ou sigla..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#13131f] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50"
-            />
+          <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
+            <div className="relative flex items-center gap-3">
+              <Search className="w-4 h-4 text-zinc-500 ml-1" />
+              <input 
+                type="text" 
+                placeholder="Buscar por nome ou sigla..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
+              />
+            </div>
           </div>
         </div>
 
@@ -262,8 +264,8 @@ export default function DepartamentosPage() {
           <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-indigo-500" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-400">
-              <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
+            <table className="w-full text-left text-sm text-muted-foreground">
+              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
                 <tr>
                   <th className="px-4 py-3 rounded-tl-lg">Departamento</th>
                   <th className="px-4 py-3">Sigla</th>
@@ -272,10 +274,10 @@ export default function DepartamentosPage() {
                   <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border/60">
                 {filteredDepartamentos.map(dept => (
-                  <tr key={dept.id} className="hover:bg-white/[0.02]">
-                    <td className="px-4 py-3 font-medium text-white">{dept.nome}</td>
+                  <tr key={dept.id} className="hover:bg-muted/50">
+                    <td className="px-4 py-3 font-medium text-foreground">{dept.nome}</td>
                     <td className="px-4 py-3">{dept.sigla || '-'}</td>
                     <td className="px-4 py-3">{dept.gestor?.nome_completo || '-'}</td>
                     <td className="px-4 py-3 text-center">
@@ -315,9 +317,9 @@ export default function DepartamentosPage() {
       {/* Modal Criar/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Component className="w-5 h-5 text-indigo-500" />
                 {editingId ? 'Editar Departamento' : 'Novo Departamento'}
               </h3>

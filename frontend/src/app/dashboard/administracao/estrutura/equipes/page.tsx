@@ -13,6 +13,8 @@ import {
 import Link from 'next/link';
 import { getModulePermissions } from '@/lib/permissions';
 import { useAuthStore } from '@/store/authStore';
+import { Input, Select, Textarea } from '@/components/ui';
+import FormField from '@/components/ui/form-field';
 
 const TIPOS_EQUIPE = ['Time', 'Squad', 'Comitê', 'Grupo de Trabalho', 'Comunidade', 'Outro'];
 const PAPEIS = ['Líder', 'Product Owner', 'Scrum Master', 'Desenvolvedor', 'QA', 'UX/UI', 'Analista', 'DevOps', 'Stakeholder', 'Colaborador'];
@@ -230,7 +232,7 @@ export default function EquipesPage() {
             <span>/</span>
             <span className="text-zinc-300">Equipes</span>
           </div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Users className="w-6 h-6 text-fuchsia-500" />
             Equipes
           </h1>
@@ -244,17 +246,19 @@ export default function EquipesPage() {
       </div>
 
       {/* Tabela */}
-      <div className="bg-[#0c0c16] border border-white/5 rounded-2xl p-4 md:p-6 shadow-xl shadow-black/20">
+      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Buscar por nome ou tipo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#13131f] border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-fuchsia-500/50"
-            />
+          <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
+            <div className="relative flex items-center gap-3">
+              <Search className="w-4 h-4 text-zinc-500 ml-1" />
+              <input 
+                type="text" 
+                placeholder="Buscar por nome ou tipo..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
+              />
+            </div>
           </div>
         </div>
 
@@ -262,8 +266,8 @@ export default function EquipesPage() {
           <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-fuchsia-500" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-zinc-400">
-              <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
+            <table className="w-full text-left text-sm text-muted-foreground">
+              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
                 <tr>
                   <th className="px-4 py-3 rounded-tl-lg">Equipe</th>
                   <th className="px-4 py-3">Tipo</th>
@@ -274,10 +278,10 @@ export default function EquipesPage() {
                   <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border/60">
                 {filtered.map(equipe => (
-                  <tr key={equipe.id} className="hover:bg-white/[0.02] cursor-pointer" onClick={() => openDetail(equipe)}>
-                    <td className="px-4 py-3 font-medium text-white">{equipe.nome}</td>
+                  <tr key={equipe.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openDetail(equipe)}>
+                    <td className="px-4 py-3 font-medium text-foreground">{equipe.nome}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${TIPO_COLORS[equipe.tipo] || TIPO_COLORS['Outro']}`}>
                         {equipe.tipo}
@@ -325,9 +329,9 @@ export default function EquipesPage() {
       {/* Modal Criar/Editar Equipe */}
       {isEquipeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Users className="w-5 h-5 text-fuchsia-500" />
                 {editingId ? 'Editar Equipe' : 'Nova Equipe'}
               </h3>
@@ -335,43 +339,15 @@ export default function EquipesPage() {
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Nome da Equipe *</label>
-                  <input {...register('nome')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none" />
-                  {errors.nome && <span className="text-xs text-rose-400">{errors.nome.message}</span>}
+                <div className="col-span-2">
+                  <FormField label="Nome da Equipe *" isEditing register={register} name="nome" error={errors.nome?.message} />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Tipo *</label>
-                  <select {...register('tipo')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none">
-                    {TIPOS_EQUIPE.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Status</label>
-                  <select {...register('status')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none">
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Líder</label>
-                  <select {...register('lider_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none">
-                    <option value="">Selecione...</option>
-                    {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-400">Departamento</label>
-                  <select {...register('departamento_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none">
-                    <option value="">Selecione...</option>
-                    {departamentos.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
-                  </select>
-                </div>
+                <FormField label="Tipo *" isEditing register={register} name="tipo" options={TIPOS_EQUIPE.map(t => ({ value: t, label: t }))} />
+                <FormField label="Status" isEditing register={register} name="status" options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]} />
+                <FormField label="Líder" isEditing register={register} name="lider_id" options={colaboradores.map(c => ({ value: c.id, label: c.nome_completo }))} />
+                <FormField label="Departamento" isEditing register={register} name="departamento_id" options={departamentos.map(d => ({ value: d.id, label: d.nome }))} />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-400">Descrição</label>
-                <textarea {...register('descricao')} rows={2} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50 outline-none" />
-              </div>
+              <FormField label="Descrição" isEditing register={register} name="descricao" type="textarea" textareaRows={2} />
               <div className="pt-4 flex justify-end gap-3 border-t border-white/5">
                 <button type="button" onClick={() => setIsEquipeModalOpen(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">Cancelar</button>
                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">
@@ -387,11 +363,11 @@ export default function EquipesPage() {
       {/* Painel de Detalhes / Integrantes */}
       {isDetailOpen && selectedEquipe && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#13131f] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
+          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
               <div>
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-bold text-white">{selectedEquipe.nome}</h3>
+                  <h3 className="text-lg font-bold text-foreground">{selectedEquipe.nome}</h3>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${TIPO_COLORS[selectedEquipe.tipo] || TIPO_COLORS['Outro']}`}>
                     {selectedEquipe.tipo}
                   </span>
@@ -410,23 +386,23 @@ export default function EquipesPage() {
               {/* Adicionar Integrante */}
               {perms.p_editar && (
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={novoIntegranteId}
                     onChange={(e) => setNovoIntegranteId(e.target.value)}
-                    className="flex-1 bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                    className=""
                   >
                     <option value="">Adicionar colaborador...</option>
                     {colaboradores
                       .filter(c => !selectedEquipe.equipe_integrantes?.find((i: any) => i.perfil?.id === c.id))
                       .map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
-                  </select>
-                  <select
+                  </Select>
+                  <Select
                     value={novoIntegrantePapel}
                     onChange={(e) => setNovoIntegrantePapel(e.target.value)}
-                    className="bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                    className=""
                   >
                     {PAPEIS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  </Select>
                   <button
                     onClick={handleAddMember}
                     disabled={!novoIntegranteId || isAddingMember}
@@ -443,13 +419,13 @@ export default function EquipesPage() {
                   <p className="text-sm text-zinc-500 text-center py-4">Nenhum integrante ainda.</p>
                 ) : (
                   selectedEquipe.equipe_integrantes?.map((i: any) => (
-                    <div key={i.perfil?.id} className="flex items-center justify-between p-3 bg-[#0c0c16] rounded-xl border border-white/5">
+                    <div key={i.perfil?.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border/60">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-violet-900/40 rounded-full flex items-center justify-center text-xs text-violet-300 font-bold ring-1 ring-violet-500/20">
                           {i.perfil?.nome_completo?.[0] || '?'}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-white">{i.perfil?.nome_completo}</p>
+                          <p className="text-sm font-medium text-foreground">{i.perfil?.nome_completo}</p>
                           <p className="text-xs text-zinc-500">{i.papel}</p>
                         </div>
                       </div>

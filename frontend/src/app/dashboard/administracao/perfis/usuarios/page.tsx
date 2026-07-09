@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Users, Plus, Search, Filter, Loader2, Edit, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui';
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -44,7 +45,7 @@ export default function UsuariosPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
             <Users className="w-6 h-6 text-violet-500" />
             Colaboradores
           </h1>
@@ -66,24 +67,26 @@ export default function UsuariosPage() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text" 
-            placeholder="Buscar por nome, e-mail ou cargo..." 
-            className="w-full bg-[#13131f] border border-white/5 rounded-lg py-2 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50"
-          />
+        <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
+          <div className="relative flex items-center gap-3">
+            <Search className="w-4 h-4 text-zinc-500 ml-1" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, e-mail ou cargo..."
+              className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
+            />
+          </div>
         </div>
-        <button className="p-2 border border-white/5 bg-white/5 text-zinc-400 hover:text-white rounded-lg transition-colors">
+        <button className="p-2.5 border border-border/60 bg-background text-zinc-400 hover:text-foreground rounded-xl transition-colors shadow-sm">
           <Filter className="w-4 h-4" />
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-[#0c0c16] border border-white/5 rounded-xl overflow-hidden shadow-xl shadow-black/20">
+      <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-zinc-400">
-            <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
+          <table className="w-full text-left text-sm text-muted-foreground">
+            <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
               <tr>
                 <th className="px-6 py-4 rounded-tl-xl">Colaborador</th>
                 <th className="px-6 py-4">Cargo / Filial</th>
@@ -92,7 +95,7 @@ export default function UsuariosPage() {
                 <th className="px-6 py-4 text-right rounded-tr-xl">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border/60">
               {isLoading ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-12 text-center">
@@ -107,7 +110,7 @@ export default function UsuariosPage() {
                 </tr>
               ) : (
                 users.map(user => (
-                  <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                  <tr key={user.id} className="hover:bg-muted/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-violet-900/50 border border-violet-500/20 flex items-center justify-center text-violet-300 font-semibold flex-shrink-0 overflow-hidden">
@@ -118,7 +121,7 @@ export default function UsuariosPage() {
                           )}
                         </div>
                         <div>
-                          <div className="text-white font-medium">
+                          <div className="text-foreground font-medium">
                             {user.nome_completo}
                             {user.matricula && <span className="ml-2 text-[10px] font-normal text-zinc-500 uppercase">#{user.matricula}</span>}
                           </div>

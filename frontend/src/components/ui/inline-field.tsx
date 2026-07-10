@@ -15,13 +15,13 @@ import { Readonly } from '@/components/ui/readonly';
 
 // ─── Tokens base — garantem que Readonly, Input e Select são idênticos ──────
 const FIELD_BASE =
-  "h-12 w-full min-w-0 rounded-lg border border-input px-3 text-sm text-foreground transition-colors outline-none";
+  "h-12 w-full min-w-0 rounded-lg border border-border/60 px-3 text-sm text-white transition-colors outline-none";
 
 const INPUT_CLASSES =
-  `${FIELD_BASE} bg-input focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 placeholder:text-muted-foreground`;
+  `${FIELD_BASE} bg-transparent focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 placeholder:text-muted-foreground`;
 
 const SELECT_CLASSES =
-  `${FIELD_BASE} bg-input appearance-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:cursor-not-allowed`;
+  `${FIELD_BASE} bg-transparent appearance-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:cursor-not-allowed`;
 
 // ─── Label padronizado ───────────────────────────────────────────────────────
 export function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -58,6 +58,7 @@ export function InlineField({
             {...rest}
             ref={ref}
             type={type}
+            defaultValue={readonlyValue || ''}
             className={INPUT_CLASSES}
           />
           {error && <span className="text-xs text-red-400 mt-0.5">{error}</span>}
@@ -100,6 +101,7 @@ export function InlineSelect({
           {...rest}
           ref={ref}
           disabled={disabled}
+          defaultValue={readonlyValue || ''}
           className={SELECT_CLASSES}
         >
           {children}

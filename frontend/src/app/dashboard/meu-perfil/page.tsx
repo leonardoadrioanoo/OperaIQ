@@ -262,30 +262,34 @@ export default function MeuPerfilPage() {
         </div>
 
         <div>
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-foreground rounded-lg text-sm font-medium transition-colors border border-border/60"
-            >
-              <Edit2 className="w-4 h-4 text-violet-400" /> Editar Perfil
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setIsEditing(false); if (originalProfile) reset(originalProfile); }}
-                className="px-3 py-2 text-muted-foreground hover:text-foreground rounded-lg text-sm transition-colors"
-                disabled={isSaving}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmit(onSubmit)}
-                className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
-                disabled={isSaving}
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
-              </button>
-            </div>
+          {(activeTab === 'pessoal' || activeTab === 'organizacional' || activeTab === 'seguranca') && (
+            <>
+              {!isEditing ? (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-foreground rounded-lg text-sm font-medium transition-colors border border-border/60"
+                >
+                  <Edit2 className="w-4 h-4 text-violet-400" /> Editar Perfil
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setIsEditing(false); if (originalProfile) reset(originalProfile); }}
+                    className="px-3 py-2 text-muted-foreground hover:text-foreground rounded-lg text-sm transition-colors"
+                    disabled={isSaving}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSubmit(onSubmit)}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -343,26 +347,40 @@ export default function MeuPerfilPage() {
 
               <InlineSelect label="Departamento" name="departamento" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.departamento}>
                 <option value="" className="bg-[#06112a] text-white">Selecione um departamento...</option>
+                {fullData?.departamento && !departamentos.find(d => d.nome === fullData.departamento) && (
+                  <option value={fullData.departamento} className="bg-[#06112a] text-white">{fullData.departamento}</option>
+                )}
                 {departamentos.map(d => <option key={d.id} value={d.nome} className="bg-[#06112a] text-white">{d.nome}</option>)}
               </InlineSelect>
 
-              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.cargo} disabled={!selectedDeptId}>
-                <option value="" className="bg-[#06112a] text-white">{selectedDeptId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
+              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.cargo}>
+                <option value="" className="bg-[#06112a] text-white">Selecione um cargo...</option>
+                {fullData?.cargo && !filteredCargos.find(c => c.nome === fullData.cargo) && (
+                  <option value={fullData.cargo} className="bg-[#06112a] text-white">{fullData.cargo}</option>
+                )}
                 {filteredCargos.map(c => <option key={c.id} value={c.nome} className="bg-[#06112a] text-white">{c.nome}</option>)}
               </InlineSelect>
 
-              <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.equipe} disabled={!selectedDeptId}>
-                <option value="" className="bg-[#06112a] text-white">{selectedDeptId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro'}</option>
-                {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
-              </InlineSelect>
+              {/* Equipe e Gestor apenas para colaboradores (não-admins) */}
+              {!isAdmin && (
+                <>
+                  <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing} readonlyValue={fullData?.equipe}>
+                    <option value="" className="bg-[#06112a] text-white">Selecione uma equipe...</option>
+                    {fullData?.equipe && !filteredEquipes.find(e => e.nome === fullData.equipe) && (
+                      <option value={fullData.equipe} className="bg-[#06112a] text-white">{fullData.equipe}</option>
+                    )}
+                    {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
+                  </InlineSelect>
+
+                  <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={false} readonlyValue={fullData?.gestor?.nome_completo}>
+                    <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
+                    {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-[#06112a] text-white">{u.nome_completo}</option>)}
+                  </InlineSelect>
+                </>
+              )}
 
               <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.filial} />
               <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.matricula} />
-
-              <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.gestor?.nome_completo}>
-                <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
-                {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-[#06112a] text-white">{u.nome_completo}</option>)}
-              </InlineSelect>
             </div>
           </div>
         )}
@@ -377,7 +395,6 @@ export default function MeuPerfilPage() {
                 value={data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
               />
               <DisplayField label="Status da Conta" value={data?.status_conta} />
-              <DisplayField label="Autenticação 2FA" value={data?.dois_fatores_ativo ? 'Ativado' : 'Desativado'} />
               <DisplayField label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Sem registro'} />
             </div>
           </div>
@@ -386,35 +403,100 @@ export default function MeuPerfilPage() {
         {/* SEGURANÇA */}
         {activeTab === 'seguranca' && (
           <div className="space-y-8">
-            <div className="space-y-4">
-              <SectionTitle>Alterar Senha</SectionTitle>
-              <div className="bg-background border border-border/60 rounded-xl p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm font-semibold text-white">Senha Atual</span>
-                    <Input type="password" value={oldPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOldPassword(e.target.value)} placeholder="Digite sua senha atual" className="w-full" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm font-semibold text-white">Nova Senha</span>
-                    <Input type="password" value={newPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full" />
-                  </div>
+            {/* Linha principal: Alterar Senha | 2FA */}
+            <div className="flex gap-0 items-stretch">
+
+              {/* Coluna Alterar Senha */}
+              <div className="flex-1 space-y-4 pr-8">
+                <SectionTitle>Alterar Senha</SectionTitle>
+                <div className="max-w-sm space-y-4">
+                  {!isEditing ? (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-white">Senha Atual</label>
+                        <div className="h-11 w-full rounded-lg border border-border/60 bg-transparent px-3 flex items-center">
+                          <span className="text-zinc-600 text-sm tracking-widest">••••••••</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-white">Nova Senha</label>
+                        <div className="h-11 w-full rounded-lg border border-border/60 bg-transparent px-3 flex items-center">
+                          <span className="text-zinc-600 text-sm tracking-widest">••••••••</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-white">Senha Atual</label>
+                        <input
+                          type="password"
+                          value={oldPassword}
+                          onChange={(e) => setOldPassword(e.target.value)}
+                          placeholder="Digite sua senha atual"
+                          className="h-11 w-full rounded-lg border border-border/60 bg-transparent px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-white">Nova Senha</label>
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Mínimo 6 caracteres"
+                          className="h-11 w-full rounded-lg border border-border/60 bg-transparent px-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 transition-colors"
+                        />
+                      </div>
+                      <div className="flex justify-center pt-1">
+                        <button
+                          onClick={handleChangePassword}
+                          disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
+                          className="flex items-center gap-2 px-6 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                          Salvar Senha
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="flex justify-center mt-6">
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
-                    className="flex items-center justify-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors w-full sm:w-auto min-w-[200px]"
-                  >
-                    {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                    ALTERAR SENHA
-                  </button>
+              </div>
+
+              {/* Divisor vertical */}
+              <div className="w-px bg-border/60 self-stretch mx-2" />
+
+              {/* Coluna 2FA */}
+              <div className="flex-1 space-y-4 pl-8">
+                <SectionTitle>Autenticação em Duas Etapas</SectionTitle>
+                <div className="flex items-center gap-4 p-4 rounded-xl border border-border/60 bg-transparent">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    data?.dois_fatores_ativo ? 'bg-emerald-500/10' : 'bg-zinc-500/10'
+                  }`}>
+                    <Shield className={`w-5 h-5 ${data?.dois_fatores_ativo ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">Autenticação 2FA</p>
+                    <p className={`text-xs mt-0.5 ${
+                      data?.dois_fatores_ativo ? 'text-emerald-400' : 'text-zinc-500'
+                    }`}>
+                      {data?.dois_fatores_ativo ? 'Ativado — sua conta está protegida' : 'Desativado — ative para mais segurança'}
+                    </p>
+                  </div>
+                  <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                    data?.dois_fatores_ativo
+                      ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10'
+                      : 'text-zinc-400 border-zinc-500/20 bg-zinc-500/10'
+                  }`}>
+                    {data?.dois_fatores_ativo ? 'Ativo' : 'Inativo'}
+                  </span>
                 </div>
+                <p className="text-xs text-zinc-600">A configuração de autenticação em duas etapas estará disponível em breve.</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <SectionTitle>Sessões Ativas</SectionTitle>
-              <div className="bg-background border border-border/60 rounded-xl p-4 flex items-center gap-4">
+              <div className="bg-transparent border border-border/60 rounded-xl p-4 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                 </div>

@@ -10,7 +10,10 @@ import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getModulosGerenciaveis } from '@/lib/modules';
-import { Input, Select, Readonly, Checkbox, FormField } from '@/components/ui';
+import { PERFIL_PRESETS } from '@/lib/profilePresets';
+import { Input, Select, Readonly, Checkbox, FormField, Breadcrumb } from '@/components/ui';
+import { InlineField, InlineSelect } from '@/components/ui/inline-field';
+import { DisplayField } from '@/components/ui/display-field';
 
 // Esquema Zod simplificado para edição
 const updateColaboradorSchema = z.object({
@@ -26,33 +29,17 @@ const updateColaboradorSchema = z.object({
   gestor_id: z.string().uuid().optional().or(z.literal('')),
   status_conta: z.string(),
   is_admin: z.any(),
+  perfil_acesso: z.string().optional(),
   permissoes: z.any().optional(), // mantendo flexível aqui para simplificar
 });
 
 type UpdateColaboradorForm = z.infer<typeof updateColaboradorSchema>;
 
-function Field({ label, value, isEditing, register, name, error, type = 'text', options = [] }: any) {
-  if (isEditing && register && name) {
-    return (
-      <FormField
-        label={label}
-        isEditing
-        register={register}
-        name={name}
-        error={error}
-        type={type}
-        options={options}
-      />
-    );
-  }
-
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">{label}</span>
-      <Readonly>
-        {value === true ? 'Sim' : value === false ? 'Não' : value || <span className="text-zinc-600 italic">Não informado</span>}
-      </Readonly>
-    </div>
+    <h3 className="text-lg font-semibold text-white border-b border-white/5 pb-2">
+      {children}
+    </h3>
   );
 }
 
@@ -61,7 +48,7 @@ export default function ColaboradorDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
-  const [activeTab, setActiveTab] = useState<'info' | 'acesso' | 'permissoes' | 'projetos'>('info');
+  const [activeTab, setActiveTab] = useState<'pessoal' | 'organizacional' | 'acesso' | 'permissoes' | 'auditoria'>('pessoal');
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -110,7 +97,8 @@ export default function ColaboradorDetailPage() {
         reset({
           ...json,
           permissoes: permissoesObj,
-          is_admin: json.is_admin ? "true" : "false" // ensuring correct select binding
+          is_admin: json.is_admin ? "true" : "false", // ensuring correct select binding
+          perfil_acesso: json.perfil_acesso || (json.is_admin ? 'Administrador da Organização' : 'Colaborador Padrão')
         });
         
         // Fetch users for gestor select
@@ -159,10 +147,13 @@ export default function ColaboradorDetailPage() {
         modulo, ...perms
       })) : [];
 
+      const selectedPreset = PERFIL_PRESETS.find(p => p.label === formData.perfil_acesso);
+      const isAdministrador = selectedPreset?.is_admin ?? (formData.perfil_acesso === 'Administrador' || formData.perfil_acesso === 'Administrador da Organização');
+
       const payload = { 
         ...formData, 
         permissoes: permissoesArray,
-        is_admin: formData.is_admin === "true" || formData.is_admin === true
+        is_admin: isAdministrador
       };
 
       const res = await fetch(`http://localhost:3002/api/colaboradores/${id}`, {
@@ -216,19 +207,21 @@ export default function ColaboradorDetailPage() {
             </h1>
           </div>
           
-          {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5">
-              <Edit2 className="w-4 h-4 text-violet-400" /> Editar
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <button onClick={() => { setIsEditing(false); reset(); }} className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white rounded-lg text-sm font-medium transition-colors" disabled={isSaving}>
-                Cancelar
+          {(activeTab !== 'auditoria' && activeTab !== 'permissoes') && (
+            !isEditing ? (
+              <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5">
+                <Edit2 className="w-4 h-4 text-violet-400" /> Editar
               </button>
-              <button onClick={handleSubmit(onSubmit, onError)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20" disabled={isSaving}>
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <button onClick={() => { setIsEditing(false); reset(); }} className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white rounded-lg text-sm font-medium transition-colors" disabled={isSaving}>
+                  Cancelar
+                </button>
+                <button onClick={handleSubmit(onSubmit, onError)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20" disabled={isSaving}>
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                </button>
+              </div>
+            )
           )}
         </div>
       </div>
@@ -247,119 +240,106 @@ export default function ColaboradorDetailPage() {
       {/* Tabs */}
       <div className="flex items-center gap-6 border-b border-white/5 mb-8">
         {[
-          { id: 'info', label: 'Dados Básicos', icon: User },
-          { id: 'acesso', label: 'Acesso', icon: Shield },
+          { id: 'pessoal', label: 'Dados Pessoais', icon: User },
+          { id: 'organizacional', label: 'Dados Organizacionais', icon: FolderOpen },
+          { id: 'acesso', label: 'Dados de Acesso', icon: Shield },
           { id: 'permissoes', label: 'Permissões', icon: Sliders },
-          { id: 'projetos', label: 'Projetos', icon: FolderOpen },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 pb-4 text-sm font-medium transition-colors border-b-2 relative top-[1px] ${
-              activeTab === tab.id ? 'text-violet-400 border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
-            }`}
-          >
-            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-violet-500' : 'opacity-70'}`} /> {tab.label}
-          </button>
-        ))}
+          { id: 'auditoria', label: 'Auditoria', icon: Activity },
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { if (!isEditing) setActiveTab(tab.id as any); }}
+              disabled={isEditing}
+              className={`flex items-center gap-2 pb-4 text-sm font-medium transition-colors border-b-2 relative top-[1px] ${
+                activeTab === tab.id ? 'text-violet-400 border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
+              } ${isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
+            >
+              <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-violet-500' : 'opacity-70'}`} /> {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, onError)} className="bg-[#0c0c16] border border-white/5 rounded-2xl p-6 md:p-8">
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="bg-background border border-border/60 rounded-2xl p-6 md:p-8">
         
-        {activeTab === 'info' && (
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">Dados Pessoais</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <Field label="Nome Completo" value={data.nome_completo} isEditing={isEditing} register={register} name="nome_completo" error={errors.nome_completo?.message} />
-                <Field label="E-mail" value={data.email} isEditing={isEditing} register={register} name="email" error={errors.email?.message} />
-                <Field label="CPF" value={data.cpf} isEditing={isEditing} register={register} name="cpf" />
-                <Field label="Telefone" value={data.telefone_direto} isEditing={isEditing} register={register} name="telefone_direto" />
-              </div>
-            </div>
-
-            <div className="w-full h-px bg-white/5" />
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">Dados Organizacionais</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-                <Field label="Empresa" value={data.empresas?.nome_fantasia || 'N/A'} isEditing={false} />
-                <Field 
-                  label="Departamento" 
-                  value={data.departamento} 
-                  isEditing={isEditing} 
-                  register={register} 
-                  name="departamento" 
-                  type="select"
-                  options={[
-                    { value: '', label: 'Selecione um departamento...' },
-                    ...departamentos.map(d => ({ value: d.nome, label: d.nome }))
-                  ]}
-                />
-                <Field 
-                  label="Cargo" 
-                  value={data.cargo} 
-                  isEditing={isEditing} 
-                  register={register} 
-                  name="cargo" 
-                  type="select"
-                  options={[
-                    { value: '', label: selectedDepartamentoId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro' },
-                    ...filteredCargos.map(c => ({ value: c.nome, label: c.nome }))
-                  ]}
-                />
-                <Field label="Filial / Unidade" value={data.filial} isEditing={isEditing} register={register} name="filial" />
-                <Field 
-                  label="Equipe / Squad" 
-                  value={data.equipe} 
-                  isEditing={isEditing} 
-                  register={register} 
-                  name="equipe" 
-                  type="select"
-                  options={[
-                    { value: '', label: selectedDepartamentoId ? 'Selecione uma equipe...' : 'Selecione um departamento primeiro' },
-                    ...filteredEquipes.map(e => ({ value: e.nome, label: e.nome }))
-                  ]}
-                />
-                <Field label="Matrícula / ID Interno" value={data.matricula} isEditing={isEditing} register={register} name="matricula" />
-                <Field 
-                  label="Gestor Imediato" 
-                  value={data.gestor?.nome_completo || 'Sem gestor'} 
-                  isEditing={isEditing} 
-                  register={register} 
-                  name="gestor_id" 
-                  type="select"
-                  options={[
-                    { value: '', label: 'Selecione um gestor...' },
-                    ...companyUsers.map(u => ({ value: u.id, label: u.nome_completo }))
-                  ]}
-                />
-              </div>
+        {/* DADOS PESSOAIS */}
+        {activeTab === 'pessoal' && (
+          <div className="space-y-6">
+            <SectionTitle>Dados Pessoais</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InlineField label="Nome Completo" name="nome_completo" register={register} error={errors.nome_completo?.message} isEditing={isEditing} readonlyValue={data?.nome_completo} />
+              <InlineField label="CPF" name="cpf" register={register} isEditing={isEditing} readonlyValue={data?.cpf} />
+              <InlineField label="E-mail" name="email" register={register} error={errors.email?.message} isEditing={isEditing} readonlyValue={data?.email} />
+              <InlineField label="Telefone" name="telefone_direto" register={register} isEditing={isEditing} readonlyValue={data?.telefone_direto} />
             </div>
           </div>
         )}
 
+        {/* DADOS ORGANIZACIONAIS */}
+        {activeTab === 'organizacional' && (
+          <div className="space-y-6">
+            <SectionTitle>Dados Organizacionais</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-2 w-full">
+                <span className="text-sm font-semibold text-white">Empresa</span>
+                <Readonly>{data?.empresas?.nome_fantasia || 'N/A'}</Readonly>
+              </div>
+              <InlineSelect label="Departamento" name="departamento" register={register} isEditing={isEditing} readonlyValue={data?.departamento}>
+                <option value="" className="bg-[#06112a] text-white">Selecione um departamento...</option>
+                {departamentos.map(d => <option key={d.id} value={d.nome} className="bg-[#06112a] text-white">{d.nome}</option>)}
+              </InlineSelect>
+              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing} readonlyValue={data?.cargo} disabled={!selectedDepartamentoId}>
+                <option value="" className="bg-[#06112a] text-white">{selectedDepartamentoId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
+                {data?.cargo && !filteredCargos.find(c => c.nome === data.cargo) && (
+                  <option value={data.cargo} className="bg-[#06112a] text-white">{data.cargo}</option>
+                )}
+                {filteredCargos.map(c => <option key={c.id} value={c.nome} className="bg-[#06112a] text-white">{c.nome}</option>)}
+              </InlineSelect>
+              <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing} readonlyValue={data?.equipe}>
+                <option value="" className="bg-[#06112a] text-white">Selecione uma equipe...</option>
+                {data?.equipe && !filteredEquipes.find(e => e.nome === data.equipe) && (
+                  <option value={data.equipe} className="bg-[#06112a] text-white">{data.equipe}</option>
+                )}
+                {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
+              </InlineSelect>
+              <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing} readonlyValue={data?.filial} />
+              <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing} readonlyValue={data?.matricula} />
+              <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing} readonlyValue={data?.gestor?.nome_completo}>
+                <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
+                {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-[#06112a] text-white">{u.nome_completo}</option>)}
+              </InlineSelect>
+            </div>
+          </div>
+        )}
+
+        {/* ACESSO */}
         {activeTab === 'acesso' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            <Field 
-              label="Perfil de Acesso" 
-              value={data.is_admin ? 'Administrador' : 'Colaborador Padrão'} 
-              isEditing={isEditing} register={register} name="is_admin" type="select"
-              options={[{value: "true", label: "Administrador"}, {value: "false", label: "Colaborador Padrão"}]}
-            />
-            <Field 
-              label="Status da Conta" 
-              value={data.status_conta} 
-              isEditing={isEditing} register={register} name="status_conta" type="select"
-              options={[{value: "Ativo", label: "Ativo"}, {value: "Inativo", label: "Inativo"}, {value: "Bloqueado", label: "Bloqueado"}]}
-            />
-            <Field label="Autenticação 2FA" value={data.dois_fatores_ativo ? 'Ativo' : 'Desativado'} isEditing={false} />
-            <Field label="Último Acesso" value={data.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Nunca acessou'} isEditing={false} />
+          <div className="space-y-6">
+            <SectionTitle>Dados de Acesso</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InlineSelect label="Perfil de Acesso" name="perfil_acesso" register={register} isEditing={isEditing} readonlyValue={data?.perfil_acesso || (data.is_admin ? 'Administrador do Sistema' : 'Colaborador')}>
+                {PERFIL_PRESETS.map(preset => (
+                  <option key={preset.tipo} value={preset.label} className="bg-[#06112a] text-white">
+                    {preset.icon} {preset.label}
+                  </option>
+                ))}
+              </InlineSelect>
+              <InlineSelect label="Status da Conta" name="status_conta" register={register} isEditing={isEditing} readonlyValue={data?.status_conta}>
+                <option value="Ativo" className="bg-[#06112a] text-white">Ativo</option>
+                <option value="Inativo" className="bg-[#06112a] text-white">Inativo</option>
+                <option value="Bloqueado" className="bg-[#06112a] text-white">Bloqueado</option>
+              </InlineSelect>
+              <DisplayField label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Nunca acessou'} />
+            </div>
           </div>
         )}
 
+        {/* PERMISSÕES */}
         {activeTab === 'permissoes' && (
           <div className="space-y-6">
+            <SectionTitle>Permissões</SectionTitle>
             <p className="text-sm text-zinc-500">
               Configure quais módulos e ações este colaborador pode acessar. Administradores têm acesso total e irrestrito.
             </p>
@@ -411,10 +391,14 @@ export default function ColaboradorDetailPage() {
           </div>
         )}
 
-        {activeTab === 'projetos' && (
-          <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
-            <FolderOpen className="w-12 h-12 mb-4 opacity-20" />
-            <p>O gerenciamento de projetos do colaborador estará disponível em breve.</p>
+        {/* AUDITORIA */}
+        {activeTab === 'auditoria' && (
+          <div className="space-y-6">
+            <SectionTitle>Auditoria do Registro</SectionTitle>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DisplayField label="Criado em" value={data?.created_at ? new Date(data.created_at).toLocaleString('pt-BR') : 'Data não disponível'} />
+              <DisplayField label="Última Atualização" value={data?.updated_at ? new Date(data.updated_at).toLocaleString('pt-BR') : 'Sem atualizações recentes'} />
+            </div>
           </div>
         )}
 

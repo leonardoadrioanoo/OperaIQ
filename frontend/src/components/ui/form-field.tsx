@@ -37,27 +37,27 @@ export function FormField({
     <div className="flex flex-col gap-1.5">
       <label className="text-xs font-semibold text-zinc-400">{label}</label>
       {isEditing && register && name ? (
-        <div className="rounded-lg border border-white/10 bg-[#13131f]">
+        <div className="rounded-lg border border-white/10 bg-transparent">
           {options ? (
             <Select
               {...register(name)}
               disabled={disabled}
-              className="w-full bg-[#13131f] border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
             >
-              {shouldRenderPlaceholder && <option value="">Selecione...</option>}
-              {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              {shouldRenderPlaceholder && <option value="" className="bg-[#0c0c16] text-white">Selecione...</option>}
+              {options.map(opt => <option key={opt.value} value={opt.value} className="bg-[#0c0c16] text-white">{opt.label}</option>)}
             </Select>
           ) : type === 'textarea' ? (
             <Textarea
               {...register(name)}
               rows={textareaRows || 3}
-              className="w-full min-h-[96px] bg-[#13131f] border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full min-h-[96px] bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
             />
           ) : (
             <Input
               {...register(name)}
               type={type}
-              className="w-full bg-[#13131f] border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
               disabled={disabled}
             />
           )}

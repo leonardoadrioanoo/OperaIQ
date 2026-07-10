@@ -24,6 +24,7 @@ const colaboradorSchema = z.object({
   senha_temporaria: z.string().optional(),
   is_admin: z.boolean().optional(),
   perfil_acesso: z.string().optional(),
+  sys_perfil_acesso_id: z.string().uuid().optional().or(z.literal('')),
   status_conta: z.string().optional(),
   dois_fatores_ativo: z.boolean().optional(),
 
@@ -98,8 +99,26 @@ export class ColaboradorService {
     validado.empresa_id = empresaId;
     await this.repo.createPerfil(validado);
 
-    // 3. Salvar permissões (se fornecidas)
-    if (validado.permissoes && validado.permissoes.length > 0) {
+    // 3. Processar Permissões Automáticas via Perfil de Acesso ou Permissões Customizadas
+    if (validado.sys_perfil_acesso_id && validado.sys_perfil_acesso_id !== '') {
+      // Busca permissões padrão do banco de dados (Single Source of Truth)
+      const { data: defaultPerms, error: permsError } = await supabaseAdmin
+        .from('sys_perfil_acesso_permissoes')
+        .select('*, modulo:sys_modulos(nome)')
+        .eq('perfil_acesso_id', validado.sys_perfil_acesso_id);
+        
+      if (!permsError && defaultPerms && defaultPerms.length > 0) {
+        const mappedPerms = defaultPerms.map((p: any) => ({
+          modulo: p.modulo.nome,
+          p_visualizar: p.p_visualizar,
+          p_criar: p.p_criar,
+          p_editar: p.p_editar,
+          p_excluir: p.p_excluir,
+          p_aprovar: p.p_aprovar
+        }));
+        await this.repo.syncPermissoes(userId, mappedPerms);
+      }
+    } else if (validado.permissoes && validado.permissoes.length > 0) {
       await this.repo.syncPermissoes(userId, validado.permissoes);
     }
 
@@ -117,7 +136,39 @@ export class ColaboradorService {
 
     await this.repo.updatePerfil(colaboradorId, empresaId, validado);
 
-    if (validado.permissoes) {
+    // Processar Permissões
+    if (validado.sys_perfil_acesso_id && validado.sys_perfil_acesso_id !== '') {
+      // Verifica se o perfil_acesso mudou comparado com o atual
+      const { data: currentPerfil } = await supabaseAdmin
+        .from('perfis')
+        .select('sys_perfil_acesso_id')
+        .eq('id', colaboradorId)
+        .single();
+        
+      // Se mudou, força a atualização das permissões baseadas no novo perfil
+      // Ou se as permissões não vieram no payload, assume que queremos garantir o padrão
+      if (currentPerfil?.sys_perfil_acesso_id !== validado.sys_perfil_acesso_id || !validado.permissoes) {
+        const { data: defaultPerms } = await supabaseAdmin
+          .from('sys_perfil_acesso_permissoes')
+          .select('*, modulo:sys_modulos(nome)')
+          .eq('perfil_acesso_id', validado.sys_perfil_acesso_id);
+          
+        if (defaultPerms && defaultPerms.length > 0) {
+          const mappedPerms = defaultPerms.map((p: any) => ({
+            modulo: p.modulo.nome,
+            p_visualizar: p.p_visualizar,
+            p_criar: p.p_criar,
+            p_editar: p.p_editar,
+            p_excluir: p.p_excluir,
+            p_aprovar: p.p_aprovar
+          }));
+          await this.repo.syncPermissoes(colaboradorId, mappedPerms);
+        }
+      } else if (validado.permissoes) {
+        // Se não mudou o perfil mas enviou permissões (edição customizada), salva as customizadas
+        await this.repo.syncPermissoes(colaboradorId, validado.permissoes);
+      }
+    } else if (validado.permissoes) {
       await this.repo.syncPermissoes(colaboradorId, validado.permissoes);
     }
 

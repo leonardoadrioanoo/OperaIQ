@@ -9,7 +9,6 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { ArrowLeft, ArrowRight, Save, CheckCircle2, User, Building2, Key, Shield, FolderOpen, Bell, FileText, Loader2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { PERFIL_PRESETS, TipoPerfil, presetToFormPermissions, ALL_MODULES } from '@/lib/profilePresets';
 import { Input, Select, Checkbox, DisplayField, FormField } from '@/components/ui';
 
 // Esquema Zod cobrindo todas as etapas
@@ -40,6 +39,7 @@ const wizardSchema = z.object({
     p_excluir: z.boolean().default(false),
     p_aprovar: z.boolean().default(false),
   })).optional(),
+  sys_perfil_acesso_id: z.string().optional(),
 });
 
 type WizardForm = z.infer<typeof wizardSchema>;
@@ -51,12 +51,12 @@ const STEPS = [
   { id: 4, title: 'Revisão', icon: FileText },
 ];
 
-const MODULOS = ALL_MODULES;
+const MODULOS = ['Início', 'Dashboards', 'Projetos', 'Execuções', 'Recursos', 'Portfólio', 'Roadmap', 'Relatórios', 'Indicadores', 'Riscos', 'IA & Insights', 'Integrações', 'Automação', 'Documentos', 'Administração'];
 
 export default function NovoUsuarioWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState<TipoPerfil | ''>('');
+  const [selectedPreset, setSelectedPreset] = useState<string>('');
   const router = useRouter();
 
   // Dados dinâmicos para Step 2
@@ -64,6 +64,7 @@ export default function NovoUsuarioWizard() {
   const [cargos, setCargos] = useState<any[]>([]);
   const [cargosFiltered, setCargosFiltered] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [perfisAcesso, setPerfisAcesso] = useState<any[]>([]);
 
   useEffect(() => {
     const loadOrgData = async () => {
@@ -71,15 +72,17 @@ export default function NovoUsuarioWizard() {
       if (!session) return;
       const headers = { Authorization: `Bearer ${session.access_token}` };
 
-      const [resDeps, resCargos, resEquipes] = await Promise.all([
+      const [resDeps, resCargos, resEquipes, resPerfis] = await Promise.all([
         fetch('http://localhost:3002/api/departamentos', { headers }),
         fetch('http://localhost:3002/api/cargos', { headers }),
         fetch('http://localhost:3002/api/equipes', { headers }),
+        fetch('http://localhost:3002/api/rbac/perfis', { headers })
       ]);
 
       if (resDeps.ok) setDepartamentos(await resDeps.json());
       if (resCargos.ok) { const c = await resCargos.json(); setCargos(c); setCargosFiltered(c); }
       if (resEquipes.ok) setEquipes(await resEquipes.json());
+      if (resPerfis.ok) setPerfisAcesso(await resPerfis.json());
     };
     loadOrgData();
   }, []);
@@ -106,22 +109,25 @@ export default function NovoUsuarioWizard() {
   }, [selectedDepartamento, cargos, departamentos]);
 
   /** Aplica as permissões de um preset ao formulário */
-  const applyPreset = (tipo: TipoPerfil | '') => {
-    setSelectedPreset(tipo);
-    if (!tipo) return;
-    const preset = PERFIL_PRESETS.find(p => p.tipo === tipo);
+  const applyPreset = (id: string) => {
+    setSelectedPreset(id);
+    if (!id) return;
+    const preset = perfisAcesso.find(p => p.id === id);
     if (!preset) return;
-    const formPerms = presetToFormPermissions(preset);
+    
     // Atualiza cada módulo individualmente
-    Object.entries(formPerms).forEach(([modulo, perms]) => {
-      setValue(`permissoes.${modulo}.p_visualizar`, perms.p_visualizar);
-      setValue(`permissoes.${modulo}.p_criar`,      perms.p_criar);
-      setValue(`permissoes.${modulo}.p_editar`,     perms.p_editar);
-      setValue(`permissoes.${modulo}.p_excluir`,    perms.p_excluir);
-      setValue(`permissoes.${modulo}.p_aprovar`,    perms.p_aprovar);
-    });
+    if (preset.permissoes) {
+      preset.permissoes.forEach((perms: any) => {
+        setValue(`permissoes.${perms.modulo}.p_visualizar`, perms.p_visualizar);
+        setValue(`permissoes.${perms.modulo}.p_criar`,      perms.p_criar);
+        setValue(`permissoes.${perms.modulo}.p_editar`,     perms.p_editar);
+        setValue(`permissoes.${perms.modulo}.p_excluir`,    perms.p_excluir);
+        setValue(`permissoes.${perms.modulo}.p_aprovar`,    perms.p_aprovar);
+      });
+    }
     // Se o preset define is_admin, aplica também
     setValue('is_admin', preset.is_admin);
+    setValue('sys_perfil_acesso_id', id);
   };
 
   const formValues = watch();
@@ -145,8 +151,7 @@ export default function NovoUsuarioWizard() {
         modulo, ...perms
       })) : [];
 
-      const perfil_acesso = PERFIL_PRESETS.find(p => p.tipo === selectedPreset)?.label || 'Personalizado';
-      const payload = { ...data, permissoes: permissoesArray, status_conta: 'Ativo', perfil_acesso };
+      const payload = { ...data, permissoes: permissoesArray, status_conta: 'Ativo', sys_perfil_acesso_id: selectedPreset || undefined };
       
       const res = await fetch('http://localhost:3002/api/colaboradores', {
         method: 'POST',
@@ -302,13 +307,13 @@ export default function NovoUsuarioWizard() {
                   <span className="text-sm font-semibold text-foreground">Perfis Padrão da OperaIQ</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {PERFIL_PRESETS.map(preset => (
+                  {perfisAcesso.map(preset => (
                     <button
-                      key={preset.tipo}
+                      key={preset.id}
                       type="button"
-                      onClick={() => applyPreset(preset.tipo)}
+                      onClick={() => applyPreset(preset.id)}
                       className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                        selectedPreset === preset.tipo
+                        selectedPreset === preset.id
                           ? 'border-violet-500 bg-violet-600/10 text-white'
                           : 'border-border/60 bg-background text-muted-foreground hover:bg-violet-600/10 hover:text-white'
                       }`}
@@ -322,7 +327,7 @@ export default function NovoUsuarioWizard() {
                 {selectedPreset && (
                   <p className="mt-3 text-xs text-violet-400 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Permissões do preset <strong>{PERFIL_PRESETS.find(p => p.tipo === selectedPreset)?.label}</strong> aplicadas.
+                    Permissões do preset <strong>{perfisAcesso.find(p => p.id === selectedPreset)?.label}</strong> aplicadas.
                   </p>
                 )}
               </div>
@@ -375,7 +380,7 @@ export default function NovoUsuarioWizard() {
                 <div className="bg-transparent p-2">
                   <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Acesso e Permissões</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <DisplayField label="Perfil de Acesso" value={PERFIL_PRESETS.find(p => p.tipo === selectedPreset)?.label || 'Personalizado'} />
+                    <DisplayField label="Perfil de Acesso" value={perfisAcesso.find(p => p.id === selectedPreset)?.label || 'Personalizado'} />
                     <DisplayField label="Cargo" value={formValues.cargo || '-'} />
                   </div>
                 </div>

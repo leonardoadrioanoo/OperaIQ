@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getModulosGerenciaveis } from '@/lib/modules';
-import { PERFIL_PRESETS } from '@/lib/profilePresets';
 import { Input, Select, Readonly, Checkbox, FormField, Breadcrumb } from '@/components/ui';
 import { InlineField, InlineSelect } from '@/components/ui/inline-field';
 import { DisplayField } from '@/components/ui/display-field';
@@ -30,6 +29,7 @@ const updateColaboradorSchema = z.object({
   status_conta: z.string(),
   is_admin: z.any(),
   perfil_acesso: z.string().optional(),
+  sys_perfil_acesso_id: z.string().optional(),
   permissoes: z.any().optional(), // mantendo flexível aqui para simplificar
 });
 
@@ -57,12 +57,14 @@ export default function ColaboradorDetailPage() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [cargos, setCargos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [perfisAcesso, setPerfisAcesso] = useState<any[]>([]);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<UpdateColaboradorForm>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<UpdateColaboradorForm>({
     resolver: zodResolver(updateColaboradorSchema)
   });
 
   const selectedDepartamentoNome = watch('departamento');
+  const selectedPerfilAcessoId = watch('sys_perfil_acesso_id');
   const selectedDepartamento = departamentos.find(d => d.nome === selectedDepartamentoNome);
   const selectedDepartamentoId = selectedDepartamento?.id;
 
@@ -98,7 +100,7 @@ export default function ColaboradorDetailPage() {
           ...json,
           permissoes: permissoesObj,
           is_admin: json.is_admin ? "true" : "false", // ensuring correct select binding
-          perfil_acesso: json.perfil_acesso || (json.is_admin ? 'Administrador da Organização' : 'Colaborador Padrão')
+          sys_perfil_acesso_id: json.sys_perfil_acesso_id || ''
         });
         
         // Fetch users for gestor select
@@ -111,16 +113,18 @@ export default function ColaboradorDetailPage() {
           setCompanyUsers(usersJson.filter((u: any) => u.id !== id));
         }
 
-        // Fetch organizational structures
-        const [resDept, resCargo, resEquipe] = await Promise.all([
+        // Fetch organizational structures and RBAC profiles
+        const [resDept, resCargo, resEquipe, resPerfis] = await Promise.all([
           fetch('http://localhost:3002/api/departamentos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
           fetch('http://localhost:3002/api/cargos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
-          fetch('http://localhost:3002/api/equipes', { headers: { Authorization: `Bearer ${session.access_token}` } })
+          fetch('http://localhost:3002/api/equipes', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+          fetch('http://localhost:3002/api/rbac/perfis', { headers: { Authorization: `Bearer ${session.access_token}` } })
         ]);
 
         if (resDept.ok) setDepartamentos(await resDept.json());
         if (resCargo.ok) setCargos(await resCargo.json());
         if (resEquipe.ok) setEquipes(await resEquipe.json());
+        if (resPerfis.ok) setPerfisAcesso(await resPerfis.json());
 
       } else {
         toast.error('Colaborador não encontrado.');
@@ -137,6 +141,28 @@ export default function ColaboradorDetailPage() {
     if (id) fetchData();
   }, [id]);
 
+  // Atualiza as permissões automaticamente quando o perfil de acesso é alterado no modo de edição
+  useEffect(() => {
+    if (isEditing && selectedPerfilAcessoId) {
+      const preset = perfisAcesso.find(p => p.id === selectedPerfilAcessoId);
+      if (preset && preset.permissoes) {
+        // Converte as permissões vindas da API para o formato do react-hook-form
+        const formattedPerms: any = {};
+        preset.permissoes.forEach((perm: any) => {
+          formattedPerms[perm.modulo] = {
+            p_visualizar: perm.p_visualizar,
+            p_criar: perm.p_criar,
+            p_editar: perm.p_editar,
+            p_excluir: perm.p_excluir,
+            p_aprovar: perm.p_aprovar
+          };
+        });
+        setValue('permissoes', formattedPerms, { shouldDirty: true });
+        toast.info(`Permissões atualizadas para o perfil: ${preset.label}`);
+      }
+    }
+  }, [selectedPerfilAcessoId, isEditing, setValue, perfisAcesso]);
+
   const onSubmit = async (formData: UpdateColaboradorForm) => {
     setIsSaving(true);
     try {
@@ -147,8 +173,8 @@ export default function ColaboradorDetailPage() {
         modulo, ...perms
       })) : [];
 
-      const selectedPreset = PERFIL_PRESETS.find(p => p.label === formData.perfil_acesso);
-      const isAdministrador = selectedPreset?.is_admin ?? (formData.perfil_acesso === 'Administrador' || formData.perfil_acesso === 'Administrador da Organização');
+      const selectedPreset = perfisAcesso.find(p => p.id === formData.sys_perfil_acesso_id);
+      const isAdministrador = selectedPreset?.is_admin ?? false;
 
       const payload = { 
         ...formData, 
@@ -319,9 +345,10 @@ export default function ColaboradorDetailPage() {
           <div className="space-y-6">
             <SectionTitle>Dados de Acesso</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <InlineSelect label="Perfil de Acesso" name="perfil_acesso" register={register} isEditing={isEditing} readonlyValue={data?.perfil_acesso || (data.is_admin ? 'Administrador do Sistema' : 'Colaborador')}>
-                {PERFIL_PRESETS.map(preset => (
-                  <option key={preset.tipo} value={preset.label} className="bg-[#06112a] text-white">
+              <InlineSelect label="Perfil de Acesso" name="sys_perfil_acesso_id" register={register} isEditing={isEditing} readonlyValue={perfisAcesso.find(p => p.id === data?.sys_perfil_acesso_id)?.label || 'Não Definido'}>
+                <option value="" className="bg-[#06112a] text-white">Selecione um perfil...</option>
+                {perfisAcesso.map(preset => (
+                  <option key={preset.id} value={preset.id} className="bg-[#06112a] text-white">
                     {preset.icon} {preset.label}
                   </option>
                 ))}

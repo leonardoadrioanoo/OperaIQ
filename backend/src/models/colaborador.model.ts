@@ -42,6 +42,7 @@ export interface ColaboradorDTO {
   senha_temporaria?: string; // apenas criação
   is_admin?: boolean;
   perfil_acesso?: string;
+  sys_perfil_acesso_id?: string;
   status_conta?: string;
   dois_fatores_ativo?: boolean;
   

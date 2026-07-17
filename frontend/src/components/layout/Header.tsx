@@ -27,7 +27,6 @@ export function Header() {
     <header className="h-16 border-b border-white/10 bg-[#070b25]/95 backdrop-blur supports-[backdrop-filter]:bg-[#070b25]/80 flex items-center justify-between px-6 sticky top-0 z-10 transition-colors duration-300 shadow-[0_0_20px_rgba(0,0,0,0.12)]">
       {/* Left side - Breadcrumbs or Context */}
       <div className="flex items-center text-sm">
-        <span className="text-white rounded-md px-2 py-1 transition-colors hover:bg-violet-600/10">Início</span>
       </div>
 
       {/* Middle - Global Search */}

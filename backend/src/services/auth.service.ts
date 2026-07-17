@@ -14,7 +14,7 @@ export class AuthService {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
-      email_confirm: true, // Auto confirm for now, or false if you want them to verify
+      email_confirm: false, // Força a verificação de e-mail
       user_metadata: {
         full_name: data.nome_admin,
         role: data.cargo_admin
@@ -30,6 +30,17 @@ export class AuthService {
     // 2. Create relational records in public schema
     try {
       await this.userRepository.createCompanyAndProfile(userId, data);
+      
+      // 3. Dispara o e-mail de verificação oficial do Supabase
+      const { error: resendError } = await supabaseAdmin.auth.resend({
+        type: 'signup',
+        email: data.email,
+      });
+
+      if (resendError) {
+        console.warn(`Aviso: Falha ao enviar e-mail de verificação para ${data.email}. Erro:`, resendError.message);
+      }
+
       return { success: true, user: authData.user };
     } catch (dbError: any) {
       // If DB insert fails, cleanup the auth user to avoid orphan accounts

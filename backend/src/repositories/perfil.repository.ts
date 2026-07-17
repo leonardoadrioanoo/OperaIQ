@@ -9,6 +9,7 @@ export class PerfilRepository {
         *,
         empresas (id, nome_fantasia, razao_social),
         gestor:perfis!gestor_id (id, nome_completo),
+        sys_perfis_acesso (nome, descricao),
         perfil_permissoes (*)
       `)
       .eq('id', userId)

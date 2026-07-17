@@ -8,6 +8,7 @@ import departamentoRoutes from './routes/departamento.routes';
 import cargoRoutes from './routes/cargo.routes';
 import equipeRoutes from './routes/equipe.routes';
 import rbacRoutes from './routes/rbac.routes';
+import documentosRoutes from './routes/documentos.routes';
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/departamentos', departamentoRoutes);
 app.use('/api/cargos', cargoRoutes);
 app.use('/api/equipes', equipeRoutes);
 app.use('/api/rbac', rbacRoutes);
+app.use('/api/empresa/documentos', documentosRoutes);
 
 const PORT = process.env.PORT || 3002;
 

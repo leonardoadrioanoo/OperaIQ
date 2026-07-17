@@ -15,9 +15,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     // Escuta mudanças no estado de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Atualiza último acesso
+        await supabase.from('perfis').update({ ultimo_acesso: new Date().toISOString() }).eq('id', session.user.id)
+      }
     })
 
     return () => subscription.unsubscribe()

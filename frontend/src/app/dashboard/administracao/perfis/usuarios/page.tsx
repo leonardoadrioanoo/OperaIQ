@@ -4,13 +4,14 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Users, Plus, Search, Filter, Loader2, Edit, ChevronRight } from 'lucide-react';
+import { Users, Plus, Search, Filter, Loader2, Edit, ChevronRight, X, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui';
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   const fetchUsers = async () => {
@@ -40,11 +41,26 @@ export default function UsuariosPage() {
 
   const getInitials = (name: string) => name ? name.split(' ').filter(Boolean).slice(0,2).map(n => n[0].toUpperCase()).join('') : '?';
 
+  const filteredUsers = users.filter(u => {
+    const term = searchTerm.toLowerCase();
+    return term === '' ||
+      (u.nome_completo && u.nome_completo.toLowerCase().includes(term)) ||
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.cargo && u.cargo.toLowerCase().includes(term));
+  });
+
   return (
     <div className="max-w-7xl mx-auto p-6 md:p-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
+          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
+            <span>Administração</span>
+            <span>/</span>
+            <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+            <span>/</span>
+            <span className="text-zinc-300">Colaboradores</span>
+          </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
             <Users className="w-6 h-6 text-violet-500" />
             Colaboradores
@@ -66,20 +82,23 @@ export default function UsuariosPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
-          <div className="relative flex items-center gap-3">
-            <Search className="w-4 h-4 text-zinc-500 ml-1" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, e-mail ou cargo..."
-              className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
-            />
-          </div>
+      <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-violet-500/30 transition-colors w-full max-w-sm">
+          <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+          <input
+            type="text"
+            placeholder="Buscar por nome, e-mail ou cargo..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="bg-transparent text-sm text-foreground placeholder:text-zinc-500 focus:outline-none w-full"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="text-zinc-500 hover:text-white transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
-        <button className="p-2.5 border border-border/60 bg-background text-zinc-400 hover:text-foreground rounded-xl transition-colors shadow-sm">
-          <Filter className="w-4 h-4" />
-        </button>
+        <span className="ml-auto text-xs text-zinc-500">{filteredUsers.length} de {users.length}</span>
       </div>
 
       {/* Table */}
@@ -98,18 +117,18 @@ export default function UsuariosPage() {
             <tbody className="divide-y divide-border/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <Loader2 className="w-8 h-8 text-violet-500 animate-spin mx-auto" />
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
                     Nenhum colaborador encontrado.
                   </td>
                 </tr>
               ) : (
-                users.map(user => (
+                filteredUsers.map(user => (
                   <tr key={user.id} className="hover:bg-muted/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">

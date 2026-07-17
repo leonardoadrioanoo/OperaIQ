@@ -156,7 +156,7 @@ export default function OrganizacaoPage() {
         <div>
           <Breadcrumb 
             items={[
-              { label: 'Administração', href: '/dashboard/administracao' },
+              { label: 'Administração' },
               { label: 'Empresa', href: '/dashboard/administracao/empresa' },
               { label: 'Dados da Empresa' },
             ]} 

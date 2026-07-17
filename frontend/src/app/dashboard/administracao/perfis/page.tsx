@@ -2,14 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  Shield, Users, Key, Settings2, Plus, ListChecks, UserCog
-} from 'lucide-react';
+import { Shield, Users, Key, Settings2, UserCog } from 'lucide-react';
 
 const PERFIS_CARDS = [
   { title: "Gerenciar Usuários", description: "Consulte, crie e gerencie colaboradores", icon: UserCog, color: "text-rose-400", bg: "bg-rose-400/10", href: "/dashboard/administracao/perfis/usuarios" },
   { title: "Gerenciar Perfis", description: "Crie ou edite perfis de acesso", icon: Users, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/administracao/perfis/listaperfil" },
-  { title: "Matriz de Permissões", description: "Visão global de acessos por módulo", icon: ListChecks, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/administracao/perfis/matrizpermissao" },
   { title: "Papéis do Sistema", description: "Regras de hierarquia avançadas", icon: Key, color: "text-amber-400", bg: "bg-amber-400/10", href: "/dashboard/administracao/perfis/papeis" },
   { title: "Regras Condicionais", description: "Permissões baseadas em atributos", icon: Settings2, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/administracao/perfis/regras" },
 ];
@@ -17,7 +14,6 @@ const PERFIS_CARDS = [
 export default function PerfisAcessoPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -28,15 +24,14 @@ export default function PerfisAcessoPage() {
             Central de segurança. Defina o que cada colaborador pode ver ou fazer dentro da OperaIQ.
           </p>
         </div>
-       
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PERFIS_CARDS.map((card) => {
+        {PERFIS_CARDS.map(card => {
           const Icon = card.icon;
           return (
-            <Link 
-              key={card.title} 
+            <Link
+              key={card.title}
               href={card.href}
               className="group relative p-6 bg-[#13131f] border border-white/5 rounded-2xl hover:bg-white/[0.02] hover:border-white/10 transition-all overflow-hidden flex flex-col items-start"
             >

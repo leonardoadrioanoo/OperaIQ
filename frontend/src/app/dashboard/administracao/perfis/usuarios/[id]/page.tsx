@@ -4,33 +4,34 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { User, Shield, Sliders, Activity, Edit2, Save, X, Loader2, CheckCircle2, ArrowLeft, FolderOpen } from 'lucide-react';
+import { User, Shield, Sliders, Activity, Edit2, Save, X, Loader2, CheckCircle2, ArrowLeft, FolderOpen, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getModulosGerenciaveis } from '@/lib/modules';
+import { PermissaoMatrix, PermissaoFlags, emptyPermissao } from '@/components/ui/permissao-matrix';
 import { Input, Select, Readonly, Checkbox, FormField, Breadcrumb } from '@/components/ui';
 import { InlineField, InlineSelect } from '@/components/ui/inline-field';
 import { DisplayField } from '@/components/ui/display-field';
+import { AuditLog } from '@/components/ui/audit-log';
 
 // Esquema Zod simplificado para edição
 const updateColaboradorSchema = z.object({
   nome_completo: z.string().min(2, 'Obrigatório'),
   email: z.string().email(),
-  cpf: z.string().optional().or(z.literal('')),
-  cargo: z.string().optional().or(z.literal('')),
-  departamento: z.string().optional().or(z.literal('')),
-  filial: z.string().optional().or(z.literal('')),
-  telefone_direto: z.string().optional().or(z.literal('')),
-  equipe: z.string().optional().or(z.literal('')),
-  matricula: z.string().optional().or(z.literal('')),
-  gestor_id: z.string().uuid().optional().or(z.literal('')),
+  cpf: z.string().nullish().or(z.literal('')),
+  cargo: z.string().nullish().or(z.literal('')),
+  departamento: z.string().nullish().or(z.literal('')),
+  filial: z.string().nullish().or(z.literal('')),
+  telefone_direto: z.string().nullish().or(z.literal('')),
+  equipe: z.string().nullish().or(z.literal('')),
+  matricula: z.string().nullish().or(z.literal('')),
+  gestor_id: z.string().uuid().nullish().or(z.literal('')),
   status_conta: z.string(),
   is_admin: z.any(),
-  perfil_acesso: z.string().optional(),
-  sys_perfil_acesso_id: z.string().optional(),
-  permissoes: z.any().optional(), // mantendo flexível aqui para simplificar
+  perfil_acesso: z.string().nullish(),
+  sys_perfil_acesso_id: z.string().nullish(),
+  permissoes: z.any().nullish(),
 });
 
 type UpdateColaboradorForm = z.infer<typeof updateColaboradorSchema>;
@@ -58,6 +59,7 @@ export default function ColaboradorDetailPage() {
   const [cargos, setCargos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
   const [perfisAcesso, setPerfisAcesso] = useState<any[]>([]);
+  const [modulosApi, setModulosApi] = useState<any[]>([]);
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<UpdateColaboradorForm>({
     resolver: zodResolver(updateColaboradorSchema)
@@ -81,16 +83,45 @@ export default function ColaboradorDetailPage() {
       });
       if (res.ok) {
         const json = await res.json();
-        // Converter permissoes do array relacional para o formato do form
         let permissoesObj: any = {};
+        
+        // 1. Busca as permissões da Matriz (Perfil de Acesso vinculado)
+        if (json.sys_perfil_acesso_id) {
+          try {
+            const resPerfilPerms = await fetch(`http://localhost:3002/api/rbac/perfis/${json.sys_perfil_acesso_id}/permissoes`, {
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (resPerfilPerms.ok) {
+              const perfilPerms = await resPerfilPerms.json();
+              perfilPerms.forEach((p: any) => {
+                permissoesObj[p.modulo] = {
+                  p_visualizar: p.p_visualizar,
+                  p_criar: p.p_criar,
+                  p_editar: p.p_editar,
+                  p_excluir: p.p_excluir,
+                  p_aprovar: p.p_aprovar,
+                  p_exportar: p.p_exportar || false,
+                  p_importar: p.p_importar || false,
+                  p_gerenciar: p.p_gerenciar || false,
+                };
+              });
+            }
+          } catch (e) {}
+        }
+
+        // 2. Sobrepõe com as permissões específicas do usuário
         if (json.perfil_permissoes) {
           json.perfil_permissoes.forEach((p: any) => {
             permissoesObj[p.modulo] = {
+              ...permissoesObj[p.modulo],
               p_visualizar: p.p_visualizar,
               p_criar: p.p_criar,
               p_editar: p.p_editar,
               p_excluir: p.p_excluir,
               p_aprovar: p.p_aprovar,
+              p_exportar: p.p_exportar || false,
+              p_importar: p.p_importar || false,
+              p_gerenciar: p.p_gerenciar || false,
             };
           });
         }
@@ -103,6 +134,8 @@ export default function ColaboradorDetailPage() {
           sys_perfil_acesso_id: json.sys_perfil_acesso_id || ''
         });
         
+        lastLoadedPerfilId.current = json.sys_perfil_acesso_id || null;
+        
         // Fetch users for gestor select
         const resUsers = await fetch(`http://localhost:3002/api/colaboradores`, {
           headers: { Authorization: `Bearer ${session.access_token}` }
@@ -114,17 +147,22 @@ export default function ColaboradorDetailPage() {
         }
 
         // Fetch organizational structures and RBAC profiles
-        const [resDept, resCargo, resEquipe, resPerfis] = await Promise.all([
+        const [resDept, resCargo, resEquipe, resPerfis, resModulos] = await Promise.all([
           fetch('http://localhost:3002/api/departamentos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
           fetch('http://localhost:3002/api/cargos', { headers: { Authorization: `Bearer ${session.access_token}` } }),
           fetch('http://localhost:3002/api/equipes', { headers: { Authorization: `Bearer ${session.access_token}` } }),
-          fetch('http://localhost:3002/api/rbac/perfis', { headers: { Authorization: `Bearer ${session.access_token}` } })
+          fetch('http://localhost:3002/api/rbac/perfis', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+          fetch('http://localhost:3002/api/rbac/modulos', { headers: { Authorization: `Bearer ${session.access_token}` } })
         ]);
 
         if (resDept.ok) setDepartamentos(await resDept.json());
         if (resCargo.ok) setCargos(await resCargo.json());
         if (resEquipe.ok) setEquipes(await resEquipe.json());
         if (resPerfis.ok) setPerfisAcesso(await resPerfis.json());
+        if (resModulos.ok) {
+          const mods = await resModulos.json();
+          setModulosApi(mods.filter((m: any) => m.tipo === 'modulo'));
+        }
 
       } else {
         toast.error('Colaborador não encontrado.');
@@ -141,27 +179,94 @@ export default function ColaboradorDetailPage() {
     if (id) fetchData();
   }, [id]);
 
-  // Atualiza as permissões automaticamente quando o perfil de acesso é alterado no modo de edição
+  // Ref para rastrear qual foi o último perfilId cujas permissões foram buscadas
+  const lastLoadedPerfilId = React.useRef<string | null>(null);
+
+  // Busca permissões da API sempre que o select de perfil muda durante edição
   useEffect(() => {
-    if (isEditing && selectedPerfilAcessoId) {
-      const preset = perfisAcesso.find(p => p.id === selectedPerfilAcessoId);
-      if (preset && preset.permissoes) {
-        // Converte as permissões vindas da API para o formato do react-hook-form
+    if (!isEditing) return;
+    if (!selectedPerfilAcessoId) return;
+    // Evita buscar duas vezes para o mesmo perfil
+    if (lastLoadedPerfilId.current === selectedPerfilAcessoId) return;
+
+    lastLoadedPerfilId.current = selectedPerfilAcessoId;
+
+    const fetchPerfilPerms = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`http://localhost:3002/api/rbac/perfis/${selectedPerfilAcessoId}/permissoes`, {
+          headers: { Authorization: `Bearer ${session?.access_token}` }
+        });
+        if (!res.ok) return;
+        const perms = await res.json();
+        if (!Array.isArray(perms) || perms.length === 0) return;
+
         const formattedPerms: any = {};
-        preset.permissoes.forEach((perm: any) => {
+        perms.forEach((perm: any) => {
           formattedPerms[perm.modulo] = {
-            p_visualizar: perm.p_visualizar,
-            p_criar: perm.p_criar,
-            p_editar: perm.p_editar,
-            p_excluir: perm.p_excluir,
-            p_aprovar: perm.p_aprovar
+            p_visualizar: perm.p_visualizar ?? false,
+            p_criar:      perm.p_criar      ?? false,
+            p_editar:     perm.p_editar     ?? false,
+            p_excluir:    perm.p_excluir    ?? false,
+            p_aprovar:    perm.p_aprovar    ?? false,
+            p_exportar:   perm.p_exportar   ?? false,
+            p_importar:   perm.p_importar   ?? false,
+            p_gerenciar:  perm.p_gerenciar  ?? false,
           };
         });
         setValue('permissoes', formattedPerms, { shouldDirty: true });
-        toast.info(`Permissões atualizadas para o perfil: ${preset.label}`);
+        if (activeTab === 'permissoes') {
+          const label = perfisAcesso.find(p => p.id === selectedPerfilAcessoId)?.label || '';
+          toast.info(`Permissões atualizadas para o perfil: ${label}`);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar permissões do perfil:', err);
       }
+    };
+
+    fetchPerfilPerms();
+  }, [selectedPerfilAcessoId, isEditing]);
+
+  const handleRestorePermissions = async () => {
+    if (!selectedPerfilAcessoId) {
+      toast.error('Nenhum perfil de acesso selecionado.');
+      return;
     }
-  }, [selectedPerfilAcessoId, isEditing, setValue, perfisAcesso]);
+    
+    if (!window.confirm('Tem certeza que deseja restaurar as permissões para o padrão do perfil selecionado? Isso apagará suas edições manuais.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`http://localhost:3002/api/rbac/perfis/${selectedPerfilAcessoId}/permissoes`, {
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+      });
+      if (!res.ok) throw new Error();
+      const perms = await res.json();
+      if (!Array.isArray(perms) || perms.length === 0) throw new Error('Matriz não encontrada.');
+
+      const formattedPerms: any = {};
+      perms.forEach((perm: any) => {
+        formattedPerms[perm.modulo] = {
+          p_visualizar: perm.p_visualizar ?? false,
+          p_criar:      perm.p_criar      ?? false,
+          p_editar:     perm.p_editar     ?? false,
+          p_excluir:    perm.p_excluir    ?? false,
+          p_aprovar:    perm.p_aprovar    ?? false,
+          p_exportar:   perm.p_exportar   ?? false,
+          p_importar:   perm.p_importar   ?? false,
+          p_gerenciar:  perm.p_gerenciar  ?? false,
+        };
+      });
+      setValue('permissoes', formattedPerms, { shouldDirty: true });
+      lastLoadedPerfilId.current = selectedPerfilAcessoId;
+      toast.success('Permissões restauradas para o padrão com sucesso!');
+    } catch (err) {
+      console.error('Erro ao restaurar permissões:', err);
+      toast.error('Falha ao restaurar permissões.');
+    }
+  };
 
   const onSubmit = async (formData: UpdateColaboradorForm) => {
     setIsSaving(true);
@@ -176,11 +281,24 @@ export default function ColaboradorDetailPage() {
       const selectedPreset = perfisAcesso.find(p => p.id === formData.sys_perfil_acesso_id);
       const isAdministrador = selectedPreset?.is_admin ?? false;
 
-      const payload = { 
-        ...formData, 
-        permissoes: permissoesArray,
-        is_admin: isAdministrador
-      };
+      // Remove campos nulos/undefined que podem causar falha na validação do backend
+      const cleanPayload = Object.fromEntries(
+        Object.entries({
+          ...formData,
+          permissoes: permissoesArray,
+          is_admin: isAdministrador,
+          // Normaliza strings vazias para undefined
+          gestor_id: formData.gestor_id || undefined,
+          sys_perfil_acesso_id: formData.sys_perfil_acesso_id || undefined,
+          cpf: formData.cpf || undefined,
+          cargo: formData.cargo || undefined,
+          departamento: formData.departamento || undefined,
+          filial: formData.filial || undefined,
+          telefone_direto: formData.telefone_direto || undefined,
+          equipe: formData.equipe || undefined,
+          matricula: formData.matricula || undefined,
+        }).filter(([_, v]) => v !== null && v !== undefined)
+      );
 
       const res = await fetch(`http://localhost:3002/api/colaboradores/${id}`, {
         method: 'PUT',
@@ -188,7 +306,7 @@ export default function ColaboradorDetailPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(cleanPayload)
       });
       
       if (res.ok) {
@@ -196,10 +314,14 @@ export default function ColaboradorDetailPage() {
         setIsEditing(false);
         fetchData();
       } else {
-        toast.error('Erro ao atualizar.');
+        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        const detail = errData?.details?.map((d: any) => d.message).join(', ') || errData?.error || 'Erro ao atualizar.';
+        toast.error(detail);
+        console.error('Erro da API:', errData);
       }
-    } catch (err) {
-      toast.error('Falha ao salvar.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Falha ao salvar.');
+      console.error('Erro ao salvar:', err);
     } finally {
       setIsSaving(false);
     }
@@ -210,6 +332,20 @@ export default function ColaboradorDetailPage() {
     toast.error("Preencha todos os campos corretamente. Verifique todas as abas.");
   };
 
+  const currentPerms = watch('permissoes') || {};
+
+  const moduloPermissaoList = modulosApi.map((m) => ({
+    modulo: m.nome,
+    modulo_id: m.id,
+    ordem: m.ordem,
+    permissoes: currentPerms[m.nome] || emptyPermissao(),
+  }));
+
+  const handlePermissaoChange = (moduloNome: string, campo: keyof PermissaoFlags, valor: boolean) => {
+    const modPerms = currentPerms[moduloNome] || emptyPermissao();
+    setValue(`permissoes.${moduloNome}`, { ...modPerms, [campo]: valor }, { shouldDirty: true });
+  };
+
   if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><Loader2 className="w-8 h-8 text-violet-500 animate-spin" /></div>;
   if (!data) return null;
 
@@ -218,9 +354,15 @@ export default function ColaboradorDetailPage() {
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-8">
       <div className="mb-6">
-        <Link href="/dashboard/administracao/perfis/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Voltar
-        </Link>
+        <div className="flex items-center gap-2 mb-4 text-sm text-zinc-500">
+          <span>Administração</span>
+          <span>/</span>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <span>/</span>
+          <Link href="/dashboard/administracao/perfis/usuarios" className="hover:text-violet-400">Colaboradores</Link>
+          <span>/</span>
+          <span className="text-zinc-300">{data?.nome_completo || 'Detalhes'}</span>
+        </div>
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -233,7 +375,7 @@ export default function ColaboradorDetailPage() {
             </h1>
           </div>
           
-          {(activeTab !== 'auditoria' && activeTab !== 'permissoes') && (
+          {activeTab !== 'auditoria' && (
             !isEditing ? (
               <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5">
                 <Edit2 className="w-4 h-4 text-violet-400" /> Editar
@@ -349,16 +491,16 @@ export default function ColaboradorDetailPage() {
                 <option value="" className="bg-[#06112a] text-white">Selecione um perfil...</option>
                 {perfisAcesso.map(preset => (
                   <option key={preset.id} value={preset.id} className="bg-[#06112a] text-white">
-                    {preset.icon} {preset.label}
+                    {preset.label}
                   </option>
                 ))}
               </InlineSelect>
+              <DisplayField label="Descrição do Perfil" value={perfisAcesso.find(p => p.id === (selectedPerfilAcessoId || data?.sys_perfil_acesso_id))?.descricao || data?.sys_perfis_acesso?.descricao || 'Sem descrição vinculada.'} />
               <InlineSelect label="Status da Conta" name="status_conta" register={register} isEditing={isEditing} readonlyValue={data?.status_conta}>
                 <option value="Ativo" className="bg-[#06112a] text-white">Ativo</option>
                 <option value="Inativo" className="bg-[#06112a] text-white">Inativo</option>
                 <option value="Bloqueado" className="bg-[#06112a] text-white">Bloqueado</option>
               </InlineSelect>
-              <DisplayField label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Nunca acessou'} />
             </div>
           </div>
         )}
@@ -366,55 +508,29 @@ export default function ColaboradorDetailPage() {
         {/* PERMISSÕES */}
         {activeTab === 'permissoes' && (
           <div className="space-y-6">
-            <SectionTitle>Permissões</SectionTitle>
-            <p className="text-sm text-zinc-500">
-              Configure quais módulos e ações este colaborador pode acessar. Administradores têm acesso total e irrestrito.
-            </p>
-            <div className="overflow-x-auto rounded-lg border border-white/5">
-              <table className="w-full text-left text-sm text-zinc-400">
-                <thead className="bg-[#13131f] text-zinc-500 text-xs uppercase font-medium">
-                  <tr>
-                    <th className="px-4 py-3 min-w-[160px]">Módulo</th>
-                    {['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar', 'p_importar', 'p_gerenciar'].map(col => (
-                      <th key={col} className="px-3 py-3 text-center whitespace-nowrap">{col.replace('p_', '')}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {getModulosGerenciaveis().map(mod => {
-                    const dbPerm = data.perfil_permissoes?.find((p: any) => p.modulo === mod.key);
-                    return (
-                      <tr key={mod.key} className="hover:bg-white/[0.02]">
-                        <td className="px-4 py-3 font-medium text-white">{mod.title}</td>
-                        {['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar', 'p_importar', 'p_gerenciar'].map(perm => {
-                          const isSupported = mod.acoes.includes(perm as any);
-                          return (
-                            <td key={perm} className="px-3 py-3 text-center">
-                              {isSupported ? (
-                                isEditing ? (
-                                  <input
-                                    type="checkbox"
-                                    {...register(`permissoes.${mod.key}.${perm}` as any)}
-                                    className="w-4 h-4 appearance-none rounded-[4px] border border-white/20 bg-transparent hover:bg-white/5 checked:bg-transparent checked:border-emerald-500 relative cursor-pointer transition-colors
-                                    checked:after:absolute checked:after:inset-0 checked:after:content-['✓'] checked:after:text-emerald-500 checked:after:flex checked:after:justify-center checked:after:items-center checked:after:text-[12px] checked:after:font-bold"
-                                  />
-                                ) : (
-                                  <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center mx-auto ${dbPerm?.[perm] ? 'border-emerald-500' : 'border-white/20'}`}>
-                                    {dbPerm?.[perm] && <span className="text-emerald-500 text-[12px] font-bold">✓</span>}
-                                  </div>
-                                )
-                              ) : (
-                                <span className="text-zinc-800">—</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className="border-b border-white/5 pb-4 mb-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Permissões</h3>
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleRestorePermissions}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg transition-all shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Restaurar Padrão
+                  </button>
+                )}
+              </div>
+              <p className="text-sm text-zinc-500 mt-2">
+                Configure quais módulos e ações este colaborador pode acessar. Administradores têm acesso total e irrestrito.
+              </p>
             </div>
+            <PermissaoMatrix
+              modulos={moduloPermissaoList}
+              isReadOnly={!isEditing}
+              onChange={handlePermissaoChange}
+            />
           </div>
         )}
 
@@ -422,10 +538,12 @@ export default function ColaboradorDetailPage() {
         {activeTab === 'auditoria' && (
           <div className="space-y-6">
             <SectionTitle>Auditoria do Registro</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <DisplayField label="Criado em" value={data?.created_at ? new Date(data.created_at).toLocaleString('pt-BR') : 'Data não disponível'} />
-              <DisplayField label="Última Atualização" value={data?.updated_at ? new Date(data.updated_at).toLocaleString('pt-BR') : 'Sem atualizações recentes'} />
-            </div>
+            <AuditLog 
+              created_at={data?.criado_em || data?.created_at} 
+              updated_at={data?.atualizado_em || data?.updated_at} 
+              ultimo_acesso={data?.ultimo_acesso}
+              userName={data?.nome_completo}
+            />
           </div>
         )}
 

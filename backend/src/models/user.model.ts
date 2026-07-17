@@ -1,10 +1,12 @@
 export interface RegisterCompanyDTO {
   empresa: string;
+  razao_social?: string;
   cnpj: string;
   setor: string;
   telefone_empresa: string;
   email_empresa: string;
   site?: string;
+  responsavel_legal?: string;
   cep: string;
   logradouro: string;
   numero: string;

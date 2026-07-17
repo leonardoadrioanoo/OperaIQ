@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Component, Plus, Search, Edit2, Trash2, X, Loader2, Check, LayoutGrid, List } from 'lucide-react';
+import { Component, Plus, Search, Edit2, Trash2, X, Loader2, Check, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { canViewMenu, hasPermission, getModulePermissions } from '@/lib/permissions';
 import { useAuthStore } from '@/store/authStore';
@@ -29,8 +29,8 @@ export default function DepartamentosPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [gestorNome, setGestorNome] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
@@ -216,6 +216,7 @@ export default function DepartamentosPage() {
   };
 
   const filteredDepartamentos = departamentos.filter(d => 
+    searchTerm === '' || 
     d.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (d.sigla && d.sigla.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -225,7 +226,7 @@ export default function DepartamentosPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <Link href="/dashboard/administracao" className="hover:text-violet-400">Administração</Link>
+            <span>Administração</span>
             <span>/</span>
             <Link href="/dashboard/administracao/estrutura" className="hover:text-violet-400">Estrutura Organizacional</Link>
             <span>/</span>
@@ -245,19 +246,23 @@ export default function DepartamentosPage() {
       </div>
 
       <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
-            <div className="relative flex items-center gap-3">
-              <Search className="w-4 h-4 text-zinc-500 ml-1" />
-              <input 
-                type="text" 
-                placeholder="Buscar por nome ou sigla..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
-              />
-            </div>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-indigo-500/30 transition-colors w-full max-w-sm">
+            <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="bg-transparent text-sm text-foreground placeholder:text-zinc-500 focus:outline-none w-full"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-zinc-500 hover:text-white transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+          <span className="ml-auto text-xs text-zinc-500">{filteredDepartamentos.length} de {departamentos.length}</span>
         </div>
 
         {isLoading ? (

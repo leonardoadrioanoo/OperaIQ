@@ -11,6 +11,8 @@ export interface Profile {
   is_admin: boolean
   empresa_id: string | null
   foto_url: string | null
+  dois_fatores_ativo?: boolean | null
+  criado_em?: string
   permissoes?: Array<{
     modulo: string
     p_visualizar: boolean
@@ -29,6 +31,9 @@ export interface Company {
   nome_fantasia: string
   cnpj: string | null
   logo_url: string | null
+  mfa_obrigatorio?: boolean
+  mfa_dias_carencia?: number
+  mfa_publico_alvo?: string
 }
 
 interface AuthState {
@@ -67,12 +72,17 @@ export const useAuthStore = create<AuthState>((set) => ({
           is_admin,
           empresa_id,
           foto_url,
+          dois_fatores_ativo,
+          criado_em,
           perfil_permissoes (*),
           empresas (
             id,
             nome_fantasia,
             cnpj,
-            logo_url
+            logo_url,
+            mfa_obrigatorio,
+            mfa_dias_carencia,
+            mfa_publico_alvo
           )
         `)
         .eq('id', userId)
@@ -93,10 +103,11 @@ export const useAuthStore = create<AuthState>((set) => ({
           is_admin: data.is_admin,
           empresa_id: data.empresa_id,
           foto_url: data.foto_url,
+          dois_fatores_ativo: data.dois_fatores_ativo,
+          criado_em: data.criado_em,
           permissoes: data.perfil_permissoes || []
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const empresaData = (data as any).empresas
         const company: Company | null = empresaData
           ? {
@@ -104,6 +115,9 @@ export const useAuthStore = create<AuthState>((set) => ({
               nome_fantasia: empresaData.nome_fantasia,
               cnpj: empresaData.cnpj,
               logo_url: empresaData.logo_url,
+              mfa_obrigatorio: empresaData.mfa_obrigatorio,
+              mfa_dias_carencia: empresaData.mfa_dias_carencia,
+              mfa_publico_alvo: empresaData.mfa_publico_alvo
             }
           : null
 

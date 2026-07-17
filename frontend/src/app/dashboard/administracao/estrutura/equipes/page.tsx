@@ -47,7 +47,6 @@ export default function EquipesPage() {
   const [novoIntegranteId, setNovoIntegranteId] = useState('');
   const [novoIntegrantePapel, setNovoIntegrantePapel] = useState('Colaborador');
   const [isAddingMember, setIsAddingMember] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState('');
 
   const { profile } = useAuthStore();
@@ -206,8 +205,9 @@ export default function EquipesPage() {
     } catch { toast.error('Erro de conexão.'); }
   };
 
-  const filtered = equipes.filter(e =>
-    e.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredEquipes = equipes.filter(e => 
+    searchTerm === '' || 
+    e.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
     e.tipo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -226,7 +226,7 @@ export default function EquipesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <Link href="/dashboard/administracao" className="hover:text-fuchsia-400">Administração</Link>
+            <span>Administração</span>
             <span>/</span>
             <Link href="/dashboard/administracao/estrutura" className="hover:text-fuchsia-400">Estrutura Organizacional</Link>
             <span>/</span>
@@ -247,19 +247,23 @@ export default function EquipesPage() {
 
       {/* Tabela */}
       <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="rounded-xl border border-border/60 bg-background p-2 w-full max-w-md">
-            <div className="relative flex items-center gap-3">
-              <Search className="w-4 h-4 text-zinc-500 ml-1" />
-              <input 
-                type="text" 
-                placeholder="Buscar por nome ou tipo..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-0"
-              />
-            </div>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-fuchsia-500/30 transition-colors w-full max-w-sm">
+            <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="bg-transparent text-sm text-foreground placeholder:text-zinc-500 focus:outline-none w-full"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-zinc-500 hover:text-white transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+          <span className="ml-auto text-xs text-zinc-500">{filteredEquipes.length} de {equipes.length}</span>
         </div>
 
         {isLoading ? (
@@ -279,7 +283,7 @@ export default function EquipesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filtered.map(equipe => (
+                {filteredEquipes.map(equipe => (
                   <tr key={equipe.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openDetail(equipe)}>
                     <td className="px-4 py-3 font-medium text-foreground">{equipe.nome}</td>
                     <td className="px-4 py-3">
@@ -317,7 +321,7 @@ export default function EquipesPage() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
+                {filteredEquipes.length === 0 && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-zinc-500">Nenhuma equipe encontrada.</td></tr>
                 )}
               </tbody>
@@ -338,16 +342,52 @@ export default function EquipesPage() {
               <button onClick={() => setIsEquipeModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <FormField label="Nome da Equipe *" isEditing register={register} name="nome" error={errors.nome?.message} />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2 space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400">Nome da Equipe *</label>
+                  <input {...register('nome')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50" />
+                  {errors.nome && <span className="text-xs text-rose-400">{errors.nome.message}</span>}
                 </div>
-                <FormField label="Tipo *" isEditing register={register} name="tipo" options={TIPOS_EQUIPE.map(t => ({ value: t, label: t }))} />
-                <FormField label="Status" isEditing register={register} name="status" options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]} />
-                <FormField label="Líder" isEditing register={register} name="lider_id" options={colaboradores.map(c => ({ value: c.id, label: c.nome_completo }))} />
-                <FormField label="Departamento" isEditing register={register} name="departamento_id" options={departamentos.map(d => ({ value: d.id, label: d.nome }))} />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400">Tipo *</label>
+                  <select {...register('tipo')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                    {TIPOS_EQUIPE.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
-              <FormField label="Descrição" isEditing register={register} name="descricao" type="textarea" textareaRows={2} />
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-400">Descrição</label>
+                <textarea {...register('descricao')} rows={2} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400">Líder</label>
+                  <select {...register('lider_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                    <option value="">Selecione um líder...</option>
+                    {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400">Departamento</label>
+                  <select {...register('departamento_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                    <option value="">Nenhum (Raiz)</option>
+                    {departamentos.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-zinc-400">Status</label>
+                  <select {...register('status')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
                 <button type="button" onClick={() => setIsEquipeModalOpen(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">Cancelar</button>
                 <button type="submit" disabled={isSaving} className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">

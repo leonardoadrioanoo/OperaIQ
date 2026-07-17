@@ -3,18 +3,31 @@ import { ColaboradorDTO, PermissaoModulo, ColaboradorProjeto } from '../models/c
 
 export class ColaboradorRepository {
   async findByEmpresaId(empresaId: string) {
-    const { data, error } = await supabaseAdmin
+    // Busca o fundador_id da empresa
+    const { data: empresaData } = await supabaseAdmin
+      .from('empresas')
+      .select('fundador_id')
+      .eq('id', empresaId)
+      .single();
+
+    const founderId = empresaData?.fundador_id;
+
+    let query = supabaseAdmin
       .from('perfis')
       .select(`
         id, nome_completo, cargo, filial, status_conta, email, foto_url, is_admin,
-        departamento, equipe, matricula, gestor_id,
+        departamento, equipe, matricula, gestor_id, perfil_acesso, sys_perfil_acesso_id,
         empresas(nome_fantasia),
         gestor:perfis!gestor_id(nome_completo)
       `)
       .eq('empresa_id', empresaId)
-      .eq('is_admin', false)
       .order('nome_completo', { ascending: true });
 
+    if (founderId) {
+      query = query.neq('id', founderId);
+    }
+
+    const { data, error } = await query;
     if (error) throw new Error(`Erro ao buscar colaboradores: ${error.message}`);
     return data;
   }
@@ -53,21 +66,28 @@ export class ColaboradorRepository {
   async updatePerfil(id: string, empresaId: string, payload: ColaboradorDTO) {
     const { permissoes, projetos, senha_temporaria, id: _id, ...perfilData } = payload;
 
+    // Garante que perfil_acesso e sys_perfil_acesso_id sejam sempre salvos
+    // mesmo quando o valor é null/undefined (para permitir remoção)
+    const updateData: any = { ...perfilData };
+    if ('perfil_acesso' in payload) updateData.perfil_acesso = payload.perfil_acesso ?? null;
+    if ('sys_perfil_acesso_id' in payload) updateData.sys_perfil_acesso_id = payload.sys_perfil_acesso_id || null;
+    if ('is_admin' in payload) updateData.is_admin = payload.is_admin ?? false;
+
     const { error } = await supabaseAdmin
       .from('perfis')
-      .update(perfilData)
+      .update(updateData)
       .eq('id', id)
       .eq('empresa_id', empresaId);
 
     if (error) throw new Error(`Erro ao atualizar perfil: ${error.message}`);
   }
 
-  async syncPermissoes(perfilId: string, permissoes: PermissaoModulo[]) {
+  async syncPermissoes(perfilId: string, permissoes: PermissaoModulo[], isCustomizado = false) {
     // Apaga permissões antigas
     await supabaseAdmin.from('perfil_permissoes').delete().eq('perfil_id', perfilId);
     
     if (permissoes.length > 0) {
-      const inserts = permissoes.map(p => ({ ...p, perfil_id: perfilId }));
+      const inserts = permissoes.map(p => ({ ...p, perfil_id: perfilId, is_customizado: isCustomizado }));
       const { error } = await supabaseAdmin.from('perfil_permissoes').insert(inserts);
       if (error) throw new Error(`Erro ao salvar permissões: ${error.message}`);
     }

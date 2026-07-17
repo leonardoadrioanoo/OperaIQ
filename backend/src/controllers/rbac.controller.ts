@@ -27,8 +27,10 @@ export const rbacController = {
   // ──────────────────────────────────────────────────────────────────────────
   // GET /api/rbac/perfis
   // ──────────────────────────────────────────────────────────────────────────
-  async getPerfisAcesso(_req: Request, res: Response) {
+  async getPerfisAcesso(req: AuthRequest, res: Response) {
     try {
+      const empresaId = req.userProfile?.empresa_id;
+
       const { data: perfis, error: perfisError } = await supabaseAdmin
         .from('sys_perfis_acesso')
         .select('*')
@@ -41,6 +43,23 @@ export const rbacController = {
         .select(`*, modulo:sys_modulos (nome, ordem)`);
 
       if (permissoesError) throw permissoesError;
+
+      // Conta os usuários vinculados aos perfis na empresa atual
+      let userCounts: Record<string, number> = {};
+      if (empresaId) {
+        const { data: usersData } = await supabaseAdmin
+          .from('perfis')
+          .select('sys_perfil_acesso_id')
+          .eq('empresa_id', empresaId)
+          .not('sys_perfil_acesso_id', 'is', null);
+          
+        userCounts = usersData?.reduce((acc: any, curr: any) => {
+          if (curr.sys_perfil_acesso_id) {
+            acc[curr.sys_perfil_acesso_id] = (acc[curr.sys_perfil_acesso_id] || 0) + 1;
+          }
+          return acc;
+        }, {}) || {};
+      }
 
       const perfisComPermissoes = perfis!.map((p: any) => {
         const perms = permissoes!
@@ -62,10 +81,10 @@ export const rbacController = {
           id:        p.id,
           label:     p.nome,
           descricao: p.descricao,
-          icon:      p.icone,
           is_admin:  p.is_admin,
           ativo:     p.ativo,
           permissoes: perms,
+          usuarios_count: userCounts[p.id] || 0,
         };
       });
 
@@ -80,14 +99,14 @@ export const rbacController = {
   // ──────────────────────────────────────────────────────────────────────────
   async criarPerfil(req: AuthRequest, res: Response) {
     try {
-      const { nome, descricao, icone, is_admin } = req.body;
-      if (!nome || !descricao || !icone) {
-        return res.status(400).json({ error: 'Nome, descrição e ícone são obrigatórios.' });
+      const { nome, descricao, is_admin } = req.body;
+      if (!nome || !descricao) {
+        return res.status(400).json({ error: 'Nome e descrição são obrigatórios.' });
       }
 
       const { data, error } = await supabaseAdmin
         .from('sys_perfis_acesso')
-        .insert({ nome, descricao, icone, is_admin: is_admin ?? false, ativo: true })
+        .insert({ nome, descricao, is_admin: is_admin ?? false, ativo: true })
         .select()
         .single();
 
@@ -110,11 +129,11 @@ export const rbacController = {
   async editarPerfil(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { nome, descricao, icone, is_admin } = req.body;
+      const { nome, descricao, is_admin } = req.body;
 
       const { data, error } = await supabaseAdmin
         .from('sys_perfis_acesso')
-        .update({ nome, descricao, icone, is_admin })
+        .update({ nome, descricao, is_admin })
         .eq('id', id)
         .select()
         .single();

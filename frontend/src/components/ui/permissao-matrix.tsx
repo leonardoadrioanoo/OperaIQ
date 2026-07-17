@@ -78,18 +78,17 @@ function ModuloRow({
           const checked = modulo.permissoes[col.key] ?? false;
           return (
             <td key={col.key} className="px-2 py-3 text-center">
-              {isReadOnly ? (
-                // Modo leitura — bolinha colorida
-                <span className={`inline-block w-4 h-4 rounded-full ${checked ? 'bg-emerald-500/80' : 'bg-zinc-700/60'}`} title={checked ? 'Permitido' : 'Negado'} />
-              ) : (
-                // Modo edição — checkbox estilizado
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => onChange?.(modulo.modulo, col.key, e.target.checked)}
-                  className="w-4 h-4 rounded border-border/60 bg-transparent cursor-pointer accent-violet-500"
-                />
-              )}
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => {
+                  if (!isReadOnly) {
+                    onChange?.(modulo.modulo, col.key, e.target.checked);
+                  }
+                }}
+                disabled={isReadOnly}
+                className={`w-4 h-4 rounded border-border/60 bg-transparent accent-violet-500 ${isReadOnly ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+              />
             </td>
           );
         })}

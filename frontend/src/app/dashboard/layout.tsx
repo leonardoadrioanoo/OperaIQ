@@ -78,7 +78,38 @@ export default function DashboardLayout({
     // Se estiver em um módulo e não puder vê-lo, redireciona
     if (moduleName && !canViewMenu(profile, moduleName)) {
       router.replace('/dashboard');
+      return;
     }
+
+    // MFA Verification check
+    const checkMFA = async () => {
+      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (mfaData?.currentLevel === 'aal1') {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasEnrolled = factors?.totp && factors.totp.length > 0 && factors.totp.some(f => f.status === 'verified');
+        
+        // 1. Se o usuário já ativou por conta própria (ou foi forçado antes), é obrigatório validar o 2FA.
+        if (hasEnrolled) {
+          router.replace('/login/mfa');
+          return;
+        }
+
+        // 2. Se a empresa exige, força o setup respeitando a carência
+        const { company } = useAuthStore.getState();
+        if (company?.mfa_obrigatorio) {
+          if (company.mfa_publico_alvo === 'admins' && !profile.is_admin) return;
+          
+          const creationDate = new Date(profile.criado_em || Date.now());
+          const daysSinceCreation = (Date.now() - creationDate.getTime()) / (1000 * 3600 * 24);
+          
+          if (daysSinceCreation >= (company.mfa_dias_carencia || 0)) {
+            router.replace('/login/mfa');
+          }
+        }
+      }
+    };
+
+    checkMFA();
   }, [pathname, profile, isCheckingAccess, router]);
 
   if (isCheckingAccess) {
@@ -91,7 +122,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="flex-1 overflow-y-auto bg-background scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          <div className="p-6 h-full">
+          <div className="p-6">
             {children}
           </div>
         </main>

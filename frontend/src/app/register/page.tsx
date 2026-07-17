@@ -59,12 +59,14 @@ function getStrength(pw: string) {
 
 // ─── Schema ─────────────────────────────────────────────────────────────────────
 const registerSchema = z.object({
-  empresa:          z.string().min(2, "Nome da empresa é obrigatório."),
+  empresa:          z.string().min(2, "Nome fantasia é obrigatório."),
+  razao_social:     z.string().optional(),
   cnpj:             z.string().refine(v => v.replace(/\D/g,"").length === 14, "CNPJ deve ter 14 dígitos."),
   setor:            z.string().min(2, "Setor é obrigatório."),
   telefone_empresa: z.string().min(14, "Telefone inválido."),
   email_empresa:    z.string().email("E-mail inválido."),
   site:             z.string().optional(),
+  responsavel_legal:z.string().optional(),
   inscricao_estadual: z.string().optional(),
   inscricao_municipal: z.string().optional(),
   ramo_atividade:     z.string().optional(),
@@ -94,7 +96,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 type FieldName = keyof RegisterForm;
 const stepsFields: FieldName[][] = [
-  ["empresa", "cnpj", "setor", "telefone_empresa", "email_empresa", "site", "inscricao_estadual", "inscricao_municipal", "ramo_atividade", "porte_empresa"],
+  ["empresa", "razao_social", "cnpj", "setor", "telefone_empresa", "email_empresa", "site", "responsavel_legal", "inscricao_estadual", "inscricao_municipal", "ramo_atividade", "porte_empresa"],
   ["nome_admin", "email", "cargo_admin", "telefone_admin"],
   ["cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf"],
   ["password", "confirmPassword", "terms"]
@@ -319,9 +321,14 @@ export default function RegisterPage() {
                 {/* ── ETAPA 1: EMPRESA ────────────────────────────────────── */}
                 <div className={`space-y-4 transition-all duration-500 ${currentStep === 0 ? "opacity-100 translate-x-0 relative z-10" : "opacity-0 absolute inset-0 -translate-x-10 pointer-events-none"}`}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="sm:col-span-2">
-                      <Field label="Nome da Empresa (Razão social ou Fantasia)" id="empresa" error={errors.empresa?.message}>
-                        <Input id="empresa" placeholder="Sua Empresa Ltda" {...register("empresa")} className="px-4" />
+                    <div className="sm:col-span-1">
+                      <Field label="Nome Fantasia" id="empresa" error={errors.empresa?.message}>
+                        <Input id="empresa" placeholder="Sua Empresa" {...register("empresa")} className="px-4" />
+                      </Field>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <Field label="Razão Social" id="razao_social" error={errors.razao_social?.message}>
+                        <Input id="razao_social" placeholder="Sua Empresa Ltda" {...register("razao_social")} className="px-4" />
                       </Field>
                     </div>
                     <Field label="CNPJ" id="cnpj" error={errors.cnpj?.message}>
@@ -373,9 +380,12 @@ export default function RegisterPage() {
                         </Select>
                       </Field>
                     </div>
-                    <div className="sm:col-span-2">
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <Field label="Site (Opcional)" id="site" error={errors.site?.message} icon={<Globe className="w-4 h-4 text-slate-500"/>}>
                         <Input id="site" type="url" placeholder="https://www.empresa.com.br" {...register("site")} className="pl-10 pr-4" />
+                      </Field>
+                      <Field label="Responsável Legal" id="responsavel_legal" error={errors.responsavel_legal?.message}>
+                        <Input id="responsavel_legal" placeholder="Nome completo do responsável" {...register("responsavel_legal")} className="px-4" />
                       </Field>
                     </div>
                   </div>

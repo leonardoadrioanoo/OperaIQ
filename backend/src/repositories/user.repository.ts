@@ -9,9 +9,11 @@ export class UserRepository {
       .insert([
         {
           nome_fantasia: data.empresa,
+          razao_social: data.razao_social,
           cnpj: data.cnpj,
           setor: data.setor,
           telefone: data.telefone_empresa,
+          responsavel_legal: data.responsavel_legal,
           email_corporativo: data.email_empresa,
           site: data.site,
           cep: data.cep,
@@ -25,6 +27,7 @@ export class UserRepository {
           inscricao_municipal: data.inscricao_municipal,
           ramo_atividade: data.ramo_atividade,
           porte_empresa: data.porte_empresa,
+          fundador_id: userId,
         }
       ])
       .select('id')

@@ -160,33 +160,27 @@ export default function MatrizPermissaoPage() {
               Configure as permissões padrão de cada perfil. As alterações são aplicadas automaticamente a todos os usuários vinculados.
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving || !selectedPerfilId}
-            className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-violet-900/30 whitespace-nowrap"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Salvar Permissões
-          </button>
         </div>
       </div>
 
       {/* Seleção de Perfil */}
       <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5">
         <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Selecione o Perfil</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {perfis.map((perfil) => (
             <button
               key={perfil.id}
               onClick={() => setSelectedPerfilId(perfil.id)}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border text-center transition-all ${
+              className={`flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all ${
                 selectedPerfilId === perfil.id
                   ? 'border-violet-500 bg-violet-600/15 text-white shadow-lg shadow-violet-900/20'
                   : 'border-border/60 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-600/5'
               }`}
             >
-              <span className="text-2xl">{perfil.icon}</span>
-              <span className="text-xs font-semibold leading-tight">{perfil.label}</span>
+              <span className="text-xs font-semibold leading-tight text-foreground">{perfil.label}</span>
+              {perfil.descricao && (
+                <span className="text-[11px] text-zinc-400 leading-relaxed">{perfil.descricao}</span>
+              )}
             </button>
           ))}
         </div>
@@ -207,7 +201,6 @@ export default function MatrizPermissaoPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{selectedPerfil?.icon}</span>
               <div>
                 <h2 className="text-lg font-bold text-white">{selectedPerfil?.label}</h2>
                 <p className="text-xs text-zinc-500">

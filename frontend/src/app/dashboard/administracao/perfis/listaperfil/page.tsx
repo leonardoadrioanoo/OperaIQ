@@ -10,13 +10,6 @@ import {
   ToggleRight, Users, Loader2, X, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 
-// Biblioteca de ícones para seleção
-const ICONES = [
-  '👤','👥','👨‍💼','👩‍💼','🏢','🔧','📋','📊','👔','🎯',
-  '🔑','⚙️','🛡️','🔐','📌','🌟','🎨','💼','🏅','📡',
-  '🤝','🧑‍💻','👨‍🔬','🧑‍🎨','🧑‍💼','🕵️','🎖️','💎','🚀','✅',
-  '🏆','🔍','📈','📉','💰','🧾','📁','🗂️','🖥️','🧩',
-];
 
 const API = 'http://localhost:3002';
 
@@ -41,13 +34,12 @@ function ModalPerfil({
 }) {
   const [nome, setNome] = useState(perfil?.label ?? '');
   const [descricao, setDescricao] = useState(perfil?.descricao ?? '');
-  const [icone, setIcone] = useState(perfil?.icon ?? '');
   const [isAdmin, setIsAdmin] = useState(perfil?.is_admin ?? false);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
   const handleSave = async () => {
-    if (!nome.trim() || !descricao.trim() || !icone) {
+    if (!nome.trim() || !descricao.trim()) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -59,7 +51,7 @@ function ModalPerfil({
         'Content-Type': 'application/json',
       };
 
-      const payload = { nome: nome.trim(), descricao: descricao.trim(), icone, is_admin: isAdmin };
+      const payload = { nome: nome.trim(), descricao: descricao.trim(), is_admin: isAdmin };
 
       let res;
       if (perfil) {
@@ -130,24 +122,7 @@ function ModalPerfil({
             />
           </div>
 
-          {/* Ícone */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
-              Ícone * {icone && <span className="ml-2 text-base">{icone} selecionado</span>}
-            </label>
-            <div className="grid grid-cols-10 gap-1.5 max-h-36 overflow-y-auto scrollbar-thin scrollbar-thumb-border/60 p-1 bg-muted/20 rounded-lg border border-border/40">
-              {ICONES.map((em) => (
-                <button
-                  key={em}
-                  type="button"
-                  onClick={() => setIcone(em)}
-                  className={`text-xl p-1.5 rounded-lg transition-all hover:bg-violet-600/20 ${icone === em ? 'bg-violet-600/30 ring-1 ring-violet-500' : ''}`}
-                >
-                  {em}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {/* Is Admin */}
           <label className="flex items-center gap-3 cursor-pointer">
@@ -199,23 +174,10 @@ export default function ListaPerfilPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const [resPerfis, resCount] = await Promise.all([
-        fetch(`${API}/api/rbac/perfis`, { headers: { Authorization: `Bearer ${session.access_token}` } }),
-        fetch(`${API}/api/colaboradores`, { headers: { Authorization: `Bearer ${session.access_token}` } }),
-      ]);
-
+      const resPerfis = await fetch(`${API}/api/rbac/perfis`, { headers: { Authorization: `Bearer ${session.access_token}` } });
       const perfisData: Perfil[] = resPerfis.ok ? await resPerfis.json() : [];
-      const usuariosData: any[] = resCount.ok ? await resCount.json() : [];
 
-      // Contar usuários por perfil
-      const countMap: Record<string, number> = {};
-      usuariosData.forEach((u) => {
-        if (u.sys_perfil_acesso_id) {
-          countMap[u.sys_perfil_acesso_id] = (countMap[u.sys_perfil_acesso_id] || 0) + 1;
-        }
-      });
-
-      setPerfis(perfisData.map((p) => ({ ...p, usuarios_count: countMap[p.id] ?? 0 })));
+      setPerfis(perfisData);
     } catch {
       toast.error('Falha ao carregar perfis.');
     } finally {
@@ -275,11 +237,15 @@ export default function ListaPerfilPage() {
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div>
-        <Link href="/dashboard/administracao/perfis" className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Voltar para Perfis e Acessos
-        </Link>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
+            <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
+              <span>Administração</span>
+              <span>/</span>
+              <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+              <span>/</span>
+              <span className="text-zinc-300">Gerenciar Perfis</span>
+            </div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
               <Shield className="w-7 h-7 text-violet-400" /> Gerenciar Perfis de Acesso
             </h1>
@@ -333,35 +299,32 @@ export default function ListaPerfilPage() {
           {perfisExibidos.map((perfil) => (
             <div
               key={perfil.id}
-              className={`group relative bg-[#13131f] border rounded-2xl p-5 flex flex-col gap-4 transition-all ${perfil.ativo ? 'border-white/5 hover:border-violet-500/30' : 'border-white/5 opacity-60'}`}
+              className={`group relative bg-[#13131f] border rounded-2xl p-5 flex flex-col h-full transition-all ${perfil.ativo ? 'border-white/5 hover:border-violet-500/30' : 'border-white/5 opacity-60'}`}
             >
-              {/* Top */}
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-2xl flex-shrink-0">
-                  {perfil.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-bold text-white leading-tight">{perfil.label}</h3>
-                    {perfil.is_admin && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Admin</span>
-                    )}
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${perfil.ativo ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'}`}>
-                      {perfil.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-1 leading-relaxed line-clamp-2">{perfil.descricao}</p>
-                </div>
+              {/* Header */}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <h3 className="text-base font-bold text-white leading-tight">{perfil.label}</h3>
+                {perfil.is_admin && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Admin</span>
+                )}
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${perfil.ativo ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'}`}>
+                  {perfil.ativo ? 'Ativo' : 'Inativo'}
+                </span>
               </div>
 
+              {/* Description */}
+              <p className="text-xs text-zinc-500 leading-relaxed mb-4 flex-1">
+                {perfil.descricao}
+              </p>
+
               {/* Stats */}
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
                 <Users className="w-3.5 h-3.5" />
                 <span>{perfil.usuarios_count} usuário{perfil.usuarios_count !== 1 ? 's' : ''} vinculado{perfil.usuarios_count !== 1 ? 's' : ''}</span>
               </div>
 
               {/* Ações */}
-              <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+              <div className="flex items-center gap-2 pt-4 border-t border-white/5 mt-auto">
                 <Link
                   href={`/dashboard/administracao/perfis/matrizpermissao?perfil=${perfil.id}`}
                   className="flex-1 text-center text-xs py-2 rounded-lg bg-violet-600/10 text-violet-400 hover:bg-violet-600/20 transition-colors font-medium"

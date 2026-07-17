@@ -2,50 +2,40 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  Building2, MapPin, Building, FileText
-} from 'lucide-react';
-import { Breadcrumb } from '@/components/ui';
+import { Building2, MapPin, Building, FileText } from 'lucide-react';
 
 const EMPRESA_CARDS = [
-  { 
-    title: "Dados da Empresa", 
-    description: "Razão social, CNPJ, logo e contatos principais", 
-    icon: Building, 
-    color: "text-blue-400", 
-    bg: "bg-blue-400/10", 
-    href: "/dashboard/administracao/empresa/dados" 
+  {
+    title: "Dados da Empresa",
+    description: "Razão social, CNPJ, logo e contatos principais",
+    icon: Building,
+    color: "text-blue-400",
+    bg: "bg-blue-400/10",
+    href: "/dashboard/administracao/empresa/dados",
   },
-  { 
-    title: "Gestão de Filiais", 
-    description: "Cadastre e gerencie múltiplos endereços e operações", 
-    icon: MapPin, 
-    color: "text-emerald-400", 
-    bg: "bg-emerald-400/10", 
-    href: "/dashboard/administracao/empresa/filiais" 
+  {
+    title: "Gestão de Filiais",
+    description: "Cadastre e gerencie múltiplos endereços e operações",
+    icon: MapPin,
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
+    href: "/dashboard/administracao/empresa/filiais",
   },
-  { 
-    title: "Documentos Legais", 
-    description: "Contratos sociais, alvarás e certidões", 
-    icon: FileText, 
-    color: "text-amber-400", 
-    bg: "bg-amber-400/10", 
-    href: "/dashboard/administracao/empresa/documentos" 
+  {
+    title: "Documentos Legais",
+    description: "Contratos sociais, alvarás e certidões",
+    icon: FileText,
+    color: "text-amber-400",
+    bg: "bg-amber-400/10",
+    href: "/dashboard/administracao/empresa/documentos",
   },
 ];
 
 export default function EmpresaPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <Breadcrumb 
-            items={[
-              { label: 'Administração', href: '/dashboard/administracao' },
-              { label: 'Empresa', href: '/dashboard/administracao/empresa' },
-            ]} 
-          />
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             <Building2 className="w-8 h-8 text-blue-500" />
             Empresa
@@ -57,11 +47,11 @@ export default function EmpresaPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {EMPRESA_CARDS.map((card) => {
+        {EMPRESA_CARDS.map(card => {
           const Icon = card.icon;
           return (
-            <Link 
-              key={card.title} 
+            <Link
+              key={card.title}
               href={card.href}
               className="group relative p-6 bg-[#13131f] border border-white/5 rounded-2xl hover:bg-white/[0.02] hover:border-white/10 transition-all overflow-hidden flex flex-col items-start"
             >

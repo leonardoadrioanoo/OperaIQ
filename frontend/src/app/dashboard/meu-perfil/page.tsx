@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,6 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 import { Checkbox, Input, Readonly, Breadcrumb } from '@/components/ui';
 import { InlineField, InlineSelect } from '@/components/ui/inline-field';
+import { AuditLog } from '@/components/ui/audit-log';
 
 const profileSchema = z.object({
   nome_completo: z.string().min(2, 'Obrigatório'),
@@ -239,7 +241,7 @@ export default function MeuPerfilPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground truncate">{data?.nome_completo}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
+            {data?.sys_perfis_acesso?.nome || data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
             {company?.nome_fantasia ? ` • ${company.nome_fantasia}` : ''}
           </p>
           <div className="flex items-center gap-2 mt-2">
@@ -392,10 +394,13 @@ export default function MeuPerfilPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <DisplayField
                 label="Perfil de Acesso"
-                value={data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
+                value={data?.sys_perfis_acesso?.nome || data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
+              />
+              <DisplayField 
+                label="Descrição do Perfil" 
+                value={data?.sys_perfis_acesso?.descricao || (isAdmin ? 'Acesso irrestrito a todos os módulos e configurações avançadas do sistema.' : 'Sem descrição vinculada.')} 
               />
               <DisplayField label="Status da Conta" value={data?.status_conta} />
-              <DisplayField label="Último Acesso" value={data?.ultimo_acesso ? new Date(data.ultimo_acesso).toLocaleString('pt-BR') : 'Sem registro'} />
             </div>
           </div>
         )}
@@ -490,7 +495,19 @@ export default function MeuPerfilPage() {
                     {data?.dois_fatores_ativo ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-600">A configuração de autenticação em duas etapas estará disponível em breve.</p>
+                {!data?.dois_fatores_ativo && (
+                  <div className="pt-2">
+                    <Link 
+                      href="/login/mfa"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-semibold transition-colors"
+                    >
+                      <Shield className="w-4 h-4" /> Configurar Google Authenticator agora
+                    </Link>
+                  </div>
+                )}
+                {data?.dois_fatores_ativo && (
+                  <p className="text-xs text-zinc-500 mt-2">Sua conta está protegida com nível máximo de segurança.</p>
+                )}
               </div>
             </div>
 
@@ -515,11 +532,12 @@ export default function MeuPerfilPage() {
         {activeTab === 'auditoria' && (
           <div className="space-y-6">
             <SectionTitle>Histórico da Conta</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <DisplayField label="Data de Criação" value={data?.criado_em ? new Date(data.criado_em).toLocaleString('pt-BR') : null} />
-              <DisplayField label="Última Atualização" value={data?.atualizado_em ? new Date(data.atualizado_em).toLocaleString('pt-BR') : null} />
-            </div>
-            <p className="text-xs text-zinc-600">O histórico detalhado de alterações realizadas pelo usuário estará disponível em breve.</p>
+            <AuditLog 
+              created_at={data?.criado_em} 
+              updated_at={data?.atualizado_em} 
+              ultimo_acesso={data?.ultimo_acesso}
+              userName={data?.nome_completo}
+            />
           </div>
         )}
 

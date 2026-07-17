@@ -5,37 +5,37 @@ import { z } from 'zod';
 
 const colaboradorSchema = z.object({
   nome_completo: z.string().min(2),
-  nome_exibicao: z.string().optional(),
+  nome_exibicao: z.string().nullish(),
   email: z.string().email(),
-  cpf: z.string().optional().or(z.literal('')),
-  telefone_direto: z.string().optional(),
-  foto_url: z.string().optional(),
-  data_nascimento: z.string().optional().or(z.literal('')),
-  idioma: z.string().optional(),
-  fuso_horario: z.string().optional(),
+  cpf: z.string().nullish().or(z.literal('')),
+  telefone_direto: z.string().nullish(),
+  foto_url: z.string().nullish(),
+  data_nascimento: z.string().nullish().or(z.literal('')),
+  idioma: z.string().nullish(),
+  fuso_horario: z.string().nullish(),
 
-  departamento: z.string().optional(),
-  cargo: z.string().optional(),
-  matricula: z.string().optional(),
-  gestor_id: z.string().uuid().optional().or(z.literal('')),
-  equipe: z.string().optional(),
-  filial: z.string().optional(),
+  departamento: z.string().nullish(),
+  cargo: z.string().nullish(),
+  matricula: z.string().nullish(),
+  gestor_id: z.string().uuid().nullish().or(z.literal('')),
+  equipe: z.string().nullish(),
+  filial: z.string().nullish(),
 
-  senha_temporaria: z.string().optional(),
-  is_admin: z.boolean().optional(),
-  perfil_acesso: z.string().optional(),
-  sys_perfil_acesso_id: z.string().uuid().optional().or(z.literal('')),
-  status_conta: z.string().optional(),
-  dois_fatores_ativo: z.boolean().optional(),
+  senha_temporaria: z.string().nullish(),
+  is_admin: z.boolean().nullish(),
+  perfil_acesso: z.string().nullish(),
+  sys_perfil_acesso_id: z.string().uuid().nullish().or(z.literal('')),
+  status_conta: z.string().nullish(),
+  dois_fatores_ativo: z.boolean().nullish(),
 
-  notificacoes_email: z.boolean().optional(),
-  notificacoes_plataforma: z.boolean().optional(),
-  notificacoes_push: z.boolean().optional(),
-  resumo_diario: z.boolean().optional(),
-  resumo_semanal: z.boolean().optional(),
+  notificacoes_email: z.boolean().nullish(),
+  notificacoes_plataforma: z.boolean().nullish(),
+  notificacoes_push: z.boolean().nullish(),
+  resumo_diario: z.boolean().nullish(),
+  resumo_semanal: z.boolean().nullish(),
 
-  permissoes: z.array(z.any()).optional(),
-  projetos: z.array(z.any()).optional(),
+  permissoes: z.array(z.any()).nullish(),
+  projetos: z.array(z.any()).nullish(),
 });
 
 export class ColaboradorService {
@@ -137,39 +137,46 @@ export class ColaboradorService {
     await this.repo.updatePerfil(colaboradorId, empresaId, validado);
 
     // Processar Permissões
-    if (validado.sys_perfil_acesso_id && validado.sys_perfil_acesso_id !== '') {
-      // Verifica se o perfil_acesso mudou comparado com o atual
-      const { data: currentPerfil } = await supabaseAdmin
-        .from('perfis')
-        .select('sys_perfil_acesso_id')
-        .eq('id', colaboradorId)
-        .single();
-        
-      // Se mudou, força a atualização das permissões baseadas no novo perfil
-      // Ou se as permissões não vieram no payload, assume que queremos garantir o padrão
-      if (currentPerfil?.sys_perfil_acesso_id !== validado.sys_perfil_acesso_id || !validado.permissoes) {
+    if (validado.permissoes) {
+      let isCustomizado = false;
+
+      if (validado.sys_perfil_acesso_id && validado.sys_perfil_acesso_id !== '') {
         const { data: defaultPerms } = await supabaseAdmin
           .from('sys_perfil_acesso_permissoes')
           .select('*, modulo:sys_modulos(nome)')
           .eq('perfil_acesso_id', validado.sys_perfil_acesso_id);
+
+        if (defaultPerms) {
+          const defaultMap = new Map(defaultPerms.map((p: any) => [p.modulo?.nome, p]));
           
-        if (defaultPerms && defaultPerms.length > 0) {
-          const mappedPerms = defaultPerms.map((p: any) => ({
-            modulo: p.modulo.nome,
-            p_visualizar: p.p_visualizar,
-            p_criar: p.p_criar,
-            p_editar: p.p_editar,
-            p_excluir: p.p_excluir,
-            p_aprovar: p.p_aprovar
-          }));
-          await this.repo.syncPermissoes(colaboradorId, mappedPerms);
+          for (const perm of validado.permissoes) {
+            const def = defaultMap.get(perm.modulo);
+            if (!def) {
+              isCustomizado = true;
+              break;
+            }
+            if (
+              !!perm.p_visualizar !== !!def.p_visualizar ||
+              !!perm.p_criar      !== !!def.p_criar ||
+              !!perm.p_editar     !== !!def.p_editar ||
+              !!perm.p_excluir    !== !!def.p_excluir ||
+              !!perm.p_aprovar    !== !!def.p_aprovar ||
+              !!perm.p_exportar   !== !!def.p_exportar ||
+              !!perm.p_importar   !== !!def.p_importar ||
+              !!perm.p_gerenciar  !== !!def.p_gerenciar
+            ) {
+              isCustomizado = true;
+              break;
+            }
+          }
+        } else {
+          isCustomizado = true;
         }
-      } else if (validado.permissoes) {
-        // Se não mudou o perfil mas enviou permissões (edição customizada), salva as customizadas
-        await this.repo.syncPermissoes(colaboradorId, validado.permissoes);
+      } else {
+        isCustomizado = true;
       }
-    } else if (validado.permissoes) {
-      await this.repo.syncPermissoes(colaboradorId, validado.permissoes);
+
+      await this.repo.syncPermissoes(colaboradorId, validado.permissoes, isCustomizado);
     }
 
     if (validado.projetos) {

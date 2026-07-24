@@ -6,6 +6,8 @@ export interface Profile {
   id: string
   nome_completo: string
   email: string
+  cpf?: string | null
+  data_nascimento?: string | null
   cargo: string | null
   telefone_direto: string | null
   is_admin: boolean
@@ -34,6 +36,10 @@ export interface Company {
   mfa_obrigatorio?: boolean
   mfa_dias_carencia?: number
   mfa_publico_alvo?: string
+  saml_entity_id?: string | null
+  saml_metadata_url?: string | null
+  saml_domains?: string | null
+  saml_ativo?: boolean
 }
 
 interface AuthState {
@@ -67,6 +73,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           id,
           nome_completo,
           email,
+          cpf,
+          data_nascimento,
           cargo,
           telefone_direto,
           is_admin,
@@ -82,7 +90,11 @@ export const useAuthStore = create<AuthState>((set) => ({
             logo_url,
             mfa_obrigatorio,
             mfa_dias_carencia,
-            mfa_publico_alvo
+            mfa_publico_alvo,
+            saml_entity_id,
+            saml_metadata_url,
+            saml_domains,
+            saml_ativo
           )
         `)
         .eq('id', userId)
@@ -98,6 +110,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           id: data.id,
           nome_completo: data.nome_completo,
           email: data.email,
+          cpf: data.cpf,
+          data_nascimento: data.data_nascimento,
           cargo: data.cargo,
           telefone_direto: data.telefone_direto,
           is_admin: data.is_admin,
@@ -117,7 +131,11 @@ export const useAuthStore = create<AuthState>((set) => ({
               logo_url: empresaData.logo_url,
               mfa_obrigatorio: empresaData.mfa_obrigatorio,
               mfa_dias_carencia: empresaData.mfa_dias_carencia,
-              mfa_publico_alvo: empresaData.mfa_publico_alvo
+              mfa_publico_alvo: empresaData.mfa_publico_alvo,
+              saml_entity_id: empresaData.saml_entity_id,
+              saml_metadata_url: empresaData.saml_metadata_url,
+              saml_domains: empresaData.saml_domains,
+              saml_ativo: empresaData.saml_ativo
             }
           : null
 

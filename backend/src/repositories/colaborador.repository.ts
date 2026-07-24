@@ -3,7 +3,6 @@ import { ColaboradorDTO, PermissaoModulo, ColaboradorProjeto } from '../models/c
 
 export class ColaboradorRepository {
   async findByEmpresaId(empresaId: string) {
-    // Busca o fundador_id da empresa
     const { data: empresaData } = await supabaseAdmin
       .from('empresas')
       .select('fundador_id')
@@ -14,12 +13,10 @@ export class ColaboradorRepository {
 
     let query = supabaseAdmin
       .from('perfis')
-      .select(`
-        id, nome_completo, cargo, filial, status_conta, email, foto_url, is_admin,
-        departamento, equipe, matricula, gestor_id, perfil_acesso, sys_perfil_acesso_id,
-        empresas(nome_fantasia),
-        gestor:perfis!gestor_id(nome_completo)
-      `)
+      .select(
+        'id, nome_completo, cargo, filial, status_conta, email, foto_url, is_admin, ' +
+        'departamento, equipe, matricula, gestor_id, perfil_acesso, sys_perfil_acesso_id'
+      )
       .eq('empresa_id', empresaId)
       .order('nome_completo', { ascending: true });
 
@@ -29,7 +26,7 @@ export class ColaboradorRepository {
 
     const { data, error } = await query;
     if (error) throw new Error(`Erro ao buscar colaboradores: ${error.message}`);
-    return data;
+    return data ?? [];
   }
 
   async findById(colaboradorId: string, empresaId: string) {
@@ -37,8 +34,6 @@ export class ColaboradorRepository {
       .from('perfis')
       .select(`
         *,
-        empresas (nome_fantasia),
-        gestor:perfis!gestor_id (id, nome_completo),
         perfil_permissoes (*),
         colaborador_projetos (*)
       `)

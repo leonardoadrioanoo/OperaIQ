@@ -268,6 +268,28 @@ export default function ColaboradorDetailPage() {
     }
   };
 
+  const handleResetMFA = async () => {
+    if (!window.confirm('Tem certeza que deseja redefinir o MFA deste usuário? Ele terá que configurar novamente no próximo login.')) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${id}/reset-mfa`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      
+      if (res.ok) {
+        toast.success('MFA redefinido com sucesso!');
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Erro ao redefinir MFA.');
+      }
+    } catch (err) {
+      toast.error('Falha de conexão.');
+    }
+  };
+
   const onSubmit = async (formData: UpdateColaboradorForm) => {
     setIsSaving(true);
     try {
@@ -352,16 +374,14 @@ export default function ColaboradorDetailPage() {
   const getInitials = (name: string) => name.split(' ').slice(0,2).map(n => n[0].toUpperCase()).join('');
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-8">
+    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-4 text-sm text-zinc-500">
           <span>Administração</span>
           <span>/</span>
           <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis/usuarios" className="hover:text-violet-400">Colaboradores</Link>
-          <span>/</span>
-          <span className="text-zinc-300">{data?.nome_completo || 'Detalhes'}</span>
+          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-violet-400">Colaboradores</Link>
         </div>
         <div className="flex items-start justify-between">
           <div>
@@ -401,7 +421,7 @@ export default function ColaboradorDetailPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-white mb-1">{data.nome_completo}</h2>
-          <p className="text-zinc-400 font-medium">{data.cargo || 'Cargo não definido'} • {data.filial || 'Filial não definida'}</p>
+          <p className="text-zinc-400 font-medium">{data.cargo || 'Cargo não definido'}</p>
         </div>
       </div>
 
@@ -472,7 +492,6 @@ export default function ColaboradorDetailPage() {
                 )}
                 {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
               </InlineSelect>
-              <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing} readonlyValue={data?.filial} />
               <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing} readonlyValue={data?.matricula} />
               <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing} readonlyValue={data?.gestor?.nome_completo}>
                 <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
@@ -501,6 +520,21 @@ export default function ColaboradorDetailPage() {
                 <option value="Inativo" className="bg-[#06112a] text-white">Inativo</option>
                 <option value="Bloqueado" className="bg-[#06112a] text-white">Bloqueado</option>
               </InlineSelect>
+            </div>
+
+            <div className="pt-4 border-t border-white/5">
+              <h4 className="text-sm font-medium text-white mb-2">Segurança</h4>
+              <button 
+                type="button" 
+                onClick={handleResetMFA} 
+                className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg text-sm font-medium transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                Redefinir MFA (Google Authenticator)
+              </button>
+              <p className="text-xs text-zinc-500 mt-2 max-w-lg leading-relaxed">
+                Isso removerá a configuração de 2 fatores atual deste usuário. Ele será solicitado a cadastrar um novo aplicativo no próximo login. Use apenas se o usuário perdeu o acesso ao código gerador.
+              </p>
             </div>
           </div>
         )}

@@ -50,9 +50,9 @@ export default function UsuariosPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto p-6 md:p-8">
+    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div>
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
             <span>Administração</span>
@@ -108,7 +108,7 @@ export default function UsuariosPage() {
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
               <tr>
                 <th className="px-6 py-4 rounded-tl-xl">Colaborador</th>
-                <th className="px-6 py-4">Cargo / Filial</th>
+                <th className="px-6 py-4">Cargo</th>
                 <th className="px-6 py-4">Departamento / Equipe</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right rounded-tr-xl">Ações</th>

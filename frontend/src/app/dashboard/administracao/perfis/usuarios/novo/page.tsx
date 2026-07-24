@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -20,25 +18,22 @@ import {
 const API = 'http://localhost:3002';
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
-const wizardSchema = z.object({
-  nome_completo:   z.string().min(2, 'Obrigatório'),
-  nome_exibicao:   z.string().optional(),
-  email:           z.string().email('E-mail inválido'),
-  cpf:             z.string().optional(),
-  telefone_direto: z.string().optional(),
-  data_nascimento: z.string().optional(),
-  idioma:          z.string().default('pt-BR'),
-
-  departamento: z.string().optional().or(z.literal('')),
-  cargo:        z.string().optional().or(z.literal('')),
-  equipe:       z.string().optional().or(z.literal('')),
-  matricula:    z.string().optional(),
-  filial:       z.string().optional(),
-
-  sys_perfil_acesso_id: z.string().optional(),
-  is_admin: z.preprocess((v) => v === 'true' || v === true, z.boolean().default(false)),
-});
-type WizardForm = z.infer<typeof wizardSchema>;
+type WizardForm = {
+  nome_completo: string;
+  nome_exibicao?: string;
+  email: string;
+  cpf?: string;
+  telefone_direto?: string;
+  data_nascimento?: string;
+  idioma: string;
+  departamento?: string;
+  cargo?: string;
+  equipe?: string;
+  matricula?: string;
+  filial?: string;
+  sys_perfil_acesso_id?: string;
+  is_admin: boolean;
+};
 
 const STEPS = [
   { id: 1, title: 'Pessoal',     icon: User      },
@@ -72,7 +67,6 @@ export default function NovoUsuarioWizard() {
   const [token,            setToken]            = useState('');
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<WizardForm>({
-    resolver: zodResolver(wizardSchema),
     defaultValues: { idioma: 'pt-BR', is_admin: false },
   });
 
@@ -188,13 +182,17 @@ export default function NovoUsuarioWizard() {
   const selectedPerfil = perfis.find(p => p.id === selectedPerfilId);
 
   return (
-    <div className="max-w-5xl mx-auto p-6 md:p-8">
+    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/dashboard/administracao/perfis/usuarios" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Voltar para lista
-        </Link>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Cadastrar Novo Colaborador</h1>
+        <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
+          <span>Administração</span>
+          <span>/</span>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <span>/</span>
+          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-violet-400">Colaboradores</Link>
+        </div>
+        <h1 className="text-2xl font-bold text-white tracking-tight mt-2">Cadastrar Novo Colaborador</h1>
       </div>
 
       {/* Progress Bar */}

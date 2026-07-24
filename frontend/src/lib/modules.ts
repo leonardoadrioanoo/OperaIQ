@@ -194,8 +194,8 @@ export const MODULOS: ModuloDefinition[] = [
     href: '/dashboard/integracoes',
     acoes: ['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_gerenciar'],
     submenus: [
-      { title: 'Marketplace', href: '/dashboard/integracoes/marketplace' },
-      { title: 'Webhooks e APIs', href: '/dashboard/integracoes/webhooks' },
+      { title: 'Conexões',       href: '/dashboard/integracoes/conexoes' },
+      { title: 'API & Webhooks', href: '/dashboard/integracoes/api-webhooks' },
     ],
   },
   {
@@ -237,7 +237,6 @@ export const MODULOS: ModuloDefinition[] = [
       { group: 'Plataforma' },
       { title: 'Configurações Gerais',     href: '/dashboard/administracao/configuracoes' },
       { title: 'Assinatura',               href: '/dashboard/administracao/assinatura' },
-      { title: 'Desenvolvedores',          href: '/dashboard/administracao/desenvolvedores' },
       { title: 'Auditoria',               href: '/dashboard/administracao/auditoria' },
       { title: 'Infraestrutura',           href: '/dashboard/administracao/infraestrutura' },
     ],

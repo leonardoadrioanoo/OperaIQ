@@ -19,11 +19,6 @@ const updatePerfilSchema = z.object({
   matricula: z.string().optional().or(z.literal('')),
   gestor_id: z.string().uuid().optional().or(z.literal('')),
 
-  notificacoes_email: z.boolean().optional(),
-  notificacoes_plataforma: z.boolean().optional(),
-  notificacoes_push: z.boolean().optional(),
-  resumo_diario: z.boolean().optional(),
-  resumo_semanal: z.boolean().optional(),
 });
 
 export class PerfilService {

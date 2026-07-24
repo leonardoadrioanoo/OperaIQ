@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-import { Mail, Lock, Loader2, Eye, EyeOff, Shield, TrendingUp, Users, Zap } from "lucide-react"
+import { Mail, Lock, Loader2, Eye, EyeOff, Shield, TrendingUp, Users, Zap, Building } from "lucide-react"
 import { Input } from "@/components/ui"
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
@@ -98,6 +98,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const [showPassword, setShowPassword] = useState(false)
+  const [isSsoLoading, setIsSsoLoading] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -123,6 +124,29 @@ export default function LoginPage() {
     }
     toast.success("Login realizado com sucesso!")
     router.push("/dashboard")
+  }
+
+  async function handleSSOLogin() {
+    const email = document.getElementById('email') as HTMLInputElement;
+    if (!email || !email.value || !email.value.includes('@')) {
+      return toast.error("Digite o seu e-mail corporativo primeiro para usar o SSO.");
+    }
+    const domain = email.value.split('@')[1];
+    
+    setIsSsoLoading(true);
+    const { data, error } = await supabase.auth.signInWithSSO({
+      domain,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+
+    if (error) {
+      toast.error("Ocorreu um erro ou SSO não está configurado para este domínio.");
+      setIsSsoLoading(false);
+    } else if (data?.url) {
+      window.location.href = data.url; // Redireciona para Microsoft/Okta
+    }
   }
 
   return (
@@ -213,11 +237,30 @@ export default function LoginPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isSsoLoading}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Entrando..." : "Entrar com Senha"}
+              </button>
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-[#07070f] px-2 text-xs text-slate-500 uppercase">ou</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSSOLogin}
+                disabled={isLoading || isSsoLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600 font-semibold text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+              >
+                {isSsoLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : <Building className="h-4 w-4 text-violet-400" />}
+                Entrar com SSO (Login Corporativo)
               </button>
             </form>
 

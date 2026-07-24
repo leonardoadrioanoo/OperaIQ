@@ -13,14 +13,7 @@ const EMPRESA_CARDS = [
     bg: "bg-blue-400/10",
     href: "/dashboard/administracao/empresa/dados",
   },
-  {
-    title: "Gestão de Filiais",
-    description: "Cadastre e gerencie múltiplos endereços e operações",
-    icon: MapPin,
-    color: "text-emerald-400",
-    bg: "bg-emerald-400/10",
-    href: "/dashboard/administracao/empresa/filiais",
-  },
+
   {
     title: "Documentos Legais",
     description: "Contratos sociais, alvarás e certidões",
@@ -33,15 +26,20 @@ const EMPRESA_CARDS = [
 
 export default function EmpresaPage() {
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
+            <span>Administração</span>
+            <span>/</span>
+            <span className="text-zinc-300">Empresa</span>
+          </div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             <Building2 className="w-8 h-8 text-blue-500" />
             Empresa
           </h1>
           <p className="text-zinc-400 mt-2">
-            Central de informações corporativas e gestão de filiais da organização.
+            Central de informações corporativas e gestão de documentos legais da organização.
           </p>
         </div>
       </div>

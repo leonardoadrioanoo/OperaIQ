@@ -12,7 +12,8 @@ export class ColaboradorController {
 
   listar = async (req: AuthRequest, res: Response) => {
     try {
-      const data = await this.service.listar(req.userId!);
+      // Passa o empresa_id já carregado pelo middleware como hint (evita query extra e falhas)
+      const data = await this.service.listar(req.userId!, req.userProfile?.empresa_id);
       res.json(data);
     } catch (err: any) {
       res.status(403).json({ error: err.message });
@@ -70,6 +71,45 @@ export class ColaboradorController {
       const data = await this.service.atualizarPermissoes(req.userId!, req.params.id, permissoes);
       res.json(data);
     } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
+  resetMFA = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await this.service.resetMFA(req.userId!, req.params.id);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
+  listSessoes = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await this.service.listSessoes(req.userId!);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
+  revogarSessao = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await this.service.revogarSessao(req.userId!, req.params.userId);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
+  onboarding = async (req: AuthRequest, res: Response) => {
+    try {
+      const data = await this.service.onboarding(req.userId!, req.body);
+      res.json(data);
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validação inválida.', details: err.errors });
+      }
       res.status(500).json({ error: err.message });
     }
   };

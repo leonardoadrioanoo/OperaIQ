@@ -13,7 +13,7 @@ import {
 
 const API = 'http://localhost:3002';
 
-type Perfil = { id: string; label: string; icon: string; ativo: boolean; usuarios_count?: number };
+type Perfil = { id: string; label: string; icon: string; ativo: boolean; usuarios_count?: number; descricao?: string; };
 type ModuloApi = { id: string; nome: string; ordem: number; tipo: string };
 
 export default function MatrizPermissaoPage() {
@@ -145,13 +145,17 @@ export default function MatrizPermissaoPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div>
-        <Link href="/dashboard/administracao/perfis" className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Voltar para Perfis e Acessos
-        </Link>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
+          <span>Administração</span>
+          <span>/</span>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <span>/</span>
+          <span className="text-zinc-300">Matriz de Permissões</span>
+        </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
               <ListChecks className="w-7 h-7 text-violet-400" /> Matriz de Permissões

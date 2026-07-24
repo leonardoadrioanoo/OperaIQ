@@ -332,4 +332,128 @@ export const rbacController = {
       return res.status(500).json({ error: error.message });
     }
   },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PAPÉIS (HIERARQUIA)
+  // ──────────────────────────────────────────────────────────────────────────
+  async getPapeis(req: AuthRequest, res: Response) {
+    try {
+      const empresaId = req.userProfile?.empresa_id;
+      const { data, error } = await supabaseAdmin
+        .from('sys_papeis')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('nivel_hierarquia', { ascending: true });
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async criarPapel(req: AuthRequest, res: Response) {
+    try {
+      const empresaId = req.userProfile?.empresa_id;
+      const { nome, descricao, nivel_hierarquia, abrangencia } = req.body;
+      const { data, error } = await supabaseAdmin
+        .from('sys_papeis')
+        .insert({ empresa_id: empresaId, nome, descricao, nivel_hierarquia, abrangencia })
+        .select()
+        .single();
+      if (error) throw error;
+      return res.status(201).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async atualizarPapel(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { nome, descricao, nivel_hierarquia, abrangencia } = req.body;
+      const { data, error } = await supabaseAdmin
+        .from('sys_papeis')
+        .update({ nome, descricao, nivel_hierarquia, abrangencia })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async excluirPapel(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { error } = await supabaseAdmin.from('sys_papeis').delete().eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ message: 'Papel excluído' });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // REGRAS CONDICIONAIS (ABAC)
+  // ──────────────────────────────────────────────────────────────────────────
+  async getRegras(req: AuthRequest, res: Response) {
+    try {
+      const empresaId = req.userProfile?.empresa_id;
+      const { data, error } = await supabaseAdmin
+        .from('sys_regras_condicionais')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async criarRegra(req: AuthRequest, res: Response) {
+    try {
+      const empresaId = req.userProfile?.empresa_id;
+      const { nome, modulo_alvo, tipo_condicao, parametros, acao_bloqueio, ativo } = req.body;
+      const { data, error } = await supabaseAdmin
+        .from('sys_regras_condicionais')
+        .insert({ empresa_id: empresaId, nome, modulo_alvo, tipo_condicao, parametros, acao_bloqueio, ativo })
+        .select()
+        .single();
+      if (error) throw error;
+      return res.status(201).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async atualizarRegra(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { nome, modulo_alvo, tipo_condicao, parametros, acao_bloqueio, ativo } = req.body;
+      const { data, error } = await supabaseAdmin
+        .from('sys_regras_condicionais')
+        .update({ nome, modulo_alvo, tipo_condicao, parametros, acao_bloqueio, ativo })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async excluirRegra(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { error } = await supabaseAdmin.from('sys_regras_condicionais').delete().eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ message: 'Regra excluída' });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
 };

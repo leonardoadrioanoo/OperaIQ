@@ -56,6 +56,54 @@ export default function DashboardLayout({
   // Checagem de permissão baseada na rota
   useEffect(() => {
     if (isCheckingAccess || !profile) return;
+
+    // Checagem de Onboarding (apenas para não-admins)
+    if (!profile.is_admin && (!profile.cpf || !profile.data_nascimento)) {
+      if (!pathname.startsWith('/dashboard/onboarding')) {
+        router.replace('/dashboard/onboarding');
+        return;
+      }
+    } else if (pathname.startsWith('/dashboard/onboarding')) {
+      // Se já completou, não deixa acessar o onboarding de novo
+      router.replace('/dashboard');
+      return;
+    }
+
+    // MFA Verification check (Executa para todos, admins ou não)
+    const checkMFA = async () => {
+      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (mfaData?.currentLevel === 'aal1') {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasEnrolled = factors?.totp && factors.totp.length > 0 && factors.totp.some(f => f.status === 'verified');
+        
+        // 1. Se o usuário já ativou por conta própria (ou foi forçado antes), é obrigatório validar o 2FA.
+        if (hasEnrolled) {
+          router.replace('/login/mfa');
+          return;
+        }
+
+        // 2. Se a flag do perfil diz que deve ter 2FA mas não tem, força o setup
+        if (profile.dois_fatores_ativo) {
+          router.replace('/login/mfa');
+          return;
+        }
+
+        // 3. Se a empresa exige, força o setup respeitando a carência
+        const { company } = useAuthStore.getState();
+        if (company?.mfa_obrigatorio) {
+          if (company.mfa_publico_alvo === 'admins' && !profile.is_admin) return;
+          
+          const creationDate = new Date(profile.criado_em || Date.now());
+          const daysSinceCreation = (Date.now() - creationDate.getTime()) / (1000 * 3600 * 24);
+          
+          if (daysSinceCreation >= (company.mfa_dias_carencia || 0)) {
+            router.replace('/login/mfa');
+          }
+        }
+      }
+    };
+    checkMFA();
+
     if (profile.is_admin) return;
 
     // Lógica simplificada de mapeamento de rota para menu principal
@@ -80,36 +128,6 @@ export default function DashboardLayout({
       router.replace('/dashboard');
       return;
     }
-
-    // MFA Verification check
-    const checkMFA = async () => {
-      const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (mfaData?.currentLevel === 'aal1') {
-        const { data: factors } = await supabase.auth.mfa.listFactors();
-        const hasEnrolled = factors?.totp && factors.totp.length > 0 && factors.totp.some(f => f.status === 'verified');
-        
-        // 1. Se o usuário já ativou por conta própria (ou foi forçado antes), é obrigatório validar o 2FA.
-        if (hasEnrolled) {
-          router.replace('/login/mfa');
-          return;
-        }
-
-        // 2. Se a empresa exige, força o setup respeitando a carência
-        const { company } = useAuthStore.getState();
-        if (company?.mfa_obrigatorio) {
-          if (company.mfa_publico_alvo === 'admins' && !profile.is_admin) return;
-          
-          const creationDate = new Date(profile.criado_em || Date.now());
-          const daysSinceCreation = (Date.now() - creationDate.getTime()) / (1000 * 3600 * 24);
-          
-          if (daysSinceCreation >= (company.mfa_dias_carencia || 0)) {
-            router.replace('/login/mfa');
-          }
-        }
-      }
-    };
-
-    checkMFA();
   }, [pathname, profile, isCheckingAccess, router]);
 
   if (isCheckingAccess) {

@@ -26,7 +26,6 @@ const profileSchema = z.object({
   departamento: z.string().optional().or(z.literal('')),
   cargo: z.string().optional().or(z.literal('')),
   equipe: z.string().optional().or(z.literal('')),
-  filial: z.string().optional().or(z.literal('')),
   matricula: z.string().optional().or(z.literal('')),
   gestor_id: z.string().optional().or(z.literal('')),
   notificacoes_email: z.boolean().optional(),
@@ -115,7 +114,6 @@ export default function MeuPerfilPage() {
           departamento: json.departamento || '',
           cargo: json.cargo || '',
           equipe: json.equipe || '',
-          filial: json.filial || '',
           matricula: json.matricula || '',
           gestor_id: json.gestor_id || '',
           notificacoes_email: json.notificacoes_email ?? true,
@@ -231,14 +229,7 @@ export default function MeuPerfilPage() {
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="mb-2">
-            <Breadcrumb 
-              items={[
-                { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Meu Perfil' },
-              ]} 
-            />
-          </div>
+
           <h1 className="text-2xl font-bold text-foreground truncate">{data?.nome_completo}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {data?.sys_perfis_acesso?.nome || data?.perfil_acesso || (isAdmin ? 'Administrador da Organização' : 'Colaborador')}
@@ -381,7 +372,6 @@ export default function MeuPerfilPage() {
                 </>
               )}
 
-              <InlineField label="Filial / Unidade" name="filial" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.filial} />
               <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing && isAdmin} readonlyValue={fullData?.matricula} />
             </div>
           </div>

@@ -8,5 +8,6 @@ const ctrl = new EmpresaController();
 
 router.get('/me', authMiddleware, requireAdmin, ctrl.getMe);
 router.put('/me', authMiddleware, requireAdmin, ctrl.updateMe);
+router.put('/sso', authMiddleware, requireAdmin, ctrl.configurarSSO);
 
 export default router;

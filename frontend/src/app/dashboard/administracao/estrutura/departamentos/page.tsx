@@ -2,25 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Component, Plus, Search, Edit2, Trash2, X, Loader2, Check, ChevronDown } from 'lucide-react';
+import { Component, Plus, Search, Edit2, Trash2, X, Loader2, Check } from 'lucide-react';
 import Link from 'next/link';
-import { canViewMenu, hasPermission, getModulePermissions } from '@/lib/permissions';
+import { getModulePermissions } from '@/lib/permissions';
 import { useAuthStore } from '@/store/authStore';
 
-const departamentoSchema = z.object({
-  nome: z.string().min(2, 'Obrigatório'),
-  sigla: z.string().optional(),
-  descricao: z.string().optional(),
-  gestor_nome: z.string().optional().or(z.literal('')),
-  departamento_superior_nome: z.string().optional().or(z.literal('')),
-  status: z.string().default('ativo'),
-});
-
-type DepartamentoForm = z.infer<typeof departamentoSchema>;
+type DepartamentoForm = {
+  nome: string;
+  sigla?: string;
+  descricao?: string;
+  gestor_nome?: string;
+  departamento_superior_nome?: string;
+  status: string;
+};
 
 export default function DepartamentosPage() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
@@ -35,8 +31,8 @@ export default function DepartamentosPage() {
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(departamentoSchema)
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<DepartamentoForm>({
+    defaultValues: { status: 'ativo', gestor_nome: '', departamento_superior_nome: '', nome: '', sigla: '', descricao: '' }
   });
 
   const fetchData = async () => {
@@ -49,7 +45,9 @@ export default function DepartamentosPage() {
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
       if (resDeps.ok) {
-        setDepartamentos(await resDeps.json());
+        const depsData = await resDeps.json();
+        // A API retorna array direto
+        setDepartamentos(Array.isArray(depsData) ? depsData : []);
       }
 
       // Fetch potential gestores
@@ -57,7 +55,8 @@ export default function DepartamentosPage() {
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
       if (resGestores.ok) {
-        setGestores(await resGestores.json());
+        const gestData = await resGestores.json();
+        setGestores(Array.isArray(gestData) ? gestData : gestData.colaboradores || []);
       }
     } catch (err) {
       toast.error('Falha ao carregar dados.');
@@ -222,7 +221,7 @@ export default function DepartamentosPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">

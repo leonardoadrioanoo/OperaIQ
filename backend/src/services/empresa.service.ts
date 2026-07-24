@@ -26,6 +26,20 @@ const updateEmpresaSchema = z.object({
   idioma: z.string().optional(),
   fuso_horario: z.string().optional(),
   moeda: z.string().optional(),
+  
+  // Notificações Globais da Empresa
+  notificacoes_email: z.boolean().optional(),
+  notificacoes_push: z.boolean().optional(),
+  resumo_diario: z.boolean().optional(),
+  resumo_semanal: z.boolean().optional(),
+  notificacao_tarefa_atribuida: z.boolean().optional(),
+  notificacao_mencao_comentario: z.boolean().optional(),
+  notificacao_alteracao_status: z.boolean().optional(),
+  notificacao_registro_atividade: z.boolean().optional(),
+  
+  mfa_obrigatorio: z.boolean().optional(),
+  mfa_dias_carencia: z.number().int().min(0).optional(),
+  mfa_publico_alvo: z.enum(['TODOS', 'ADMINS']).optional(),
 });
 
 export class EmpresaService {
@@ -51,5 +65,37 @@ export class EmpresaService {
     if (!empresa) throw new Error('Empresa não encontrada.');
 
     return this.repo.update(empresa.id, validated as UpdateEmpresaDTO);
+  }
+
+  async configurarSSO(userId: string, payload: any) {
+    const ssoSchema = z.object({
+      samlEntityId: z.string().min(5),
+      samlMetadataUrl: z.string().url(),
+      samlDomains: z.string().min(3),
+      samlAtivo: z.boolean().default(true)
+    });
+
+    const validated = ssoSchema.parse(payload);
+    
+    const empresa = await this.repo.findByUserId(userId);
+    if (!empresa) throw new Error('Empresa não encontrada.');
+
+    // 1. Aqui é onde registraríamos via API do Supabase Admin
+    // const ssoProvider = await supabaseAdmin.auth.admin.createSSOProvider({
+    //   type: 'saml',
+    //   domains: validated.samlDomains.split(',').map(d => d.trim()),
+    //   metadata_url: validated.samlMetadataUrl,
+    //   entity_id: validated.samlEntityId
+    // });
+    
+    // 2. Salva as configurações de forma persistente no banco de dados
+    const updated = await this.repo.update(empresa.id, {
+      saml_entity_id: validated.samlEntityId,
+      saml_metadata_url: validated.samlMetadataUrl,
+      saml_domains: validated.samlDomains,
+      saml_ativo: validated.samlAtivo
+    });
+
+    return updated;
   }
 }

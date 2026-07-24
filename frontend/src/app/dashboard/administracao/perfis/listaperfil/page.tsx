@@ -175,11 +175,18 @@ export default function ListaPerfilPage() {
       if (!session) return;
 
       const resPerfis = await fetch(`${API}/api/rbac/perfis`, { headers: { Authorization: `Bearer ${session.access_token}` } });
-      const perfisData: Perfil[] = resPerfis.ok ? await resPerfis.json() : [];
+      const textData = await resPerfis.text();
+
+      if (!resPerfis.ok) {
+        console.error('ERRO API PERFIS:', textData);
+        toast.error(`Erro API: ${resPerfis.status} - ${textData.substring(0, 50)}`);
+      }
+
+      const perfisData: Perfil[] = resPerfis.ok ? JSON.parse(textData) : [];
 
       setPerfis(perfisData);
-    } catch {
-      toast.error('Falha ao carregar perfis.');
+    } catch (error: any) {
+      toast.error(`Falha ao carregar perfis: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -234,7 +241,7 @@ export default function ListaPerfilPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

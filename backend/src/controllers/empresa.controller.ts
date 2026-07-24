@@ -30,4 +30,16 @@ export class EmpresaController {
       res.status(500).json({ error: err.message });
     }
   };
+
+  configurarSSO = async (req: AuthRequest, res: Response) => {
+    try {
+      const updated = await this.service.configurarSSO(req.userId!, req.body);
+      res.json({ message: 'Configuração SSO SAML 2.0 salva com sucesso.', data: updated });
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Validação inválida.', details: err.errors });
+      }
+      res.status(500).json({ error: err.message });
+    }
+  };
 }

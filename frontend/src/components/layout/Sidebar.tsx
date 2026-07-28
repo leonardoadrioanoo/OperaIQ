@@ -80,7 +80,7 @@ export function Sidebar() {
       <div className="px-4 py-4 shrink-0">
         <div className="w-full bg-card border border-border/60 rounded-md px-3 py-2 flex items-center justify-between text-sm">
           <div className="flex items-center gap-2 text-card-foreground min-w-0">
-            <div className="w-7 h-7 bg-violet-900/60 rounded flex items-center justify-center text-xs text-violet-300 font-bold flex-shrink-0 overflow-hidden ring-1 ring-violet-500/20">
+            <div className="w-7 h-7 bg-emerald-900/60 rounded flex items-center justify-center text-xs text-emerald-300 font-bold flex-shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
               {company?.logo_url ? (
                 <Image
                   src={company.logo_url}
@@ -116,7 +116,7 @@ export function Sidebar() {
                 <button
                   onClick={() => toggleMenu(item.key)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive ? 'bg-violet-600/10 text-white' : 'text-white hover:bg-violet-600/10 hover:text-white'
+                    isActive ? 'bg-emerald-600/10 text-white' : 'text-white hover:bg-emerald-600/10 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -133,8 +133,8 @@ export function Sidebar() {
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     pathname === item.href
-                      ? 'bg-violet-600/10 text-white'
-                      : 'text-white hover:bg-violet-600/10 hover:text-white'
+                      ? 'bg-emerald-600/10 text-white'
+                      : 'text-white hover:bg-emerald-600/10 hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -159,8 +159,8 @@ export function Sidebar() {
                         href={sub.href}
                         className={`block px-3 py-1.5 text-sm rounded-md transition-colors ${
                           pathname === sub.href
-                            ? 'bg-violet-600/10 text-white font-medium'
-                            : 'text-white hover:bg-violet-600/10 hover:text-white'
+                            ? 'bg-emerald-600/10 text-white font-medium'
+                            : 'text-white hover:bg-emerald-600/10 hover:text-white'
                         }`}
                       >
                         {sub.title}
@@ -182,7 +182,7 @@ export function Sidebar() {
             className="flex items-center gap-3 min-w-0 text-left hover:bg-muted p-1 rounded-md transition-colors flex-1"
             title="Ver meu perfil"
           >
-            <div className="w-8 h-8 bg-violet-900 rounded-full flex items-center justify-center text-violet-200 text-sm font-semibold flex-shrink-0 ring-1 ring-violet-500/20">
+            <div className="w-8 h-8 bg-emerald-900 rounded-full flex items-center justify-center text-emerald-200 text-sm font-semibold flex-shrink-0 ring-1 ring-emerald-500/20">
               {profile?.foto_url ? (
                 <Image
                   src={profile.foto_url}

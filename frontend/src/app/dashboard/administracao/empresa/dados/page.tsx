@@ -122,7 +122,7 @@ export default function OrganizacaoPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
-        <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
@@ -154,7 +154,7 @@ export default function OrganizacaoPage() {
               onClick={() => setIsEditing(true)}
               className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-foreground rounded-lg text-sm font-medium transition-colors border border-border/60"
             >
-              <Edit2 className="w-4 h-4 text-violet-400" /> Editar Dados
+              <Edit2 className="w-4 h-4 text-emerald-400" /> Editar Dados
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -167,7 +167,7 @@ export default function OrganizacaoPage() {
               </button>
               <button
                 onClick={handleSubmit(onSubmit)}
-                className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20"
                 disabled={isSaving}
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
@@ -188,7 +188,7 @@ export default function OrganizacaoPage() {
               disabled={isEditing}
               className={`flex items-center gap-2 px-4 pb-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 relative top-[1px] ${
                 activeTab === tab.id
-                  ? 'text-violet-400 border-violet-500'
+                  ? 'text-emerald-400 border-emerald-500'
                   : 'text-muted-foreground border-transparent hover:text-foreground'
               } ${isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
             >

@@ -106,7 +106,7 @@ export default function MFAPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#07070f]">
-        <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
@@ -114,11 +114,11 @@ export default function MFAPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#07070f] p-4">
       <div className="w-full max-w-md bg-[#0d0d1e]/80 backdrop-blur-sm border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl" />
         
         <div className="relative z-10">
-          <div className="w-12 h-12 bg-violet-600/20 rounded-xl flex items-center justify-center mb-6">
-            <Shield className="w-6 h-6 text-violet-400" />
+          <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center mb-6">
+            <Shield className="w-6 h-6 text-emerald-400" />
           </div>
           
           <h2 className="text-2xl font-bold text-white mb-2">
@@ -136,7 +136,7 @@ export default function MFAPage() {
                 <img src={qrCode} alt="QR Code" className="w-48 h-48" />
               </div>
               <p className="text-xs text-slate-500">Ou use o código manual:</p>
-              <code className="mt-1 px-3 py-1 bg-black/40 rounded text-xs text-violet-300 font-mono tracking-widest">{secret}</code>
+              <code className="mt-1 px-3 py-1 bg-black/40 rounded text-xs text-emerald-300 font-mono tracking-widest">{secret}</code>
             </div>
           )}
 
@@ -150,7 +150,7 @@ export default function MFAPage() {
                   maxLength={6}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full h-12 bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 text-white text-lg tracking-[0.5em] focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all"
+                  className="w-full h-12 bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 text-white text-lg tracking-[0.5em] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
                   placeholder="000000"
                   autoFocus
                 />
@@ -160,7 +160,7 @@ export default function MFAPage() {
             <button
               type="submit"
               disabled={isVerifying || code.length < 6}
-              className="w-full flex items-center justify-center gap-2 h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-violet-900/30 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50"
             >
               {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verificar Código"}
             </button>

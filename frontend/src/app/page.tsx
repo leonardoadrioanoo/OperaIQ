@@ -8,18 +8,18 @@ export default function Home() {
       {/* NAVBAR */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-[#07070f]/95 backdrop-blur-md border-b border-[#1c1a33] z-50 flex items-center">
         <div className="container mx-auto px-6 flex items-center justify-between max-w-7xl">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-violet-300 tracking-tight">
-            <div className="w-7 h-7 bg-violet-700 rounded-md flex items-center justify-center text-white">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-emerald-300 tracking-tight">
+            <div className="w-7 h-7 bg-emerald-700 rounded-md flex items-center justify-center text-white">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/></svg>
             </div>
             OperaIQ
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost" className="font-semibold text-violet-200 hover:text-white hover:bg-white/5">Entrar</Button>
+              <Button variant="ghost" className="font-semibold text-emerald-200 hover:text-white hover:bg-white/5">Entrar</Button>
             </Link>
             <Link href="/register">
-              <Button className="font-semibold bg-violet-600 hover:bg-violet-500 text-white">Criar Conta</Button>
+              <Button className="font-semibold bg-emerald-600 hover:bg-emerald-500 text-white">Criar Conta</Button>
             </Link>
           </nav>
         </div>
@@ -38,7 +38,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
-                <Button size="lg" className="bg-violet-600 hover:bg-violet-500 text-white w-full sm:w-auto">
+                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto">
                   Comece gratuitamente <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -68,8 +68,8 @@ export default function Home() {
                 { icon: Users, title: "Gestão de Equipes", desc: "Monitore produtividade e mantenha a comunicação centralizada." },
                 { icon: Link2, title: "Integrações", desc: "Conecte sistemas via APIs modernas e flexíveis." }
               ].map((f, i) => (
-                <div key={i} className="bg-[#0d0d1f] p-8 rounded-xl border border-[#2c2b49] shadow-lg shadow-black/25 hover:shadow-violet-900/40 transition-shadow">
-                  <div className="w-12 h-12 bg-violet-700/20 text-violet-200 rounded-lg flex items-center justify-center mb-6">
+                <div key={i} className="bg-[#0d0d1f] p-8 rounded-xl border border-[#2c2b49] shadow-lg shadow-black/25 hover:shadow-emerald-900/40 transition-shadow">
+                  <div className="w-12 h-12 bg-emerald-700/20 text-emerald-200 rounded-lg flex items-center justify-center mb-6">
                     <f.icon className="w-6 h-6" />
                   </div>
                   <h3 className="text-xl font-semibold mb-3 text-white">{f.title}</h3>
@@ -85,7 +85,7 @@ export default function Home() {
           <div className="container mx-auto px-6 max-w-7xl">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="bg-[#0d0d1f] rounded-2xl border border-[#2c2b49] h-96 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-violet-600/20 text-violet-200 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-emerald-600/20 text-emerald-200 flex items-center justify-center">
                   <Check className="w-12 h-12" />
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default function Home() {
                     "MFA e Passkeys", "Infraestrutura escalável"
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-600/20 text-violet-200 flex items-center justify-center flex-shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-emerald-600/20 text-emerald-200 flex items-center justify-center flex-shrink-0">
                         <Check className="w-3 h-3" strokeWidth={3} />
                       </div>
                       <span className="font-medium text-slate-300">{item}</span>

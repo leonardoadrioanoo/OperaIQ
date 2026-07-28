@@ -6,7 +6,7 @@ import { Shield, Users, Key, Settings2, UserCog } from 'lucide-react';
 
 const PERFIS_CARDS = [
   { title: "Gerenciar Usuários", description: "Consulte, crie e gerencie colaboradores", icon: UserCog, color: "text-rose-400", bg: "bg-rose-400/10", href: "/dashboard/administracao/perfis/usuarios" },
-  { title: "Gerenciar Perfis", description: "Crie ou edite perfis de acesso", icon: Users, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/administracao/perfis/listaperfil" },
+  { title: "Gerenciar Perfis", description: "Crie ou edite perfis de acesso", icon: Users, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/administracao/perfis/listaperfil" },
   { title: "Papéis do Sistema", description: "Regras de hierarquia avançadas", icon: Key, color: "text-amber-400", bg: "bg-amber-400/10", href: "/dashboard/administracao/perfis/papeis" },
   { title: "Regras Condicionais", description: "Permissões baseadas em atributos", icon: Settings2, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/administracao/perfis/regras" },
 ];
@@ -22,7 +22,7 @@ export default function PerfisAcessoPage() {
             <span className="text-zinc-300">Perfis e Acessos</span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Shield className="w-8 h-8 text-violet-500" />
+            <Shield className="w-8 h-8 text-emerald-500" />
             Perfis e Acessos (RBAC)
           </h1>
           <p className="text-zinc-400 mt-2">
@@ -44,7 +44,7 @@ export default function PerfisAcessoPage() {
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${card.bg} ${card.color}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-semibold text-white mb-1 group-hover:text-violet-400 transition-colors">
+              <h3 className="text-base font-semibold text-white mb-1 group-hover:text-emerald-400 transition-colors">
                 {card.title}
               </h3>
               <p className="text-xs text-zinc-500 leading-relaxed">

@@ -1,64 +1,87 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
-  LayoutDashboard, Plus, Search, Star, Clock, Shield,
-  Trash2, Edit2, Loader2, Play, X, Briefcase, Check
+  LayoutDashboard, Loader2, Play, Building2, TrendingUp,
+  AlertCircle, CheckCircle2, Clock, CircleDashed, ChevronRight,
+  Briefcase, BarChart3, Plus, ArrowUpRight, Activity, 
+  Target, Users, Wallet, CalendarDays
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
 import { Breadcrumb } from '@/components/ui';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const API = 'http://localhost:3002';
 
-type DashboardForm = {
+type Projeto = {
+  id: string;
+  codigo: string;
   titulo: string;
-  descricao?: string;
-  privacidade: 'privado' | 'departamento' | 'publico';
-  projeto_id?: string;
+  status: string;
+  prioridade: string;
+  orcamento_previsto: number;
+  data_inicio?: string;
+  data_fim?: string;
+  tipo_projeto?: string;
+  categoria?: string;
+  atualizado_em: string;
+  departamento?: { nome: string };
+  gerente?: { nome_completo: string };
+  responsavel?: { nome_completo: string };
 };
 
-const PRIVACIDADE_CONFIG = {
-  privado:     { label: 'Privado',      color: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' },
-  departamento:{ label: 'Departamento', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-  publico:     { label: 'Público',      color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
+  'Rascunho':     { color: 'text-zinc-400',   bg: 'bg-zinc-500' },
+  'Planejamento': { color: 'text-blue-400',   bg: 'bg-blue-500' },
+  'Em Andamento': { color: 'text-emerald-400',bg: 'bg-emerald-500' },
+  'Pausado':      { color: 'text-amber-400',  bg: 'bg-amber-500' },
+  'Concluído':    { color: 'text-purple-400', bg: 'bg-purple-500' },
+  'Cancelado':    { color: 'text-red-400',    bg: 'bg-red-500' },
 };
 
-export default function DashboardsListPage() {
-  const [dashboards, setDashboards] = useState<any[]>([]);
-  const [projetos,   setProjetos]   = useState<any[]>([]);
-  const [isLoading,  setIsLoading]  = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId,   setEditingId]   = useState<string | null>(null);
-  const [isSaving,    setIsSaving]    = useState(false);
-  const [tab, setTab] = useState<'meus' | 'projetos'>('meus');
+const PRIORIDADE_CONFIG: Record<string, { color: string; bg: string }> = {
+  'Baixa':   { color: 'text-zinc-400',   bg: 'bg-zinc-400' },
+  'Normal':  { color: 'text-blue-400',   bg: 'bg-blue-400' },
+  'Alta':    { color: 'text-orange-400', bg: 'bg-orange-400' },
+  'Urgente': { color: 'text-red-400',    bg: 'bg-red-500' },
+};
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<DashboardForm>({
-    defaultValues: { privacidade: 'privado' }
-  });
+// Componente visual de mini-barra horizontal
+const MiniBar = ({ label, value, max, colorClass }: { label: string, value: number, max: number, colorClass: string }) => {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return (
+    <div className="flex items-center gap-3 w-full">
+      <span className="text-[11px] font-medium text-muted-foreground w-20 truncate">{label || 'Outros'}</span>
+      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+        <div className={`h-full ${colorClass} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[11px] font-bold text-foreground w-8 text-right">{value}</span>
+    </div>
+  );
+};
 
-  const fetchAll = async () => {
+export default function MasterDashboardPage() {
+  const router = useRouter();
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProjetos = async () => {
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const h = { Authorization: `Bearer ${session.access_token}` };
+      
+      const res = await fetch(`${API}/api/projetos`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
 
-      const [resDash, resProj] = await Promise.all([
-        fetch(`${API}/api/dashboards`, { headers: h }),
-        fetch(`${API}/api/projetos`,   { headers: h }),
-      ]);
-
-      if (resDash.ok) {
-        const j = await resDash.json();
-        setDashboards(j.dashboards || []);
-      }
-      if (resProj.ok) {
-        const j = await resProj.json();
+      if (res.ok) {
+        const j = await res.json();
         setProjetos(j.projetos || []);
+      } else {
+        toast.error('Erro ao carregar dados do dashboard');
       }
     } catch {
       toast.error('Falha de conexão com o servidor');
@@ -67,355 +90,275 @@ export default function DashboardsListPage() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchProjetos(); }, []);
 
-  const openNew = () => {
-    setEditingId(null);
-    reset({ titulo: '', descricao: '', privacidade: 'privado', projeto_id: '' });
-    setIsModalOpen(true);
-  };
+  // === ANALYTICS & METRICS CALCULATION ===
+  const metrics = useMemo(() => {
+    const total = projetos.length;
+    const ativos = projetos.filter(p => p.status === 'Em Andamento' || p.status === 'Planejamento');
+    const concluidos = projetos.filter(p => p.status === 'Concluído').length;
+    const orcamentoTotal = projetos.reduce((acc, p) => acc + (Number(p.orcamento_previsto) || 0), 0);
+    const ticketMedio = total > 0 ? orcamentoTotal / total : 0;
+    
+    const hoje = new Date();
+    const emAtraso = ativos.filter(p => p.data_fim && new Date(p.data_fim) < hoje).length;
+    const riscoAlto = ativos.filter(p => p.prioridade === 'Urgente' || p.prioridade === 'Alta').length;
 
-  const openEdit = (dash: any) => {
-    setEditingId(dash.id);
-    reset({ titulo: dash.titulo, descricao: dash.descricao || '', privacidade: dash.privacidade });
-    setIsModalOpen(true);
-  };
+    // Distribuição por Categoria
+    const categorias = projetos.reduce((acc, p) => {
+      const cat = p.categoria || 'Não Definida';
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const catArray = Object.entries(categorias).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const maxCat = Math.max(...catArray.map(c => c[1]), 1);
 
-  const onSubmit = async (data: DashboardForm) => {
-    setIsSaving(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+    // Workload por Responsável (Top 5)
+    const workload = ativos.reduce((acc, p) => {
+      const resp = p.responsavel?.nome_completo?.split(' ')[0] || p.gerente?.nome_completo?.split(' ')[0] || 'Sem Responsável';
+      acc[resp] = (acc[resp] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const workloadArray = Object.entries(workload).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const maxWorkload = Math.max(...workloadArray.map(w => w[1]), 1);
 
-      const url    = editingId ? `${API}/api/dashboards/${editingId}` : `${API}/api/dashboards`;
-      const method = editingId ? 'PUT' : 'POST';
+    // Status Distribution
+    const statusCount = projetos.reduce((acc, p) => {
+      acc[p.status] = (acc[p.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const statusArray = Object.keys(statusCount).map(k => ({
+      name: k, count: statusCount[k], pct: total ? (statusCount[k] / total) * 100 : 0, ...STATUS_CONFIG[k] || STATUS_CONFIG['Rascunho']
+    })).sort((a, b) => b.count - a.count);
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        toast.success(editingId ? 'Dashboard atualizado!' : 'Dashboard criado!');
-        setIsModalOpen(false);
-        fetchAll();
-      } else {
-        const j = await res.json().catch(() => ({}));
-        toast.error(j.error || 'Erro ao salvar dashboard');
-      }
-    } catch {
-      toast.error('Erro na requisição');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const toggleFav = async (dash: any) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      setDashboards(prev => prev.map(d => d.id === dash.id ? { ...d, favorito: !d.favorito } : d));
-      await fetch(`${API}/api/dashboards/${dash.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ ...dash, favorito: !dash.favorito }),
-      });
-    } catch { fetchAll(); }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Excluir este dashboard permanentemente?')) return;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const res = await fetch(`${API}/api/dashboards/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (res.ok) { toast.success('Dashboard excluído'); fetchAll(); }
-      else toast.error('Erro ao excluir');
-    } catch { toast.error('Erro'); }
-  };
-
-  const filtered = dashboards.filter(d =>
-    d.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (d.descricao && d.descricao.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const inputClass = "w-full h-10 bg-background border border-border/60 rounded-lg px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-colors shadow-sm";
-  const labelClass = "block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1.5";
+    return { 
+      total, ativos: ativos.length, concluidos, orcamentoTotal, ticketMedio, emAtraso, riscoAlto, 
+      catArray, maxCat, workloadArray, maxWorkload, statusArray 
+    };
+  }, [projetos]);
 
   return (
-    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
-
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="max-w-[1400px] mx-auto space-y-5 animate-in fade-in duration-500 pb-12">
+      
+      {/* HEADER COMPACTO */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/50 pb-4">
         <div>
-          <Breadcrumb items={[{ label: 'Dashboards' }, { label: 'Meus Dashboards' }]} />
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3 mt-2">
-            <LayoutDashboard className="w-7 h-7 text-cyan-500" />
-            Meus Dashboards
+          <Breadcrumb items={[{ label: 'Análise Estratégica' }, { label: 'Portfólio Global' }]} />
+          <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2 mt-1">
+            <Activity className="w-5 h-5 text-emerald-500" />
+            Control Tower: Inteligência de Projetos
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Crie painéis personalizados ou configure dashboards vinculados aos seus projetos.
-          </p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Buscar dashboards..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full h-10 bg-background border border-border/60 rounded-lg pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500/50 transition-all shadow-sm"
-            />
-          </div>
-          <button
-            onClick={openNew}
-            className="h-10 px-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors shadow-lg shadow-cyan-900/20 whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4" /> Novo Dashboard
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1.5 bg-background border border-border/60 hover:border-emerald-500/50 hover:bg-muted text-[12px] font-semibold rounded-md transition-colors">
+            Exportar Relatório
           </button>
+          <Link href="/dashboard/projetos/visao-geral" className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+            <Plus className="w-3.5 h-3.5" /> Novo Projeto
+          </Link>
         </div>
       </div>
 
-      {/* TABS */}
-      <div className="flex gap-1 border-b border-border/60">
-        {(['meus', 'projetos'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t
-                ? 'border-cyan-500 text-cyan-500'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t === 'meus' ? `Painéis Personalizados (${dashboards.length})` : `Dashboards de Projetos (${projetos.length})`}
-          </button>
-        ))}
-      </div>
-
-      {/* TAB: PAINÉIS PERSONALIZADOS */}
-      {tab === 'meus' && (
-        isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1,2,3].map(i => <div key={i} className="h-48 rounded-2xl bg-muted/40 animate-pulse border border-border/60" />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4 border border-dashed border-border/60 rounded-2xl bg-muted/10">
-            <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
-              <LayoutDashboard className="w-8 h-8 text-cyan-500" />
-            </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">Nenhum painel encontrado</h2>
-            <p className="text-muted-foreground text-center max-w-md mb-6 text-sm">
-              Crie seu primeiro dashboard personalizado para acompanhar indicadores.
-            </p>
-            <button
-              onClick={openNew}
-              className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-semibold transition-colors"
-            >
-              <Plus className="w-4 h-4 inline-block mr-1.5 -mt-0.5" /> Criar Dashboard
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map(dash => {
-              const priv = PRIVACIDADE_CONFIG[dash.privacidade as keyof typeof PRIVACIDADE_CONFIG] || PRIVACIDADE_CONFIG.privado;
-              return (
-                <div key={dash.id} className="group relative bg-background border border-border/60 rounded-2xl p-5 hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-900/10 transition-all flex flex-col">
-                  <div className="flex items-start justify-between mb-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border ${priv.color}`}>
-                      {priv.label}
-                    </span>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => toggleFav(dash)} className={`p-1.5 hover:bg-muted rounded-md transition-colors ${dash.favorito ? 'text-amber-400' : 'text-muted-foreground'}`}>
-                        <Star className={`w-4 h-4 ${dash.favorito ? 'fill-current' : ''}`} />
-                      </button>
-                      <button onClick={() => openEdit(dash)} className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDelete(dash.id)} className="p-1.5 hover:bg-red-500/10 rounded-md transition-colors text-muted-foreground hover:text-red-500">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-cyan-500 transition-colors">{dash.titulo}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">{dash.descricao || 'Sem descrição.'}</p>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-border/60 mt-auto">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">
-                        {dash.criador?.nome_completo?.charAt(0) || '?'}
-                      </div>
-                      <span className="text-xs text-muted-foreground">{dash.criador?.nome_completo?.split(' ')[0]}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
-                      {new Date(dash.atualizado_em).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-
-                  {/* Play button hover */}
-                  <Link
-                    href={`/dashboard/dashboards/executivo`}
-                    className="absolute -bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:bottom-4 transition-all duration-300 bg-cyan-600 text-white rounded-full p-3 shadow-lg shadow-cyan-900/50 z-10"
-                  >
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )
-      )}
-
-      {/* TAB: DASHBOARDS DE PROJETOS */}
-      {tab === 'projetos' && (
-        isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1,2].map(i => <div key={i} className="h-40 rounded-2xl bg-muted/40 animate-pulse border border-border/60" />)}
-          </div>
-        ) : projetos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border/60 rounded-2xl bg-muted/10">
-            <Briefcase className="w-12 h-12 text-violet-500/40 mb-4" />
-            <h2 className="text-lg font-bold text-foreground mb-2">Nenhum projeto encontrado</h2>
-            <p className="text-muted-foreground text-sm mb-4">Crie um projeto para gerar dashboards automaticamente.</p>
-            <Link href="/dashboard/projetos/novo" className="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold">
-              <Plus className="w-4 h-4 inline-block mr-1 -mt-0.5" /> Criar Projeto
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projetos.map(proj => {
-              const statusColors: Record<string, string> = {
-                'Em Andamento': 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-                'Planejamento': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                'Concluído':    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                'Pausado':      'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                'Rascunho':     'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-              };
-              const sc = statusColors[proj.status] || statusColors['Rascunho'];
-              return (
-                <div key={proj.id} className="group bg-background border border-border/60 rounded-2xl p-5 hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-900/10 transition-all flex flex-col">
-                  <div className="flex items-start justify-between mb-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border ${sc}`}>
-                      {proj.status}
-                    </span>
-                    <span className="font-mono text-[11px] text-muted-foreground">{proj.codigo}</span>
-                  </div>
-
-                  <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-violet-500 transition-colors line-clamp-1">
-                    {proj.titulo}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {proj.departamento?.nome && <span>{proj.departamento.nome} · </span>}
-                    {proj.gerente?.nome_completo?.split(' ')[0]}
-                  </p>
-
-                  <div className="flex-1" />
-
-                  {/* Módulos disponíveis */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {['Dashboard', 'Kanban', 'Timeline', 'KPIs', 'Riscos'].map(mod => (
-                      <span key={mod} className="text-[10px] px-2 py-0.5 rounded-md bg-muted border border-border/60 text-muted-foreground flex items-center gap-1">
-                        <Check className="w-2.5 h-2.5 text-violet-400" /> {mod}
-                      </span>
-                    ))}
-                  </div>
-
-                  <Link
-                    href={`/dashboard/projetos/${proj.id}`}
-                    className="flex items-center justify-center gap-2 h-9 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" /> Abrir Workspace
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )
-      )}
-
-      {/* MODAL CRIAR/EDITAR */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-border/60 flex items-center justify-between bg-muted/10">
-              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <LayoutDashboard className="w-5 h-5 text-cyan-500" />
-                {editingId ? 'Editar Dashboard' : 'Novo Dashboard'}
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <X className="w-4 h-4" />
-              </button>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
+      ) : projetos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border/60 rounded-xl bg-muted/10">
+          <BarChart3 className="w-10 h-10 text-emerald-500/40 mb-3" />
+          <h2 className="text-lg font-bold text-foreground mb-1">Sem dados suficientes</h2>
+          <p className="text-muted-foreground text-xs mb-4">Crie projetos com orçamento, responsáveis e prazos para gerar a análise.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+          
+          {/* =========================================================================
+              LINHA 1: MINI-KPIS ALTA DENSIDADE (6 colunas em telas grandes)
+             ========================================================================= */}
+          <div className="md:col-span-12 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Volume Total</span>
+                <Briefcase className="w-3.5 h-3.5 text-blue-500" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black text-foreground">{metrics.total}</p>
+                <span className="text-[10px] font-medium text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded">{metrics.ativos} Ativos</span>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
-              <div>
-                <label className={labelClass}>Título do Dashboard *</label>
-                <input
-                  {...register('titulo', { required: 'Obrigatório' })}
-                  autoFocus
-                  placeholder="Ex: Visão Financeira Q3"
-                  className={inputClass}
-                />
-                {errors.titulo && <span className="text-xs text-red-400 mt-1 block">{errors.titulo.message}</span>}
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Desvio de Prazo</span>
+                <CalendarDays className={`w-3.5 h-3.5 ${metrics.emAtraso > 0 ? 'text-red-500' : 'text-emerald-500'}`} />
               </div>
-
-              <div>
-                <label className={labelClass}>Vincular a Projeto (Opcional)</label>
-                <select {...register('projeto_id')} className={inputClass}>
-                  <option value="">Nenhum projeto específico</option>
-                  {projetos.map(p => <option key={p.id} value={p.id}>{p.titulo}</option>)}
-                </select>
-                <p className="text-[11px] text-muted-foreground mt-1">Vincula este painel aos dados do projeto selecionado.</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black text-foreground">{metrics.emAtraso}</p>
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${metrics.emAtraso > 0 ? 'text-red-500 bg-red-500/10' : 'text-emerald-500 bg-emerald-500/10'}`}>
+                  {metrics.emAtraso > 0 ? 'Projetos Atrasados' : 'No Prazo'}
+                </span>
               </div>
+            </div>
 
-              <div>
-                <label className={labelClass}>Descrição (Opcional)</label>
-                <textarea
-                  {...register('descricao')}
-                  rows={2}
-                  placeholder="Qual o objetivo principal deste painel?"
-                  className={`${inputClass} h-auto py-2 resize-none`}
-                />
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Em Risco Alto</span>
+                <AlertCircle className="w-3.5 h-3.5 text-orange-500" />
               </div>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black text-foreground">{metrics.riscoAlto}</p>
+                <span className="text-[10px] font-medium text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded">Prioridade Máx.</span>
+              </div>
+            </div>
 
-              <div>
-                <label className={labelClass}>Privacidade</label>
-                <select {...register('privacidade')} className={inputClass}>
-                  <option value="privado">Privado (Apenas eu)</option>
-                  <option value="departamento">Departamento (Minha equipe)</option>
-                  <option value="publico">Público (Toda a empresa)</option>
-                </select>
-                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                  <Shield className="w-3 h-3" /> Define quem pode visualizar este painel.
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Capex / Opex</span>
+                <Wallet className="w-3.5 h-3.5 text-amber-500" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-lg font-black text-foreground truncate max-w-[120px]" title={metrics.orcamentoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}>
+                  {metrics.orcamentoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
                 </p>
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-lg shadow-cyan-900/20 disabled:opacity-50"
-                >
-                  {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {editingId ? 'Salvar Alterações' : 'Criar Dashboard'}
-                </button>
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ticket Médio</span>
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
               </div>
-            </form>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-lg font-black text-foreground truncate max-w-[120px]" title={metrics.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}>
+                  {metrics.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-background border border-border/50 rounded-xl p-3 shadow-sm hover:border-emerald-500/30 transition-colors">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Taxa de Entrega</span>
+                <Target className="w-3.5 h-3.5 text-purple-500" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black text-foreground">{metrics.total > 0 ? ((metrics.concluidos / metrics.total) * 100).toFixed(0) : 0}%</p>
+                <span className="text-[10px] font-medium text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded">{metrics.concluidos} Entregues</span>
+              </div>
+            </div>
+            
           </div>
+
+          {/* =========================================================================
+              LINHA 2: DISTRIBUIÇÃO E GRÁFICOS COMPACTOS (3 colunas)
+             ========================================================================= */}
+          <div className="md:col-span-4 bg-background border border-border/50 rounded-xl p-4 shadow-sm">
+            <h3 className="text-[12px] font-bold text-foreground mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+              <Building2 className="w-4 h-4 text-emerald-500" /> Foco de Negócio (Categorias)
+            </h3>
+            <div className="space-y-3">
+              {metrics.catArray.map(([cat, count]) => (
+                <MiniBar key={cat} label={cat} value={count} max={metrics.maxCat} colorClass="bg-emerald-500" />
+              ))}
+              {metrics.catArray.length === 0 && <span className="text-xs text-muted-foreground">Sem dados categorizados.</span>}
+            </div>
+          </div>
+
+          <div className="md:col-span-4 bg-background border border-border/50 rounded-xl p-4 shadow-sm">
+            <h3 className="text-[12px] font-bold text-foreground mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+              <Users className="w-4 h-4 text-blue-500" /> Carga de Trabalho (Top Ativos)
+            </h3>
+            <div className="space-y-3">
+              {metrics.workloadArray.map(([resp, count]) => (
+                <MiniBar key={resp} label={resp} value={count} max={metrics.maxWorkload} colorClass="bg-blue-500" />
+              ))}
+              {metrics.workloadArray.length === 0 && <span className="text-xs text-muted-foreground">Sem responsáveis atribuídos.</span>}
+            </div>
+          </div>
+
+          <div className="md:col-span-4 bg-background border border-border/50 rounded-xl p-4 shadow-sm flex flex-col">
+            <h3 className="text-[12px] font-bold text-foreground mb-4 flex items-center gap-1.5 uppercase tracking-wider">
+              <CircleDashed className="w-4 h-4 text-purple-500" /> Macro Status do Portfólio
+            </h3>
+            <div className="h-3 w-full bg-muted rounded-full overflow-hidden flex mb-4">
+              {metrics.statusArray.map(item => (
+                <div key={item.name} title={`${item.name} (${item.pct.toFixed(1)}%)`} className={`h-full ${item.bg} hover:brightness-110 transition-all border-r border-background/20 last:border-0`} style={{ width: `${item.pct}%` }} />
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-y-2 gap-x-2 mt-auto">
+              {metrics.statusArray.map(item => (
+                <div key={item.name} className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className={`w-2 h-2 rounded-full ${item.bg} shrink-0`} />
+                    <span className="text-muted-foreground truncate">{item.name}</span>
+                  </div>
+                  <span className="font-bold text-foreground">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* =========================================================================
+              LINHA 3: TABELA ANALÍTICA (Bottom)
+             ========================================================================= */}
+          <div className="md:col-span-12 bg-background border border-border/50 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/50 bg-muted/10 flex items-center justify-between">
+              <h3 className="text-[12px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-emerald-500" /> Radar: Movimentação Recente
+              </h3>
+              <Link href="/dashboard/projetos/visao-geral" className="text-[10px] font-bold text-emerald-500 hover:text-emerald-600 uppercase tracking-wider flex items-center gap-0.5 transition-colors">
+                Tabela Completa <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[11px]">
+                <thead>
+                  <tr className="border-b border-border/50 bg-muted/5 text-muted-foreground">
+                    <th className="px-4 py-2 font-semibold uppercase tracking-wider">Projeto / Código</th>
+                    <th className="px-4 py-2 font-semibold uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 font-semibold uppercase tracking-wider">Responsável</th>
+                    <th className="px-4 py-2 font-semibold uppercase tracking-wider text-right">Orçamento</th>
+                    <th className="px-4 py-2 font-semibold uppercase tracking-wider text-right">Fim Previsto</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {projetos.slice(0, 5).map(proj => {
+                    const sc = STATUS_CONFIG[proj.status] || STATUS_CONFIG['Rascunho'];
+                    const isAtrasado = proj.data_fim && new Date(proj.data_fim) < new Date() && proj.status !== 'Concluído';
+                    
+                    return (
+                      <tr key={proj.id} onClick={() => router.push(`/dashboard/projetos/${proj.id}`)} className="hover:bg-muted/30 cursor-pointer transition-colors group">
+                        <td className="px-4 py-2.5">
+                          <p className="font-bold text-foreground group-hover:text-emerald-500 flex items-center gap-1.5 transition-colors">
+                            {proj.titulo}
+                            <ArrowUpRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </p>
+                          <p className="text-[10px] font-mono text-muted-foreground">{proj.codigo} {proj.departamento?.nome ? `· ${proj.departamento.nome}` : ''}</p>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className={`inline-flex px-1.5 py-0.5 rounded-[4px] font-bold border ${sc.color} ${sc.bg.replace('bg-', 'bg-').replace('500', '500/10')} border-current/20`}>
+                            {proj.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="font-semibold text-foreground">{proj.responsavel?.nome_completo?.split(' ')[0] || proj.gerente?.nome_completo?.split(' ')[0] || '—'}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-medium text-muted-foreground">
+                          {Number(proj.orcamento_previsto) > 0 ? Number(proj.orcamento_previsto).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono">
+                          {proj.data_fim ? (
+                            <span className={isAtrasado ? 'text-red-500 font-bold' : 'text-muted-foreground'}>
+                              {new Date(proj.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}
+                            </span>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       )}
     </div>

@@ -226,7 +226,7 @@ export default function SessoesAtivasPage() {
                     <tr key={sessao.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-violet-900/60 flex items-center justify-center text-sm font-bold text-violet-200 flex-shrink-0 ring-2 ring-violet-500/10 overflow-hidden">
+                          <div className="w-9 h-9 rounded-full bg-emerald-900/60 flex items-center justify-center text-sm font-bold text-emerald-200 flex-shrink-0 ring-2 ring-emerald-500/10 overflow-hidden">
                             {sessao.foto_url
                               ? <img src={sessao.foto_url} alt="" className="w-full h-full object-cover" />
                               : getInitials(sessao.nome_completo)
@@ -236,7 +236,7 @@ export default function SessoesAtivasPage() {
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-white">{sessao.nome_completo}</span>
                               {sessao.is_admin && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 text-violet-400 border border-violet-500/20">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
                                   <Shield className="w-2.5 h-2.5" /> Admin
                                 </span>
                               )}

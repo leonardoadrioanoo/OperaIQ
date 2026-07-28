@@ -27,7 +27,7 @@ type Documento = {
 const CATEGORIAS: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   contrato_social: { label: 'Contrato Social',    icon: FileSignature, color: 'text-blue-400',   bg: 'bg-blue-400/10'   },
   alvara:          { label: 'Alvará',             icon: Shield,        color: 'text-emerald-400', bg: 'bg-emerald-400/10'},
-  certidao:        { label: 'Certidão',           icon: FileCheck,     color: 'text-violet-400',  bg: 'bg-violet-400/10' },
+  certidao:        { label: 'Certidão',           icon: FileCheck,     color: 'text-emerald-400',  bg: 'bg-emerald-400/10' },
   procuracao:      { label: 'Procuração',         icon: FileBadge,     color: 'text-amber-400',   bg: 'bg-amber-400/10'  },
   outros:          { label: 'Outros',             icon: FolderOpen,    color: 'text-zinc-400',    bg: 'bg-zinc-400/10'   },
 };
@@ -186,7 +186,7 @@ export default function DocumentosPage() {
         <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
           <span>Administração</span>
           <span>/</span>
-          <Link href="/dashboard/administracao/empresa" className="hover:text-violet-400">Empresa</Link>
+          <Link href="/dashboard/administracao/empresa" className="hover:text-emerald-400">Empresa</Link>
           <span>/</span>
           <span className="text-zinc-300">Documentos Legais</span>
         </div>

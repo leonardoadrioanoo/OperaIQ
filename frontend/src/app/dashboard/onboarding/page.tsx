@@ -67,7 +67,7 @@ export default function OnboardingPage() {
       
       {/* Background Decorativo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
       </div>
@@ -76,8 +76,8 @@ export default function OnboardingPage() {
         
         {/* Header */}
         <div className="p-8 text-center border-b border-white/5 bg-white/[0.02]">
-          <div className="w-16 h-16 bg-violet-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-violet-500/20">
-            <UserCircle className="w-8 h-8 text-violet-400" />
+          <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+            <UserCircle className="w-8 h-8 text-emerald-400" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Complete seu Perfil</h1>
           <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
                   value={formData.nome_completo}
                   onChange={e => setFormData({ ...formData, nome_completo: e.target.value })}
                   placeholder="Seu nome completo"
-                  className="pl-10 bg-black/40 border-white/10 focus:border-violet-500/50 text-sm"
+                  className="pl-10 bg-black/40 border-white/10 focus:border-emerald-500/50 text-sm"
                 />
               </div>
             </div>
@@ -112,7 +112,7 @@ export default function OnboardingPage() {
                   value={formData.cpf}
                   onChange={e => setFormData({ ...formData, cpf: e.target.value })}
                   placeholder="000.000.000-00"
-                  className="pl-10 bg-black/40 border-white/10 focus:border-violet-500/50 text-sm font-mono"
+                  className="pl-10 bg-black/40 border-white/10 focus:border-emerald-500/50 text-sm font-mono"
                 />
               </div>
             </div>
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
                   type="date"
                   value={formData.data_nascimento}
                   onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })}
-                  className="pl-10 bg-black/40 border-white/10 focus:border-violet-500/50 text-sm text-zinc-300"
+                  className="pl-10 bg-black/40 border-white/10 focus:border-emerald-500/50 text-sm text-zinc-300"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Concluir Integração"}
                 {!isLoading && <ArrowRight className="w-4 h-4" />}

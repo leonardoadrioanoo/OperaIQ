@@ -227,7 +227,7 @@ export default function DepartamentosPage() {
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
             <span>Administração</span>
             <span>/</span>
-            <Link href="/dashboard/administracao/estrutura" className="hover:text-violet-400">Estrutura Organizacional</Link>
+            <Link href="/dashboard/administracao/estrutura" className="hover:text-emerald-400">Estrutura Organizacional</Link>
             <span>/</span>
             <span className="text-zinc-300">Departamentos</span>
           </div>

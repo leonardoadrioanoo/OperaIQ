@@ -8,8 +8,8 @@ interface PagePlaceholderProps {
 export function PagePlaceholder({ title }: PagePlaceholderProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-      <div className="w-20 h-20 bg-violet-600/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-violet-500/20">
-        <Construction className="w-10 h-10 text-violet-500" />
+      <div className="w-20 h-20 bg-emerald-600/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-emerald-500/20">
+        <Construction className="w-10 h-10 text-emerald-500" />
       </div>
       <h1 className="text-3xl font-semibold text-white mb-3">{title}</h1>
       <p className="text-zinc-400 max-w-md">

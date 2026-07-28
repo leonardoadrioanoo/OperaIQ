@@ -125,20 +125,20 @@ function RightPanel() {
   return (
     <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col items-center justify-center p-12">
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a3e] via-[#2d1166] to-[#0f0a2e]"/>
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl auth-glow-pulse"/>
+      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-emerald-600/30 rounded-full blur-3xl auth-glow-pulse"/>
       <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-indigo-600/20 rounded-full blur-3xl auth-glow-pulse" style={{animationDelay:"2s"}}/>
       <div className="absolute inset-0 opacity-[0.04]"
         style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }}/>
 
       <div className="relative z-10 w-full max-w-md space-y-8 auth-animate auth-delay-2">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-medium">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
             <Zap className="w-3 h-3"/>
             Plataforma Empresarial
           </div>
           <h2 className="text-3xl font-extrabold text-white leading-tight tracking-tight">
             Junte-se a centenas<br/>de empresas que já<br/>
-            <span className="text-violet-400">confiam no OperaIQ.</span>
+            <span className="text-emerald-400">confiam no OperaIQ.</span>
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed">
             Centralize processos, gerencie equipes e tome decisões melhores com dados em tempo real.
@@ -154,7 +154,7 @@ function RightPanel() {
             { icon: <Shield className="w-4 h-4"/>,      title: "Segurança corporativa",    desc: "Dados criptografados e controle de acesso" },
           ].map((b) => (
             <div key={b.title} className="flex items-start gap-3 bg-white/[0.04] rounded-xl p-3 border border-white/5">
-              <div className="mt-0.5 w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+              <div className="mt-0.5 w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                 {b.icon}
               </div>
               <div>
@@ -265,13 +265,13 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="p-8 shrink-0 auth-animate relative z-20">
           <Link href="/login" className="flex items-center gap-2.5 w-max">
-            <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-emerald-400">
                 <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
               </svg>
             </div>
             <span className="text-white font-bold text-lg tracking-tight">
-              Opera<span className="text-violet-400">IQ</span>
+              Opera<span className="text-emerald-400">IQ</span>
             </span>
           </Link>
         </div>
@@ -289,7 +289,7 @@ export default function RegisterPage() {
             {/* Stepper */}
             <div className="relative mb-10 auth-animate auth-delay-2">
               <div className="absolute top-5 left-10 right-10 h-0.5 bg-white/5 -z-10 rounded-full">
-                <div className="h-full bg-violet-600 transition-all duration-500 rounded-full" style={{ width: `${(currentStep / 3) * 100}%` }}/>
+                <div className="h-full bg-emerald-600 transition-all duration-500 rounded-full" style={{ width: `${(currentStep / 3) * 100}%` }}/>
               </div>
               <div className="flex justify-between">
                 {steps.map((s, i) => {
@@ -298,14 +298,14 @@ export default function RegisterPage() {
                   return (
                     <div key={i} className="flex flex-col items-center gap-2">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${
-                        isPast ? "bg-violet-600 border-violet-600 text-white" :
-                        isActive ? "bg-violet-600/20 border-violet-500 text-violet-400" :
+                        isPast ? "bg-emerald-600 border-emerald-600 text-white" :
+                        isActive ? "bg-emerald-600/20 border-emerald-500 text-emerald-400" :
                         "bg-[#0d0d1a] border-white/10 text-slate-500"
                       }`}>
                         {isPast ? <CheckCircle2 className="w-5 h-5"/> : s.icon}
                       </div>
                       <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${
-                        isActive ? "text-violet-400" : isPast ? "text-slate-300" : "text-slate-600"
+                        isActive ? "text-emerald-400" : isPast ? "text-slate-300" : "text-slate-600"
                       }`}>
                         {s.title}
                       </span>
@@ -537,7 +537,7 @@ export default function RegisterPage() {
                         onCheckedChange={checked => setValue("terms", checked, { shouldValidate: true })}
                       />
                       <span className="text-sm text-slate-400 leading-relaxed">
-                        Eu concordo com os <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Termos de Serviço</a> e a <a href="#" className="text-violet-400 hover:text-violet-300 transition-colors">Política de Privacidade</a>.
+                        Eu concordo com os <a href="#" className="text-emerald-400 hover:text-emerald-300 transition-colors">Termos de Serviço</a> e a <a href="#" className="text-emerald-400 hover:text-emerald-300 transition-colors">Política de Privacidade</a>.
                       </span>
                     </label>
                     {errors.terms && <p className="text-xs text-red-400 font-medium mt-1">{errors.terms.message}</p>}
@@ -560,7 +560,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all shadow-lg shadow-violet-900/40 active:scale-95"
+                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-900/40 active:scale-95"
                   >
                     Próximo etapa
                   </button>
@@ -568,7 +568,7 @@ export default function RegisterPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+                    className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-lg shadow-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : null}
                     {isLoading ? "Criando conta..." : "Criar conta corporativa"}
@@ -579,7 +579,7 @@ export default function RegisterPage() {
               {currentStep === 0 && (
                 <p className="text-center text-sm text-slate-500 mt-6 auth-animate auth-delay-5">
                   Já possui uma conta?{" "}
-                  <Link href="/login" className="font-semibold text-violet-400 hover:text-violet-300 transition-colors">
+                  <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
                     Entrar agora
                   </Link>
                 </p>

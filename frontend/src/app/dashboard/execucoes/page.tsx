@@ -10,7 +10,7 @@ import {
 
 const EXECUCOES_CARDS = [
   { title: "Quadro Kanban", description: "Gerencie fluxos e etapas visuais", icon: LayoutGrid, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/execucoes/kanban" },
-  { title: "Lista de Tarefas", description: "Visão detalhada e estruturada", icon: ListTodo, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/execucoes/lista" },
+  { title: "Lista de Tarefas", description: "Visão detalhada e estruturada", icon: ListTodo, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/execucoes/lista" },
   { title: "Timeline", description: "Acompanhe prazos temporalmente", icon: CalendarClock, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/execucoes/timeline" },
   { title: "Calendário", description: "Visão mensal das entregas", icon: Calendar, color: "text-orange-400", bg: "bg-orange-400/10", href: "/dashboard/execucoes/calendario" },
   { title: "Gráfico de Gantt", description: "Dependências e planejamento global", icon: BarChart, color: "text-rose-400", bg: "bg-rose-400/10", href: "/dashboard/execucoes/gantt" },
@@ -33,7 +33,7 @@ export default function ExecucoesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Rocket className="w-8 h-8 text-violet-500" />
+            <Rocket className="w-8 h-8 text-emerald-500" />
             Execuções
           </h1>
           <p className="text-zinc-400 mt-2">
@@ -42,7 +42,7 @@ export default function ExecucoesPage() {
         </div>
         <Link 
           href="/dashboard/execucoes/nova" 
-          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-all shadow-lg shadow-violet-900/20 active:scale-95"
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
         >
           Nova Execução
         </Link>
@@ -61,7 +61,7 @@ export default function ExecucoesPage() {
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${card.bg} ${card.color}`}>
                 <Icon className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
                 {card.title}
               </h3>
               <p className="text-sm text-zinc-500 leading-relaxed">
@@ -72,7 +72,7 @@ export default function ExecucoesPage() {
         })}
       </div>
 
-      <div className="mt-12 bg-violet-900/10 border border-violet-500/20 rounded-2xl p-6 lg:p-8">
+      <div className="mt-12 bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-6 lg:p-8">
         <h3 className="text-lg font-medium text-white mb-6">Recursos Integrados</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {FEATURES_LIST.map((feat) => {

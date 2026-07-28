@@ -47,7 +47,7 @@ const resetSchema = z.object({
 type ResetForm = z.infer<typeof resetSchema>
 
 const INPUT_CLS =
-  "w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 py-2.5 text-sm outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all duration-200"
+  "w-full rounded-xl bg-slate-900/40 border border-white/10 text-white placeholder:text-slate-500 py-2.5 text-sm outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
 
 // ─── Estado: link inválido / expirado ──────────────────────────────────────────
 function InvalidTokenState() {
@@ -72,14 +72,14 @@ function InvalidTokenState() {
           "Verifique se copiou o link completo",
         ].map((tip, i) => (
           <div key={i} className="flex items-start gap-2">
-            <div className="w-1 h-1 rounded-full bg-violet-400 mt-1.5 shrink-0"/>
+            <div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0"/>
             <span className="text-slate-300 text-sm">{tip}</span>
           </div>
         ))}
       </div>
       <Link
         href="/forgot-password"
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 active:scale-[0.98]"
       >
         <ArrowLeft className="w-4 h-4"/>
         Solicitar novo link
@@ -121,7 +121,7 @@ function SuccessState() {
       </div>
       <Link
         href="/login"
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 active:scale-[0.98]"
       >
         Ir para o login
       </Link>
@@ -141,7 +141,7 @@ function RightPanel() {
   return (
     <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col items-center justify-center p-12">
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a3e] via-[#2d1166] to-[#0f0a2e]"/>
-      <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl auth-glow-pulse"/>
+      <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-emerald-600/30 rounded-full blur-3xl auth-glow-pulse"/>
       <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-indigo-600/20 rounded-full blur-3xl auth-glow-pulse"
         style={{ animationDelay: "2s" }}/>
       <div className="absolute inset-0 opacity-[0.04]"
@@ -149,14 +149,14 @@ function RightPanel() {
 
       <div className="relative z-10 w-full max-w-sm space-y-8 auth-animate auth-delay-2">
         {/* Icon */}
-        <div className="mx-auto w-16 h-16 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center auth-float">
-          <KeyRound className="w-7 h-7 text-violet-400"/>
+        <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center auth-float">
+          <KeyRound className="w-7 h-7 text-emerald-400"/>
         </div>
 
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-extrabold text-white leading-tight">
             Crie uma senha<br/>
-            <span className="text-violet-400">realmente segura.</span>
+            <span className="text-emerald-400">realmente segura.</span>
           </h2>
           <p className="text-slate-400 text-sm">
             Siga as dicas abaixo para criar uma senha forte e proteger sua conta.
@@ -252,13 +252,13 @@ function ResetPasswordInner() {
         {/* Logo */}
         <div className="p-8 auth-animate">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-emerald-400">
                 <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
               </svg>
             </div>
             <span className="text-white font-bold text-lg tracking-tight">
-              Opera<span className="text-violet-400">IQ</span>
+              Opera<span className="text-emerald-400">IQ</span>
             </span>
           </div>
         </div>
@@ -270,8 +270,8 @@ function ResetPasswordInner() {
             {/* ── LOADING ──────────────────────────────────────────────────── */}
             {status === "loading" && (
               <div className="flex flex-col items-center gap-4 text-slate-400 auth-animate">
-                <div className="w-12 h-12 rounded-xl bg-violet-600/20 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-violet-400 animate-spin"/>
+                <div className="w-12 h-12 rounded-xl bg-emerald-600/20 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-emerald-400 animate-spin"/>
                 </div>
                 <p className="text-sm">Verificando link de recuperação...</p>
               </div>
@@ -288,8 +288,8 @@ function ResetPasswordInner() {
               <div className="space-y-7">
                 {/* Heading */}
                 <div className="auth-animate auth-delay-1">
-                  <div className="w-12 h-12 rounded-xl bg-violet-600/20 border border-violet-500/20 flex items-center justify-center mb-5">
-                    <KeyRound className="w-5 h-5 text-violet-400"/>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600/20 border border-emerald-500/20 flex items-center justify-center mb-5">
+                    <KeyRound className="w-5 h-5 text-emerald-400"/>
                   </div>
                   <h1 className="text-2xl font-bold text-white tracking-tight">Redefinir senha</h1>
                   <p className="text-slate-400 text-sm mt-1 leading-relaxed">
@@ -396,7 +396,7 @@ function ResetPasswordInner() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
                   >
                     {isLoading
                       ? <Loader2 className="h-4 w-4 animate-spin"/>
@@ -440,8 +440,8 @@ export default function ResetPasswordPage() {
       fallback={
         <main className="min-h-screen flex items-center justify-center bg-[#07070f]">
           <div className="flex flex-col items-center gap-4 text-slate-400">
-            <div className="w-12 h-12 rounded-xl bg-violet-600/20 flex items-center justify-center">
-              <Loader2 className="w-6 h-6 text-violet-400 animate-spin"/>
+            <div className="w-12 h-12 rounded-xl bg-emerald-600/20 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-emerald-400 animate-spin"/>
             </div>
             <p className="text-sm">Carregando...</p>
           </div>

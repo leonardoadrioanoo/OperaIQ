@@ -139,7 +139,7 @@ export default function MatrizPermissaoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
       </div>
     );
   }
@@ -151,14 +151,14 @@ export default function MatrizPermissaoPage() {
         <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
           <span>Administração</span>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
           <span>/</span>
           <span className="text-zinc-300">Matriz de Permissões</span>
         </div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-              <ListChecks className="w-7 h-7 text-violet-400" /> Matriz de Permissões
+              <ListChecks className="w-7 h-7 text-emerald-400" /> Matriz de Permissões
             </h1>
             <p className="text-zinc-400 mt-1 text-sm">
               Configure as permissões padrão de cada perfil. As alterações são aplicadas automaticamente a todos os usuários vinculados.
@@ -177,8 +177,8 @@ export default function MatrizPermissaoPage() {
               onClick={() => setSelectedPerfilId(perfil.id)}
               className={`flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all ${
                 selectedPerfilId === perfil.id
-                  ? 'border-violet-500 bg-violet-600/15 text-white shadow-lg shadow-violet-900/20'
-                  : 'border-border/60 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-600/5'
+                  ? 'border-emerald-500 bg-emerald-600/15 text-white shadow-lg shadow-emerald-900/20'
+                  : 'border-border/60 text-muted-foreground hover:border-emerald-500/40 hover:bg-emerald-600/5'
               }`}
             >
               <span className="text-xs font-semibold leading-tight text-foreground">{perfil.label}</span>
@@ -246,7 +246,7 @@ export default function MatrizPermissaoPage() {
                               type="checkbox"
                               checked={checked}
                               onChange={(e) => handleChange(mod.modulo, col.key, e.target.checked)}
-                              className="w-4 h-4 rounded border-border/60 bg-transparent cursor-pointer accent-violet-500"
+                              className="w-4 h-4 rounded border-border/60 bg-transparent cursor-pointer accent-emerald-500"
                             />
                           </td>
                         );
@@ -263,7 +263,7 @@ export default function MatrizPermissaoPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-violet-900/30"
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/30"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Salvar e Sincronizar Usuários

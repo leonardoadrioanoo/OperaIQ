@@ -204,7 +204,7 @@ export default function MeuPerfilPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
-        <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
       </div>
     );
   }
@@ -218,7 +218,7 @@ export default function MeuPerfilPage() {
       {/* Header Card */}
       <div className="bg-background border border-border/60 rounded-2xl p-6 flex items-center gap-6">
         <div className="relative group flex-shrink-0">
-          <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center text-3xl text-card-foreground font-bold ring-4 ring-violet-500/20 overflow-hidden">
+          <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center text-3xl text-card-foreground font-bold ring-4 ring-emerald-500/20 overflow-hidden">
             {data?.foto_url
               ? <img src={data.foto_url} alt="Avatar" className="w-full h-full object-cover" />
               : getInitials(data?.nome_completo || '')}
@@ -238,10 +238,10 @@ export default function MeuPerfilPage() {
           <div className="flex items-center gap-2 mt-2">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
               isAdmin
-                ? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                 : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
             }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-violet-400' : 'bg-emerald-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-emerald-400' : 'bg-emerald-400'}`} />
               {isAdmin ? 'Administrador' : 'Colaborador'}
             </span>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -262,7 +262,7 @@ export default function MeuPerfilPage() {
                   onClick={() => setIsEditing(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/90 text-foreground rounded-lg text-sm font-medium transition-colors border border-border/60"
                 >
-                  <Edit2 className="w-4 h-4 text-violet-400" /> Editar Perfil
+                  <Edit2 className="w-4 h-4 text-emerald-400" /> Editar Perfil
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export default function MeuPerfilPage() {
                   </button>
                   <button
                     onClick={handleSubmit(onSubmit)}
-                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20"
                     disabled={isSaving}
                   >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
@@ -298,7 +298,7 @@ export default function MeuPerfilPage() {
               disabled={isEditing}
               className={`flex items-center gap-2 px-4 pb-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 relative top-[1px] ${
                 activeTab === tab.id
-                  ? 'text-violet-400 border-violet-500'
+                  ? 'text-emerald-400 border-emerald-500'
                   : 'text-muted-foreground border-transparent hover:text-foreground'
               } ${isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
             >
@@ -446,7 +446,7 @@ export default function MeuPerfilPage() {
                         <button
                           onClick={handleChangePassword}
                           disabled={isSavingPassword || !oldPassword || newPassword.length < 6}
-                          className="flex items-center gap-2 px-6 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors"
+                          className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                           {isSavingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
                           Salvar Senha

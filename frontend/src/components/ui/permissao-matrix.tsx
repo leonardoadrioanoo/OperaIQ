@@ -44,7 +44,7 @@ export const PERM_COLUMNS: { key: keyof PermissaoFlags; label: string; color: st
   { key: 'p_criar',      label: 'Criar',      color: 'text-emerald-400' },
   { key: 'p_editar',     label: 'Editar',     color: 'text-amber-400'  },
   { key: 'p_excluir',    label: 'Excluir',    color: 'text-red-400'    },
-  { key: 'p_aprovar',    label: 'Aprovar',    color: 'text-violet-400' },
+  { key: 'p_aprovar',    label: 'Aprovar',    color: 'text-emerald-400' },
   { key: 'p_exportar',   label: 'Exportar',   color: 'text-cyan-400'   },
   { key: 'p_importar',   label: 'Importar',   color: 'text-orange-400' },
   { key: 'p_gerenciar',  label: 'Gerenciar',  color: 'text-pink-400'   },
@@ -87,7 +87,7 @@ function ModuloRow({
                   }
                 }}
                 disabled={isReadOnly}
-                className={`w-4 h-4 rounded border-border/60 bg-transparent accent-violet-500 ${isReadOnly ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`w-4 h-4 rounded border-border/60 bg-transparent accent-emerald-500 ${isReadOnly ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
               />
             </td>
           );

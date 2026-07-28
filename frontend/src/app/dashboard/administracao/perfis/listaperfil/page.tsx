@@ -85,7 +85,7 @@ function ModalPerfil({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Shield className="w-5 h-5 text-violet-400" />
+            <Shield className="w-5 h-5 text-emerald-400" />
             {perfil ? 'Editar Perfil' : 'Novo Perfil de Acesso'}
           </h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
@@ -104,7 +104,7 @@ function ModalPerfil({
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Supervisor de Qualidade"
-              className="w-full bg-transparent border border-border/60 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full bg-transparent border border-border/60 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors"
             />
           </div>
 
@@ -118,7 +118,7 @@ function ModalPerfil({
               onChange={(e) => setDescricao(e.target.value)}
               rows={3}
               placeholder="Descreva as responsabilidades deste perfil..."
-              className="w-full bg-transparent border border-border/60 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-violet-500 focus:outline-none transition-colors resize-none"
+              className="w-full bg-transparent border border-border/60 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors resize-none"
             />
           </div>
 
@@ -130,7 +130,7 @@ function ModalPerfil({
               type="checkbox"
               checked={isAdmin}
               onChange={(e) => setIsAdmin(e.target.checked)}
-              className="w-4 h-4 rounded accent-violet-500"
+              className="w-4 h-4 rounded accent-emerald-500"
             />
             <div>
               <span className="text-sm text-white font-medium">Perfil Administrativo</span>
@@ -147,7 +147,7 @@ function ModalPerfil({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-violet-900/30"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/30"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             {perfil ? 'Salvar Alterações' : 'Salvar e Configurar Permissões'}
@@ -249,12 +249,12 @@ export default function ListaPerfilPage() {
             <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
               <span>Administração</span>
               <span>/</span>
-              <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+              <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
               <span>/</span>
               <span className="text-zinc-300">Gerenciar Perfis</span>
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-              <Shield className="w-7 h-7 text-violet-400" /> Gerenciar Perfis de Acesso
+              <Shield className="w-7 h-7 text-emerald-400" /> Gerenciar Perfis de Acesso
             </h1>
             <p className="text-zinc-400 mt-1 text-sm">
               Crie e gerencie os perfis de acesso. Cada perfil define o conjunto de permissões dos usuários vinculados.
@@ -262,7 +262,7 @@ export default function ListaPerfilPage() {
           </div>
           <button
             onClick={() => { setEditingPerfil(undefined); setModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-violet-900/30 whitespace-nowrap"
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/30 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" /> Novo Perfil
           </button>
@@ -277,13 +277,13 @@ export default function ListaPerfilPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome ou descrição..."
-            className="w-full pl-9 pr-4 py-2.5 bg-background border border-border/60 rounded-xl text-sm text-white placeholder-zinc-600 focus:border-violet-500 focus:outline-none transition-colors"
+            className="w-full pl-9 pr-4 py-2.5 bg-background border border-border/60 rounded-xl text-sm text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors"
           />
         </div>
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value as any)}
-          className="bg-background border border-border/60 rounded-xl text-sm text-white px-3 py-2.5 focus:border-violet-500 focus:outline-none transition-colors"
+          className="bg-background border border-border/60 rounded-xl text-sm text-white px-3 py-2.5 focus:border-emerald-500 focus:outline-none transition-colors"
         >
           <option value="todos">Todos os status</option>
           <option value="ativo">Ativos</option>
@@ -294,7 +294,7 @@ export default function ListaPerfilPage() {
       {/* Lista de Perfis */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
         </div>
       ) : perfisExibidos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
@@ -306,7 +306,7 @@ export default function ListaPerfilPage() {
           {perfisExibidos.map((perfil) => (
             <div
               key={perfil.id}
-              className={`group relative bg-[#13131f] border rounded-2xl p-5 flex flex-col h-full transition-all ${perfil.ativo ? 'border-white/5 hover:border-violet-500/30' : 'border-white/5 opacity-60'}`}
+              className={`group relative bg-[#13131f] border rounded-2xl p-5 flex flex-col h-full transition-all ${perfil.ativo ? 'border-white/5 hover:border-emerald-500/30' : 'border-white/5 opacity-60'}`}
             >
               {/* Header */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -334,7 +334,7 @@ export default function ListaPerfilPage() {
               <div className="flex items-center gap-2 pt-4 border-t border-white/5 mt-auto">
                 <Link
                   href={`/dashboard/administracao/perfis/matrizpermissao?perfil=${perfil.id}`}
-                  className="flex-1 text-center text-xs py-2 rounded-lg bg-violet-600/10 text-violet-400 hover:bg-violet-600/20 transition-colors font-medium"
+                  className="flex-1 text-center text-xs py-2 rounded-lg bg-emerald-600/10 text-emerald-400 hover:bg-emerald-600/20 transition-colors font-medium"
                 >
                   Permissões
                 </Link>

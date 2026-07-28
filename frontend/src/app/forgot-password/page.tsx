@@ -21,21 +21,21 @@ function RightPanel() {
   return (
     <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col items-center justify-center p-12">
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a3e] via-[#2d1166] to-[#0f0a2e]"/>
-      <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl auth-glow-pulse"/>
+      <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-emerald-600/30 rounded-full blur-3xl auth-glow-pulse"/>
       <div className="absolute bottom-1/3 right-1/4 w-56 h-56 bg-indigo-600/20 rounded-full blur-3xl auth-glow-pulse" style={{animationDelay:"2s"}}/>
       <div className="absolute inset-0 opacity-[0.04]"
         style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }}/>
 
       <div className="relative z-10 text-center space-y-6 max-w-sm auth-animate auth-delay-2">
         {/* Icon */}
-        <div className="mx-auto w-20 h-20 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center auth-float">
-          <Shield className="w-9 h-9 text-violet-400"/>
+        <div className="mx-auto w-20 h-20 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center auth-float">
+          <Shield className="w-9 h-9 text-emerald-400"/>
         </div>
 
         <div className="space-y-3">
           <h2 className="text-3xl font-extrabold text-white leading-tight tracking-tight">
             Sua segurança<br/>
-            <span className="text-violet-400">é prioridade.</span>
+            <span className="text-emerald-400">é prioridade.</span>
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed">
             Utilizamos criptografia de ponta a ponta e tokens de redefinição com validade de 1 hora para garantir a proteção da sua conta.
@@ -105,13 +105,13 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="p-8 auth-animate">
           <Link href="/login" className="flex items-center gap-2.5 w-fit group">
-            <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-emerald-400">
                 <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
               </svg>
             </div>
             <span className="text-white font-bold text-lg tracking-tight">
-              Opera<span className="text-violet-400">IQ</span>
+              Opera<span className="text-emerald-400">IQ</span>
             </span>
           </Link>
         </div>
@@ -126,8 +126,8 @@ export default function ForgotPasswordPage() {
                 {/* Animated mail icon */}
                 <div className="flex justify-center">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-                      <MailCheck className="w-9 h-9 text-violet-400"/>
+                    <div className="w-20 h-20 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center">
+                      <MailCheck className="w-9 h-9 text-emerald-400"/>
                     </div>
                     <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 border-2 border-[#07070f] flex items-center justify-center">
                       <div className="w-2 h-2 rounded-full bg-[#07070f]"/>
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
                     Enviamos as instruções de redefinição para:
                   </p>
                   <div className="inline-block px-4 py-2 rounded-xl bg-slate-900/40 border border-white/10">
-                    <span className="text-violet-300 font-semibold text-sm">{sentEmail}</span>
+                    <span className="text-emerald-300 font-semibold text-sm">{sentEmail}</span>
                   </div>
                 </div>
 
@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
                     "Link expira em 1 hora",
                   ].map((step, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shrink-0 text-violet-400 text-[9px] font-bold">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400 text-[9px] font-bold">
                         {i + 1}
                       </div>
                       <span className="text-slate-300 text-sm">{step}</span>
@@ -179,7 +179,7 @@ export default function ForgotPasswordPage() {
 
                 <Link
                   href="/login"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 active:scale-[0.98]"
                 >
                   Voltar ao login
                 </Link>
@@ -190,8 +190,8 @@ export default function ForgotPasswordPage() {
               <div className="space-y-7">
                 {/* Heading */}
                 <div className="auth-animate auth-delay-1">
-                  <div className="w-12 h-12 rounded-xl bg-violet-600/20 border border-violet-500/20 flex items-center justify-center mb-5">
-                    <Shield className="w-5 h-5 text-violet-400"/>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600/20 border border-emerald-500/20 flex items-center justify-center mb-5">
+                    <Shield className="w-5 h-5 text-emerald-400"/>
                   </div>
                   <h1 className="text-2xl font-bold text-white tracking-tight">Esqueci minha senha</h1>
                   <p className="text-slate-400 text-sm mt-1 leading-relaxed">
@@ -223,7 +223,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : <Mail className="h-4 w-4"/>}
                     {isLoading ? "Enviando..." : "Enviar instruções"}

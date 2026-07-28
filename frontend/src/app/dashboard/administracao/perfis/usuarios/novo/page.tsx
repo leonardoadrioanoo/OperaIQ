@@ -188,9 +188,9 @@ export default function NovoUsuarioWizard() {
         <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
           <span>Administração</span>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-violet-400">Colaboradores</Link>
+          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-emerald-400">Colaboradores</Link>
         </div>
         <h1 className="text-2xl font-bold text-white tracking-tight mt-2">Cadastrar Novo Colaborador</h1>
       </div>
@@ -200,7 +200,7 @@ export default function NovoUsuarioWizard() {
         <div className="flex items-center justify-between relative">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/5 rounded-full -z-10" />
           <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-violet-600 rounded-full -z-10 transition-all duration-300"
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-emerald-600 rounded-full -z-10 transition-all duration-300"
             style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
           />
           {STEPS.map(step => {
@@ -210,8 +210,8 @@ export default function NovoUsuarioWizard() {
             return (
               <div key={step.id} className="flex flex-col items-center gap-2">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors border-2 ${
-                  isActive    ? 'bg-[#07070f] border-violet-500 text-violet-400' :
-                  isCompleted ? 'bg-violet-600 border-violet-600 text-white'     :
+                  isActive    ? 'bg-[#07070f] border-emerald-500 text-emerald-400' :
+                  isCompleted ? 'bg-emerald-600 border-emerald-600 text-white'     :
                                 'bg-[#13131f] border-white/10 text-zinc-500'
                 }`}>
                   {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
@@ -290,8 +290,8 @@ export default function NovoUsuarioWizard() {
                       onClick={() => applyPreset(preset.id)}
                       className={`flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all ${
                         selectedPerfilId === preset.id
-                          ? 'border-violet-500 bg-violet-600/15 text-white shadow-lg shadow-violet-900/20'
-                          : 'border-border/60 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-600/5'
+                          ? 'border-emerald-500 bg-emerald-600/15 text-white shadow-lg shadow-emerald-900/20'
+                          : 'border-border/60 text-muted-foreground hover:border-emerald-500/40 hover:bg-emerald-600/5'
                       }`}
                     >
                       <span className="text-xs font-semibold leading-tight text-foreground">{preset.label}</span>
@@ -302,7 +302,7 @@ export default function NovoUsuarioWizard() {
                   ))}
                 </div>
                 {selectedPerfil && (
-                  <p className="mt-3 text-xs text-violet-400 flex items-center gap-1.5">
+                  <p className="mt-3 text-xs text-emerald-400 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Permissões do perfil <strong>{selectedPerfil.label}</strong> aplicadas.
                   </p>
@@ -312,7 +312,7 @@ export default function NovoUsuarioWizard() {
               {/* Tabela de Permissões — somente leitura */}
               {loadingPerms ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
+                  <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
                 </div>
               ) : (
                 <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
@@ -336,7 +336,7 @@ export default function NovoUsuarioWizard() {
                                   type="checkbox"
                                   readOnly
                                   checked={mod.permissoes[col.key] ?? false}
-                                  className="w-4 h-4 rounded border-border/60 bg-background accent-violet-500 cursor-not-allowed opacity-80"
+                                  className="w-4 h-4 rounded border-border/60 bg-background accent-emerald-500 cursor-not-allowed opacity-80"
                                 />
                               </td>
                             ))}
@@ -373,7 +373,7 @@ export default function NovoUsuarioWizard() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-white bg-violet-500/10 border border-violet-500/20 p-4 rounded-lg flex gap-3">
+              <p className="text-sm text-white bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-lg flex gap-3">
                 <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                 Um e-mail de confirmação será enviado para o colaborador com as instruções de acesso e definição de senha. A conta será criada com status Ativo.
               </p>
@@ -397,7 +397,7 @@ export default function NovoUsuarioWizard() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>

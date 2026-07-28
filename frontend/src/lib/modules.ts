@@ -90,25 +90,15 @@ export const MODULOS: ModuloDefinition[] = [
     key: 'Projetos',
     title: 'Projetos',
     icon: 'Briefcase',
-    href: '/dashboard/projetos',
+    href: '/dashboard/projetos/visao-geral',
     acoes: ['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar'],
-    submenus: [
-      { title: 'Visão Geral', href: '/dashboard/projetos/visao-geral' },
-      { title: 'Novo Projeto', href: '/dashboard/projetos/novo' },
-      { title: 'Cronogramas', href: '/dashboard/projetos/cronogramas' },
-    ],
   },
   {
     key: 'Execuções',
     title: 'Execuções',
     icon: 'Rocket',
-    href: '/dashboard/execucoes',
+    href: '/dashboard/execucoes/kanban',
     acoes: ['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar'],
-    submenus: [
-      { title: 'Quadro Kanban', href: '/dashboard/execucoes/kanban' },
-      { title: 'Lista de Tarefas', href: '/dashboard/execucoes/lista' },
-      { title: 'Timeline / Gantt', href: '/dashboard/execucoes/timeline' },
-    ],
   },
   {
     key: 'Recursos',
@@ -116,10 +106,6 @@ export const MODULOS: ModuloDefinition[] = [
     icon: 'Users',
     href: '/dashboard/recursos',
     acoes: ['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_gerenciar'],
-    submenus: [
-      { title: 'Gestão da Equipe', href: '/dashboard/recursos/equipe' },
-      { title: 'Alocação e Carga', href: '/dashboard/recursos/alocacao' },
-    ],
   },
   {
     key: 'Portfólio',

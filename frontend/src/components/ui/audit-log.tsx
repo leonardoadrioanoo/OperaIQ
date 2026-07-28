@@ -40,9 +40,9 @@ export function AuditLog({ created_at, updated_at, ultimo_acesso, userName }: Au
       title: 'Registro atualizado',
       desc: 'Dados do perfil foram modificados',
       date: updated_at,
-      color: 'text-violet-400',
-      bg: 'bg-violet-400/10',
-      border: 'border-violet-400/20'
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-400/10',
+      border: 'border-emerald-400/20'
     },
     {
       id: 3,
@@ -67,7 +67,7 @@ export function AuditLog({ created_at, updated_at, ultimo_acesso, userName }: Au
 
       <div>
         <h4 className="text-sm font-semibold text-white border-b border-white/5 pb-2 mb-6 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-violet-500" />
+          <Activity className="w-4 h-4 text-emerald-500" />
           Timeline de Atividades
         </h4>
         

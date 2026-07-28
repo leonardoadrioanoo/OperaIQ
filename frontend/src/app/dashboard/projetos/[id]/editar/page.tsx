@@ -118,13 +118,13 @@ export default function EditarProjetoPage() {
     }
   };
 
-  const inputClass = "w-full h-11 bg-background border border-border/60 rounded-lg px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-colors shadow-sm";
+  const inputClass = "w-full h-11 bg-background border border-border/60 rounded-lg px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors shadow-sm";
   const labelClass = "block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1.5";
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
       </div>
     );
   }
@@ -141,7 +141,7 @@ export default function EditarProjetoPage() {
             { label: 'Editar' },
           ]} />
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3 mt-2">
-            <Briefcase className="w-7 h-7 text-violet-500" />
+            <Briefcase className="w-7 h-7 text-emerald-500" />
             Editar Projeto
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">Modifique as informações do projeto conforme necessário.</p>
@@ -168,7 +168,7 @@ export default function EditarProjetoPage() {
         {/* BLOCO 1: Identificação */}
         <div className="bg-background border border-border/60 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-1">
-            <Briefcase className="w-4 h-4 text-violet-500" />
+            <Briefcase className="w-4 h-4 text-emerald-500" />
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Identificação</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -187,7 +187,7 @@ export default function EditarProjetoPage() {
                 {...register('descricao')}
                 rows={3}
                 placeholder="Descreva o objetivo principal deste projeto..."
-                className="w-full bg-background border border-border/60 rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-colors shadow-sm resize-none"
+                className="w-full bg-background border border-border/60 rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors shadow-sm resize-none"
               />
             </div>
             <div>
@@ -216,7 +216,7 @@ export default function EditarProjetoPage() {
         {/* BLOCO 2: Cronograma */}
         <div className="bg-background border border-border/60 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-4 h-4 text-violet-500" />
+            <Calendar className="w-4 h-4 text-emerald-500" />
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Cronograma e Orçamento</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -241,7 +241,7 @@ export default function EditarProjetoPage() {
         {/* BLOCO 3: Responsabilidade */}
         <div className="bg-background border border-border/60 rounded-2xl p-6 shadow-sm space-y-5">
           <div className="flex items-center gap-2 mb-1">
-            <Building2 className="w-4 h-4 text-violet-500" />
+            <Building2 className="w-4 h-4 text-emerald-500" />
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Responsabilidade</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -277,7 +277,7 @@ export default function EditarProjetoPage() {
           <button
             type="submit"
             disabled={isSubmitting || !isDirty}
-            className="flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-violet-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}

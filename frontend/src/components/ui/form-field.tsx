@@ -42,7 +42,7 @@ export function FormField({
             <Select
               {...register(name)}
               disabled={disabled}
-              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
             >
               {shouldRenderPlaceholder && <option value="" className="bg-[#0c0c16] text-white">Selecione...</option>}
               {options.map(opt => <option key={opt.value} value={opt.value} className="bg-[#0c0c16] text-white">{opt.label}</option>)}
@@ -51,13 +51,13 @@ export function FormField({
             <Textarea
               {...register(name)}
               rows={textareaRows || 3}
-              className="w-full min-h-[96px] bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full min-h-[96px] bg-transparent border-0 focus-visible:border-2 focus-visible:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
             />
           ) : (
             <Input
               {...register(name)}
               type={type}
-              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-violet-500/50 focus-visible:ring-2 focus-visible:ring-violet-500/20"
+              className="w-full bg-transparent border-0 focus-visible:border-2 focus-visible:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
               disabled={disabled}
             />
           )}

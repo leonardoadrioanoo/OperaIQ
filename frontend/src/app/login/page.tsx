@@ -35,12 +35,12 @@ function DashboardPreview() {
   ]
   return (
     <div className="auth-float relative w-full max-w-[420px] mx-auto">
-      <div className="absolute -inset-4 bg-violet-500/20 blur-3xl rounded-3xl auth-glow-pulse" />
+      <div className="absolute -inset-4 bg-emerald-500/20 blur-3xl rounded-3xl auth-glow-pulse" />
       <div className="relative bg-[#0d0d1e]/80 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
         {/* header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-slate-900/30">
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-emerald-400">
               <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
             </svg>
             <span className="text-white text-xs font-semibold tracking-wide">OperaIQ</span>
@@ -81,7 +81,7 @@ function DashboardPreview() {
         <div className="mx-3 mb-3 space-y-1.5">
           {activities.map((item, i) => (
             <div key={i} className="flex items-center gap-2 bg-slate-900/40 rounded-lg px-2 py-1.5 border border-white/10">
-              <div className="w-1 h-1 rounded-full bg-violet-400 shrink-0"/>
+              <div className="w-1 h-1 rounded-full bg-emerald-400 shrink-0"/>
               <p className="text-slate-300 text-[8px] truncate">{item}</p>
               <span className="text-slate-500 text-[7px] ml-auto shrink-0">Agora</span>
             </div>
@@ -156,13 +156,13 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="p-8 auth-animate">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-violet-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-emerald-400">
                 <path d="M13 3L21 9V15L13 21L5 15V9L13 3Z"/>
               </svg>
             </div>
             <span className="text-white font-bold text-lg tracking-tight">
-              Opera<span className="text-violet-400">IQ</span>
+              Opera<span className="text-emerald-400">IQ</span>
             </span>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-slate-300">
                     Senha
                   </label>
-                  <Link href="/forgot-password" className="text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors">
+                  <Link href="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
                     Esqueci minha senha
                   </Link>
                 </div>
@@ -238,7 +238,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || isSsoLoading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/40 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
                 {isLoading ? "Entrando..." : "Entrar com Senha"}
@@ -259,7 +259,7 @@ export default function LoginPage() {
                 disabled={isLoading || isSsoLoading}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600 font-semibold text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
               >
-                {isSsoLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : <Building className="h-4 w-4 text-violet-400" />}
+                {isSsoLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : <Building className="h-4 w-4 text-emerald-400" />}
                 Entrar com SSO (Login Corporativo)
               </button>
             </form>
@@ -267,7 +267,7 @@ export default function LoginPage() {
             {/* Register link */}
             <p className="text-center text-sm text-slate-500 auth-animate auth-delay-4">
               Ainda não tem uma conta?{" "}
-              <Link href="/register" className="font-semibold text-violet-400 hover:text-violet-300 transition-colors">
+              <Link href="/register" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
                 Criar conta
               </Link>
             </p>
@@ -288,7 +288,7 @@ export default function LoginPage() {
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1a0a3e] via-[#2d1166] to-[#0f0a2e]"/>
         {/* Decorative blobs */}
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-violet-600/30 rounded-full blur-3xl auth-glow-pulse"/>
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-emerald-600/30 rounded-full blur-3xl auth-glow-pulse"/>
         <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-indigo-600/20 rounded-full blur-3xl auth-glow-pulse" style={{animationDelay:"2s"}}/>
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 opacity-[0.04]"
@@ -300,7 +300,7 @@ export default function LoginPage() {
             <h2 className="text-4xl font-extrabold text-white leading-tight tracking-tight">
               Sua operação.<br/>
               Inteligente. Integrada.<br/>
-              <span className="text-violet-400">Eficiente.</span>
+              <span className="text-emerald-400">Eficiente.</span>
             </h2>
             <p className="text-slate-300 text-base leading-relaxed max-w-xs">
               OperaIQ centraliza processos, equipes e dados para uma gestão mais estratégica.
@@ -315,7 +315,7 @@ export default function LoginPage() {
               { icon: <Zap className="w-3 h-3"/>, text: "Automações com IA" },
             ].map((f) => (
               <div key={f.text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/40 border border-white/10 text-slate-200 text-xs font-medium">
-                <span className="text-violet-400">{f.icon}</span>
+                <span className="text-emerald-400">{f.icon}</span>
                 {f.text}
               </div>
             ))}

@@ -368,7 +368,7 @@ export default function ColaboradorDetailPage() {
     setValue(`permissoes.${moduloNome}`, { ...modPerms, [campo]: valor }, { shouldDirty: true });
   };
 
-  if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><Loader2 className="w-8 h-8 text-violet-500 animate-spin" /></div>;
+  if (isLoading) return <div className="flex-1 flex items-center justify-center min-h-[500px]"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin" /></div>;
   if (!data) return null;
 
   const getInitials = (name: string) => name.split(' ').slice(0,2).map(n => n[0].toUpperCase()).join('');
@@ -379,9 +379,9 @@ export default function ColaboradorDetailPage() {
         <div className="flex items-center gap-2 mb-4 text-sm text-zinc-500">
           <span>Administração</span>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
           <span>/</span>
-          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-violet-400">Colaboradores</Link>
+          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-emerald-400">Colaboradores</Link>
         </div>
         <div className="flex items-start justify-between">
           <div>
@@ -398,14 +398,14 @@ export default function ColaboradorDetailPage() {
           {activeTab !== 'auditoria' && (
             !isEditing ? (
               <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5">
-                <Edit2 className="w-4 h-4 text-violet-400" /> Editar
+                <Edit2 className="w-4 h-4 text-emerald-400" /> Editar
               </button>
             ) : (
               <div className="flex items-center gap-3">
                 <button onClick={() => { setIsEditing(false); reset(); }} className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white rounded-lg text-sm font-medium transition-colors" disabled={isSaving}>
                   Cancelar
                 </button>
-                <button onClick={handleSubmit(onSubmit, onError)} className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20" disabled={isSaving}>
+                <button onClick={handleSubmit(onSubmit, onError)} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20" disabled={isSaving}>
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
                 </button>
               </div>
@@ -416,7 +416,7 @@ export default function ColaboradorDetailPage() {
 
       {/* Card Header */}
       <div className="bg-gradient-to-r from-[#13131f] to-[#0c0c16] border border-white/5 rounded-2xl p-6 mb-8 flex items-center gap-6">
-        <div className="w-20 h-20 rounded-full bg-violet-900 flex items-center justify-center text-3xl text-violet-200 font-bold flex-shrink-0 ring-4 ring-violet-500/20">
+        <div className="w-20 h-20 rounded-full bg-emerald-900 flex items-center justify-center text-3xl text-emerald-200 font-bold flex-shrink-0 ring-4 ring-emerald-500/20">
           {data.foto_url ? <img src={data.foto_url} alt="Avatar" className="w-full h-full object-cover rounded-full" /> : getInitials(data.nome_completo)}
         </div>
         <div>
@@ -441,10 +441,10 @@ export default function ColaboradorDetailPage() {
               onClick={() => { if (!isEditing) setActiveTab(tab.id as any); }}
               disabled={isEditing}
               className={`flex items-center gap-2 pb-4 text-sm font-medium transition-colors border-b-2 relative top-[1px] ${
-                activeTab === tab.id ? 'text-violet-400 border-violet-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                activeTab === tab.id ? 'text-emerald-400 border-emerald-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
               } ${isEditing ? 'cursor-not-allowed opacity-50' : ''}`}
             >
-              <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-violet-500' : 'opacity-70'}`} /> {tab.label}
+              <Icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-emerald-500' : 'opacity-70'}`} /> {tab.label}
             </button>
           );
         })}

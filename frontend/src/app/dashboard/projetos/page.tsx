@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 const PROJETOS_ACTIONS = [
-  { title: "Criar Projeto", icon: Plus, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/projetos/novo" },
+  { title: "Visão Geral", icon: Plus, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/projetos/visao-geral" },
   { title: "Duplicar", icon: Copy, color: "text-blue-400", bg: "bg-blue-400/10", href: "#" },
   { title: "Arquivar", icon: Archive, color: "text-orange-400", bg: "bg-orange-400/10", href: "#" },
   { title: "Excluir", icon: Trash2, color: "text-red-400", bg: "bg-red-400/10", href: "#" },

@@ -213,7 +213,7 @@ export default function EquipesPage() {
 
   const TIPO_COLORS: Record<string, string> = {
     'Time': 'bg-blue-500/10 text-blue-400',
-    'Squad': 'bg-violet-500/10 text-violet-400',
+    'Squad': 'bg-emerald-500/10 text-emerald-400',
     'Comitê': 'bg-amber-500/10 text-amber-400',
     'Grupo de Trabalho': 'bg-emerald-500/10 text-emerald-400',
     'Comunidade': 'bg-pink-500/10 text-pink-400',
@@ -461,7 +461,7 @@ export default function EquipesPage() {
                   selectedEquipe.equipe_integrantes?.map((i: any) => (
                     <div key={i.perfil?.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border/60">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-violet-900/40 rounded-full flex items-center justify-center text-xs text-violet-300 font-bold ring-1 ring-violet-500/20">
+                        <div className="w-8 h-8 bg-emerald-900/40 rounded-full flex items-center justify-center text-xs text-emerald-300 font-bold ring-1 ring-emerald-500/20">
                           {i.perfil?.nome_completo?.[0] || '?'}
                         </div>
                         <div>

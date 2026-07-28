@@ -11,7 +11,7 @@ import {
 const DASHBOARDS_CARDS = [
   { title: "Dashboard Executivo", description: "Visão estratégica de alto nível", icon: LineChart, color: "text-blue-400", bg: "bg-blue-400/10", href: "/dashboard/dashboards/executivo" },
   { title: "Dashboard Financeiro", description: "Indicadores e saúde financeira", icon: Target, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/dashboards/financeiro" },
-  { title: "Dashboard Projetos", description: "Saúde e andamento global", icon: Briefcase, color: "text-violet-400", bg: "bg-violet-400/10", href: "/dashboard/dashboards/projetos" },
+  { title: "Dashboard Projetos", description: "Saúde e andamento global", icon: Briefcase, color: "text-emerald-400", bg: "bg-emerald-400/10", href: "/dashboard/dashboards/projetos" },
   { title: "Dashboard RH", description: "Gestão de pessoas e turn-over", icon: Users, color: "text-orange-400", bg: "bg-orange-400/10", href: "/dashboard/dashboards/rh" },
   { title: "Dashboard Comercial", description: "Vendas e prospecção", icon: LineChart, color: "text-cyan-400", bg: "bg-cyan-400/10", href: "/dashboard/dashboards/comercial" },
   { title: "Dashboard Operacional", description: "Métricas de produção diárias", icon: Settings, color: "text-slate-400", bg: "bg-slate-400/10", href: "/dashboard/dashboards/operacional" },

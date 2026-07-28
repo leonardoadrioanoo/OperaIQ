@@ -57,12 +57,12 @@ export default function UsuariosPage() {
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
             <span>Administração</span>
             <span>/</span>
-            <Link href="/dashboard/administracao/perfis" className="hover:text-violet-400">Perfis e Acessos</Link>
+            <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
             <span>/</span>
             <span className="text-zinc-300">Colaboradores</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
-            <Users className="w-6 h-6 text-violet-500" />
+            <Users className="w-6 h-6 text-emerald-500" />
             Colaboradores
           </h1>
           <p className="text-zinc-400 text-sm mt-1">
@@ -73,7 +73,7 @@ export default function UsuariosPage() {
         <div className="flex items-center gap-3">
           <Link 
             href="/dashboard/administracao/perfis/usuarios/novo"
-            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-violet-900/20"
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20"
           >
             <Plus className="w-4 h-4" />
             Novo Colaborador
@@ -83,7 +83,7 @@ export default function UsuariosPage() {
 
       {/* Toolbar */}
       <div className="flex items-center gap-2 mb-6">
-        <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-violet-500/30 transition-colors w-full max-w-sm">
+        <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
           <Search className="w-4 h-4 text-zinc-500 shrink-0" />
           <input
             type="text"
@@ -118,7 +118,7 @@ export default function UsuariosPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
-                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin mx-auto" />
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
@@ -132,7 +132,7 @@ export default function UsuariosPage() {
                   <tr key={user.id} className="hover:bg-muted/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-violet-900/50 border border-violet-500/20 flex items-center justify-center text-violet-300 font-semibold flex-shrink-0 overflow-hidden">
+                        <div className="w-10 h-10 rounded-full bg-emerald-900/50 border border-emerald-500/20 flex items-center justify-center text-emerald-300 font-semibold flex-shrink-0 overflow-hidden">
                           {user.foto_url ? (
                              <img src={user.foto_url} alt="Avatar" className="w-full h-full object-cover" />
                           ) : (
@@ -169,7 +169,7 @@ export default function UsuariosPage() {
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => router.push(`/dashboard/administracao/perfis/usuarios/${user.id}`)}
-                        className="inline-flex items-center justify-center p-2 text-zinc-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                        className="inline-flex items-center justify-center p-2 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
                         title="Ver / Editar Perfil"
                       >
                         <ChevronRight className="w-5 h-5" />

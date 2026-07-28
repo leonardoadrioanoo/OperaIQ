@@ -135,7 +135,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden selection:bg-violet-500/30 transition-colors duration-300">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden selection:bg-emerald-500/30 transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />

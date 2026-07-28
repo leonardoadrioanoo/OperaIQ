@@ -13,6 +13,9 @@ import auditoriaRoutes from './routes/auditoria.routes';
 import infraestruturaRoutes from './routes/infraestrutura.routes';
 import dashboardsRoutes from './routes/dashboards.routes';
 import projetosRoutes from './routes/projetos.routes';
+import tarefaRoutes from './routes/tarefa.routes';
+import sprintRoutes from './routes/sprint.routes';
+import notificacaoRoutes from './routes/notificacao.routes';
 import { auditMiddleware } from './middlewares/auditMiddleware';
 import {
   securityHeaders,
@@ -80,6 +83,9 @@ app.use('/api/auditoria', auditoriaRoutes);
 app.use('/api/infraestrutura', infraestruturaRoutes);
 app.use('/api/dashboards', dashboardsRoutes);
 app.use('/api/projetos', projetosRoutes);
+app.use('/api/tarefas', tarefaRoutes);
+app.use('/api/sprints', sprintRoutes);
+app.use('/api/notificacoes', notificacaoRoutes);
 
 const PORT = process.env.PORT || 3002;
 

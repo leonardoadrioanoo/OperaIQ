@@ -26,7 +26,7 @@ function ToggleField({ label, description, name, register }: any) {
         <p className="text-sm font-semibold text-white">{label}</p>
         {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
       </div>
-      <input type="checkbox" {...register(name)} className="mt-0.5 w-5 h-5 accent-violet-400 rounded-lg border border-white/10 bg-slate-950" />
+      <input type="checkbox" {...register(name)} className="mt-0.5 w-5 h-5 accent-emerald-400 rounded-lg border border-white/10 bg-slate-950" />
     </label>
   );
 }
@@ -110,7 +110,7 @@ export default function NotificacoesPage() {
       <div className="rounded-3xl border border-white/10 bg-[#0a1135] p-7 shadow-[0_16px_80px_rgba(3,7,26,0.25)]">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-7 w-7 animate-spin text-violet-500" />
+            <Loader2 className="h-7 w-7 animate-spin text-emerald-500" />
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -149,7 +149,7 @@ export default function NotificacoesPage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-700 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Salvar preferências

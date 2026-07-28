@@ -18,6 +18,7 @@ const updatePerfilSchema = z.object({
   filial: z.string().optional().or(z.literal('')),
   matricula: z.string().optional().or(z.literal('')),
   gestor_id: z.string().uuid().optional().or(z.literal('')),
+  foto_url: z.string().optional().or(z.literal('')),
 
 });
 

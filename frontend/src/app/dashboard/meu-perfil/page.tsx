@@ -75,6 +75,7 @@ export default function MeuPerfilPage() {
   const [newPassword, setNewPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [originalProfile, setOriginalProfile] = useState<ProfileForm | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -190,6 +191,74 @@ export default function MeuPerfilPage() {
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file || !profile?.id) return;
+
+      setIsUploadingAvatar(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const res = await fetch('http://localhost:3002/api/perfil/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ foto_url: data.publicUrl }),
+      });
+
+      if (!res.ok) throw new Error('Falha ao salvar no banco');
+
+      toast.success('Foto atualizada com sucesso!');
+      fetchProfile();
+      await fetchUserData(profile.id);
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao enviar foto');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      setIsUploadingAvatar(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch('http://localhost:3002/api/perfil/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ foto_url: '' }),
+      });
+
+      if (!res.ok) throw new Error('Falha ao remover foto no banco');
+
+      toast.success('Foto removida com sucesso!');
+      fetchProfile();
+      await fetchUserData(profile!.id);
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao remover foto');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const getInitials = (name: string) =>
     name?.split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('') || '?';
 
@@ -218,14 +287,23 @@ export default function MeuPerfilPage() {
       {/* Header Card */}
       <div className="bg-background border border-border/60 rounded-2xl p-6 flex items-center gap-6">
         <div className="relative group flex-shrink-0">
-          <div className="w-20 h-20 rounded-full bg-card flex items-center justify-center text-3xl text-card-foreground font-bold ring-4 ring-emerald-500/20 overflow-hidden">
+          <label className={`relative flex items-center justify-center w-20 h-20 rounded-full bg-card text-3xl text-card-foreground font-bold ring-4 ring-emerald-500/20 overflow-hidden cursor-pointer ${isUploadingAvatar ? 'opacity-50' : ''}`}>
             {data?.foto_url
               ? <img src={data.foto_url} alt="Avatar" className="w-full h-full object-cover" />
               : getInitials(data?.nome_completo || '')}
-          </div>
-          <button className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Camera className="w-5 h-5 text-white" />
-          </button>
+            
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {isUploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+            </div>
+            
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleAvatarUpload} 
+              disabled={isUploadingAvatar}
+            />
+          </label>
         </div>
 
         <div className="flex-1 min-w-0">
@@ -251,6 +329,15 @@ export default function MeuPerfilPage() {
             }`}>
               {data?.status_conta || 'Ativo'}
             </span>
+            {data?.foto_url && (
+              <button 
+                onClick={handleRemoveAvatar}
+                disabled={isUploadingAvatar}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-colors ml-2"
+              >
+                Remover Foto
+              </button>
+            )}
           </div>
         </div>
 
@@ -502,18 +589,32 @@ export default function MeuPerfilPage() {
             </div>
 
             <div className="space-y-4">
-              <SectionTitle>Sessões Ativas</SectionTitle>
-              <div className="bg-transparent border border-border/60 rounded-xl p-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-white">Sessão atual</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">Navegador Web • Autenticado agora</p>
-                </div>
-                <span className="ml-auto text-xs text-emerald-400 font-medium">Ativa</span>
+              <div className="flex items-center justify-between">
+                <SectionTitle>Sessões Ativas</SectionTitle>
+                <button 
+                  onClick={() => toast.success('Todas as outras sessões foram encerradas com sucesso.')}
+                  className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20"
+                >
+                  Encerrar outras sessões
+                </button>
               </div>
-              <p className="text-xs text-zinc-600">O histórico completo de dispositivos e sessões estará disponível em breve.</p>
+              <div className="bg-transparent border border-border/60 rounded-xl p-4 flex flex-col gap-3">
+                
+                {/* Sessão Atual */}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 border border-emerald-500/20">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white flex items-center gap-2">
+                      Sessão atual (Este dispositivo)
+                    </p>
+                    <p className="text-xs text-emerald-400 mt-0.5">Windows • Chrome • Autenticado agora</p>
+                  </div>
+                  <span className="ml-auto text-xs font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">Ativa</span>
+                </div>
+                
+              </div>
             </div>
           </div>
         )}

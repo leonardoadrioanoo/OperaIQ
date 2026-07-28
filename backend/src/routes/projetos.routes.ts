@@ -141,7 +141,7 @@ const createProjeto: RequestHandler = async (req: any, res: Response): Promise<v
       tipo_projeto, categoria, metodologia,
       data_inicio, data_fim, orcamento_previsto,
       gerente_id, departamento_id, equipe_id, responsavel_id,
-      visibilidade, config_ia, tags, comentario_inicial
+      visibilidade, config_ia, tags, comentario_inicial, portfolio_id
     } = req.body;
 
     if (!titulo) {
@@ -209,6 +209,7 @@ const createProjeto: RequestHandler = async (req: any, res: Response): Promise<v
         tags:               tags               || [],
         comentario_inicial: comentario_inicial || null,
         anexos:             anexosData.length ? anexosData : null,
+        portfolio_id:       portfolio_id       || null,
       })
       .select()
       .single();

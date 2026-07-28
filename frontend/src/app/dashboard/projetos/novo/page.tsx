@@ -47,7 +47,7 @@ type ProjetoForm = {
   gerente_id: string;
   patrocinador_id?: string;
   cliente?: string;
-  portfolio?: string;
+  portfolio_id?: string;
   programa?: string;
 
   // Seção 3 — Planejamento
@@ -123,6 +123,7 @@ export default function NovoProjetoPage() {
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
   const [arquivos, setArquivos] = useState<File[]>([]);
 
   // =====================================================
@@ -188,6 +189,11 @@ export default function NovoProjetoPage() {
         .then(r => r.ok ? r.json() : [])
         .then(d => { if (!cancelled) setEquipes(Array.isArray(d) ? d : d.equipes || []); })
         .catch(() => {});
+
+      fetch(`${API}/api/portfolios`, { headers: h })
+        .then(r => r.ok ? r.json() : [])
+        .then(d => { if (!cancelled) setPortfolios(Array.isArray(d) ? d : d.portfolios || []); })
+        .catch(() => {});
     });
     return () => { cancelled = true; };
   }, []);
@@ -212,6 +218,7 @@ export default function NovoProjetoPage() {
       formData.append('departamento_id', data.departamento_id);
       formData.append('gerente_id', data.gerente_id);
       if (data.patrocinador_id) formData.append('patrocinador_id', data.patrocinador_id);
+      if (data.portfolio_id) formData.append('portfolio_id', data.portfolio_id);
       formData.append('data_inicio', data.data_inicio);
       formData.append('data_fim', data.data_fim);
       if (data.equipe_id) formData.append('equipe_id', data.equipe_id);
@@ -436,8 +443,11 @@ export default function NovoProjetoPage() {
               <input {...register('cliente')} className={inputClass} placeholder="Nome do cliente (opcional)" />
             </div>
             <div>
-              <label className={labelClass}>Portfólio</label>
-              <input {...register('portfolio')} className={inputClass} placeholder="Vincular a portfólio..." />
+              <label className={labelClass}>Portfólio Vinculado</label>
+              <select {...register('portfolio_id')} className={inputClass}>
+                <option value="">Opcional (Nenhum)</option>
+                {portfolios.map((p: any) => <option key={p.id} value={p.id}>{p.titulo}</option>)}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Programa</label>

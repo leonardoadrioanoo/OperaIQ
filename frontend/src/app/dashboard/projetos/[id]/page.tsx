@@ -28,7 +28,7 @@ type ProjetoForm = {
   responsavel_id?: string;
   patrocinador_id?: string;
   cliente?: string;
-  portfolio?: string;
+  portfolio_id?: string;
   programa?: string;
   data_inicio: string;
   data_fim: string;
@@ -61,6 +61,7 @@ export default function ProjetoJiraViewPage() {
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [tarefas, setTarefas] = useState<any[]>([]);
   const [sprints, setSprints] = useState<any[]>([]);
@@ -99,13 +100,14 @@ export default function ProjetoJiraViewPage() {
         if (!session || cancelled) return;
         const headers = { Authorization: `Bearer ${session.access_token}` };
         
-        const [pRes, cRes, dRes, eRes, tRes, sRes] = await Promise.all([
+        const [pRes, cRes, dRes, eRes, tRes, sRes, portRes] = await Promise.all([
           fetch(`${API}/api/projetos/${id}`, { headers }),
           fetch(`${API}/api/colaboradores`, { headers }),
           fetch(`${API}/api/departamentos`, { headers }),
           fetch(`${API}/api/equipes`, { headers }),
           fetch(`${API}/api/tarefas?projeto_id=${id}`, { headers }),
-          fetch(`${API}/api/sprints?projeto_id=${id}`, { headers })
+          fetch(`${API}/api/sprints?projeto_id=${id}`, { headers }),
+          fetch(`${API}/api/portfolios`, { headers })
         ]);
 
         if (pRes.ok) {
@@ -115,11 +117,13 @@ export default function ProjetoJiraViewPage() {
           const eData = eRes.ok ? await eRes.json() : [];
           const tData = tRes.ok ? await tRes.json() : [];
           const sData = sRes.ok ? await sRes.json() : [];
+          const portData = portRes.ok ? await portRes.json() : [];
 
           if (!cancelled) {
             setColaboradores(Array.isArray(cData) ? cData : cData.colaboradores || []);
             setDepartamentos(Array.isArray(dData) ? dData : []);
             setEquipes(Array.isArray(eData) ? eData : eData.equipes || []);
+            setPortfolios(Array.isArray(portData) ? portData : portData.portfolios || []);
             setTarefas(Array.isArray(tData) ? tData : tData.tarefas || []);
             setSprints(sData);
             
@@ -1028,6 +1032,13 @@ export default function ProjetoJiraViewPage() {
                     <select {...register('patrocinador_id')} className={selectClass}>
                       <option value="">Selecione...</option>
                       {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+                    <label className="text-muted-foreground text-[12px] font-medium">Portfólio</label>
+                    <select {...register('portfolio_id')} className={selectClass}>
+                      <option value="">Opcional (Nenhum)</option>
+                      {portfolios.map(p => <option key={p.id} value={p.id}>{p.titulo}</option>)}
                     </select>
                   </div>
                 </>

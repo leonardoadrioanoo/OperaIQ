@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ExecucoesTabs } from '../ExecucoesTabs';
 
 const API = 'http://localhost:3002';
 
@@ -251,21 +252,29 @@ export default function ExecucoesListaPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12">
       
       {/* HEADER & TITLES */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border/50 pb-4">
-        <div>
+      <div className="flex flex-col border-b border-border/50 pb-4">
+        
+        {/* Top Row */}
+        <div className="flex justify-between items-start w-full mb-2">
           <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Rastreamento de Entregas' }]} />
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2 mt-2">
-            <ListTodo className="w-6 h-6 text-emerald-500" />
-            Controladoria de Execução
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Auditoria corporativa de progresso, burn-rate financeiro, cronograma de SLAs e risco.
-          </p>
+          <ExecucoesTabs />
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto relative">
+
+        {/* Bottom Row */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
+              <ListTodo className="w-6 h-6 text-emerald-500" />
+              Controladoria de Execução
+            </h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Auditoria corporativa de progresso, burn-rate financeiro, cronograma de SLAs e risco.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto relative">
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-md animate-in fade-in duration-300">
               <span className="text-[11px] font-bold text-emerald-600 mr-2 uppercase tracking-wider">{selectedIds.size} Selecionados</span>
@@ -297,6 +306,7 @@ export default function ExecucoesListaPage() {
           <button onClick={exportToCSV} className="h-9 px-3 bg-background border border-border/60 hover:bg-muted rounded-md text-sm font-semibold transition-colors flex items-center gap-2 text-foreground">
             <Download className="w-4 h-4" /> Exportar (CSV)
           </button>
+        </div>
         </div>
       </div>
 

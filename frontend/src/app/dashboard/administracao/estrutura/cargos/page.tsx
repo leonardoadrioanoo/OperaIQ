@@ -6,11 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Users, Plus, Search, Edit2, Trash2, X, Loader2, Check, Component, ChevronDown } from 'lucide-react';
+import { Users, Plus, Search, Edit2, Trash2, X, Loader2, Check, Component, MoreVertical, Power, PowerOff } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { getModulePermissions } from '@/lib/permissions';
 import { FormField } from '@/components/ui/form-field';
+import { DataTableHeader } from '@/components/ui';
+
 const cargoSchema = z.object({
   departamento_id: z.string().min(1, 'Obrigatório'),
   nome: z.string().min(2, 'Obrigatório'),
@@ -29,6 +31,9 @@ export default function CargosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
@@ -145,11 +150,68 @@ export default function CargosPage() {
     }
   };
 
-  const filteredCargos = cargos.filter(c => 
-    searchTerm === '' || 
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (c.departamento?.nome && c.departamento.nome.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const changeStatus = async (id: string, currentCargo: any, newStatus: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/cargos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ ...currentCargo, departamento_id: currentCargo.departamento_id || undefined, status: newStatus })
+      });
+      if (res.ok) {
+        toast.success(`Status atualizado para ${newStatus}`);
+        setMenuOpenId(null);
+        fetchData();
+      } else {
+        toast.error('Erro ao atualizar status');
+      }
+    } catch {
+      toast.error('Erro de conexão');
+    }
+  };
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const handleFilter = (key: string, value: string | null) => {
+    setColumnFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredCargos = React.useMemo(() => {
+    let filtrados = cargos;
+    
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      filtrados = filtrados.filter(c => 
+        c.nome.toLowerCase().includes(q) || 
+        (c.departamento?.nome && c.departamento.nome.toLowerCase().includes(q))
+      );
+    }
+
+    Object.entries(columnFilters).forEach(([key, value]) => {
+      if (!value) return;
+      filtrados = filtrados.filter(p => {
+        const parts = key.split('.');
+        let val: any = p;
+        for (const pt of parts) val = val?.[pt];
+        return String(val) === value;
+      });
+    });
+
+    if (!sortConfig) return filtrados;
+    return [...filtrados].sort((a, b) => {
+      let aValue: any = a[sortConfig.key] || '';
+      let bValue: any = b[sortConfig.key] || '';
+      if (sortConfig.key === 'departamento') { aValue = a.departamento?.nome || ''; bValue = b.departamento?.nome || ''; }
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [cargos, searchTerm, sortConfig, columnFilters]);
 
   return (
     <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
@@ -158,17 +220,17 @@ export default function CargosPage() {
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
             <span>Administração</span>
             <span>/</span>
-            <Link href="/dashboard/administracao/estrutura" className="hover:text-amber-400">Estrutura Organizacional</Link>
+            <Link href="/dashboard/administracao/estrutura" className="hover:text-emerald-400">Estrutura Organizacional</Link>
             <span>/</span>
             <span className="text-zinc-300">Cargos</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6 text-amber-500" />
+            <Users className="w-6 h-6 text-emerald-500" />
             Cargos
           </h1>
         </div>
         {perms.p_criar && (
-          <button onClick={() => openModal()} className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-amber-900/20 transition-all">
+          <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
             <Plus className="w-4 h-4" />
             Novo Cargo
           </button>
@@ -177,7 +239,7 @@ export default function CargosPage() {
 
       <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
-          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-amber-500/30 transition-colors w-full max-w-sm">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
             <Search className="w-4 h-4 text-zinc-500 shrink-0" />
             <input
               type="text"
@@ -196,51 +258,115 @@ export default function CargosPage() {
         </div>
 
         {isLoading ? (
-          <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-amber-500" /></div>
+          <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left text-sm text-muted-foreground">
               <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
                 <tr>
-                  <th className="px-4 py-3 rounded-tl-lg">Cargo</th>
-                  <th className="px-4 py-3">Departamento</th>
-                  <th className="px-4 py-3 text-center">Nível Hierárquico</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
+                  <DataTableHeader
+                    label="Cargo"
+                    sortKey="nome"
+                    filterKey="nome"
+                    data={cargos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['nome']}
+                    onFilter={handleFilter}
+                    className="rounded-tl-lg"
+                  />
+                  <DataTableHeader
+                    label="Departamento"
+                    sortKey="departamento"
+                    filterKey="departamento.nome"
+                    data={cargos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['departamento.nome']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Nível Hierárquico"
+                    sortKey="nivel_hierarquico"
+                    filterKey="nivel_hierarquico"
+                    data={cargos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['nivel_hierarquico']}
+                    onFilter={handleFilter}
+                    align="center"
+                  />
+                  <DataTableHeader
+                    label="Status"
+                    sortKey="status"
+                    filterKey="status"
+                    data={cargos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['status']}
+                    onFilter={handleFilter}
+                    align="center"
+                  />
+                  <th className="px-3 py-2 text-center rounded-tr-lg whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredCargos.map(cargo => (
-                  <tr key={cargo.id} className="hover:bg-muted/50">
-                    <td className="px-4 py-3 font-medium text-foreground">{cargo.nome}</td>
-                    <td className="px-4 py-3">
+                  <tr key={cargo.id} onClick={() => openModal(cargo)} className="hover:bg-muted/50 cursor-pointer group">
+                    <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{cargo.nome}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-md text-xs">
                         <Component className="w-3 h-3 text-indigo-400" />
                         {cargo.departamento?.nome || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className="inline-block px-2 py-0.5 rounded-full bg-white/5 text-xs font-semibold">
                         Nível {cargo.nivel_hierarquico}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
                         cargo.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'
                       }`}>
                         {cargo.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right flex items-center justify-end gap-2">
-                      {perms.p_editar && (
-                        <button onClick={() => openModal(cargo)} className="p-1.5 text-zinc-500 hover:text-amber-400 hover:bg-amber-400/10 rounded transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      {perms.p_excluir && (
-                        <button onClick={() => handleDelete(cargo.id)} className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <td className="px-3 py-2 text-center relative whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === cargo.id ? null : cargo.id); }}
+                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/50 rounded-md transition-all focus:outline-none"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      
+                      {menuOpenId === cargo.id && (
+                        <div className="absolute right-8 top-10 w-48 bg-background border border-border/80 rounded-lg shadow-xl py-1 z-[999] text-left animate-in fade-in zoom-in-95 duration-100">
+                          {perms.p_editar && (
+                            <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); openModal(cargo); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-muted flex items-center gap-2">
+                              <Edit2 className="w-3.5 h-3.5" /> Editar Cargo
+                            </button>
+                          )}
+                          
+                          {cargo.status === 'ativo' ? (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(cargo.id, cargo, 'inativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-zinc-400 hover:bg-muted flex items-center gap-2">
+                              <PowerOff className="w-3.5 h-3.5" /> Inativar Cargo
+                            </button>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(cargo.id, cargo, 'ativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-emerald-400 hover:bg-muted flex items-center gap-2">
+                              <Power className="w-3.5 h-3.5" /> Ativar Cargo
+                            </button>
+                          )}
+
+                          {perms.p_excluir && (
+                            <>
+                              <div className="h-[1px] w-full bg-border/50 my-1" />
+                              <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleDelete(cargo.id); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-500/10 flex items-center gap-2">
+                                <Trash2 className="w-3.5 h-3.5" /> Excluir Permanentemente
+                              </button>
+                            </>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -264,7 +390,7 @@ export default function CargosPage() {
           <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Users className="w-5 h-5 text-amber-500" />
+                <Users className="w-5 h-5 text-emerald-500" />
                 {editingId ? 'Editar Cargo' : 'Novo Cargo'}
               </h3>
               <button onClick={closeModal} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
@@ -323,7 +449,7 @@ export default function CargosPage() {
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
                   Cancelar
                 </button>
-                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-amber-900/20 transition-all">
+                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Salvar Cargo
                 </button>

@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb } from '@/components/ui';
+import { Breadcrumb, DataTableHeader } from '@/components/ui';
 
 const API = 'http://localhost:3002';
 
@@ -87,12 +87,12 @@ function ProjectSlidePanel({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-30 bg-black/20 backdrop-blur-[1px]"
+        className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-[1px]"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-[360px] z-40 bg-background border-l border-border/60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed top-0 right-0 h-full w-[360px] z-[110] bg-background border-l border-border/60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
 
         {/* Header */}
         <div className="flex items-start justify-between p-4 border-b border-border/60 shrink-0">
@@ -140,21 +140,16 @@ function ProjectSlidePanel({
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-0">
 
-          {/* Descrição */}
-          {(projeto.descricao || projeto.objetivo) && (
-            <div className="mb-4 pb-4 border-b border-border/60">
-              {projeto.objetivo && (
-                <p className="text-xs text-muted-foreground mb-1 font-semibold uppercase tracking-widest">Objetivo</p>
-              )}
-              {projeto.objetivo && <p className="text-sm text-foreground mb-2">{projeto.objetivo}</p>}
-              {projeto.descricao && (
-                <>
-                  <p className="text-xs text-muted-foreground mb-1 font-semibold uppercase tracking-widest">Descrição</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{projeto.descricao}</p>
-                </>
-              )}
-            </div>
-          )}
+          <DetailField label="Responsável">
+            {projeto.responsavel ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0">
+                  {projeto.responsavel.nome_completo.charAt(0)}
+                </div>
+                <span>{projeto.responsavel.nome_completo}</span>
+              </div>
+            ) : <span className="text-muted-foreground">Não definido</span>}
+          </DetailField>
 
           <DetailField label="Gestor do Projeto">
             {projeto.gerente ? (
@@ -422,6 +417,7 @@ function NovoProjetoModal({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProjetosVisaoGeralPage() {
+  const router = useRouter();
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -429,6 +425,7 @@ export default function ProjetosVisaoGeralPage() {
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
 
   // Bulk Actions & Export
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -451,6 +448,16 @@ export default function ProjetosVisaoGeralPage() {
       filtrados = filtrados.filter(p => p.titulo.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q));
     }
 
+    Object.entries(columnFilters).forEach(([key, value]) => {
+      if (!value) return;
+      filtrados = filtrados.filter(p => {
+        const parts = key.split('.');
+        let val: any = p;
+        for (const pt of parts) val = val?.[pt];
+        return String(val) === value;
+      });
+    });
+
     if (!sortConfig) return filtrados;
     return [...filtrados].sort((a, b) => {
       let aValue: any = a[sortConfig.key as keyof Projeto] || '';
@@ -461,7 +468,11 @@ export default function ProjetosVisaoGeralPage() {
       if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [projetos, sortConfig, search, statusFiltro]);
+  }, [projetos, sortConfig, search, statusFiltro, columnFilters]);
+
+  const handleFilter = (key: string, value: string | null) => {
+    setColumnFilters(prev => ({ ...prev, [key]: value }));
+  };
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { 'Todos': projetos.length };
@@ -587,7 +598,7 @@ export default function ProjetosVisaoGeralPage() {
   const totalConcluidos= projetos.filter(p => p.status === 'Concluído').length;
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -714,7 +725,7 @@ export default function ProjetosVisaoGeralPage() {
             <table className="w-full text-sm whitespace-nowrap">
               <thead>
                 <tr className="border-b border-border/60 bg-muted/30">
-                  <th className="px-4 py-3 w-10 text-center">
+                  <th className="px-3 py-2 w-10 text-center whitespace-nowrap">
                     <input 
                       type="checkbox" 
                       checked={sortedProjetos.length > 0 && selectedIds.size === sortedProjetos.length}
@@ -722,25 +733,103 @@ export default function ProjetosVisaoGeralPage() {
                       className="w-4 h-4 rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background cursor-pointer"
                     />
                   </th>
-                  <th onClick={() => requestSort('titulo')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider group">
-                    <div className="flex items-center gap-1.5">Estrutura do Projeto <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th onClick={() => requestSort('status')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell group">
-                    <div className="flex items-center gap-1.5">Governança (Status) <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th onClick={() => requestSort('prioridade')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell group">
-                    <div className="flex items-center gap-1.5">Prioridade <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th onClick={() => requestSort('gerente')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell group">
-                    <div className="flex items-center gap-1.5">Gestor <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th onClick={() => requestSort('responsavel')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell group">
-                    <div className="flex items-center gap-1.5">Responsável <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th onClick={() => requestSort('data_fim')} className="cursor-pointer hover:bg-muted/40 transition-colors text-left px-4 py-3.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell group">
-                    <div className="flex items-center gap-1.5">Timeline (Fim) <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-500" /></div>
-                  </th>
-                  <th className="px-4 py-3 w-12 text-center">Ações</th>
+                  <DataTableHeader
+                    label="Referência"
+                    sortKey="codigo"
+                    filterKey="codigo"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['codigo']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Projeto"
+                    sortKey="titulo"
+                    filterKey="titulo"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['titulo']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Departamento"
+                    sortKey="departamento.nome"
+                    filterKey="departamento.nome"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['departamento.nome']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Governança (Status)"
+                    sortKey="status"
+                    filterKey="status"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['status']}
+                    onFilter={handleFilter}
+                    className="hidden md:table-cell"
+                  />
+                  <DataTableHeader
+                    label="Prioridade"
+                    sortKey="prioridade"
+                    filterKey="prioridade"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['prioridade']}
+                    onFilter={handleFilter}
+                    className="hidden lg:table-cell"
+                  />
+                  <DataTableHeader
+                    label="Gestor"
+                    sortKey="gerente"
+                    filterKey="gerente.nome_completo"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['gerente.nome_completo']}
+                    onFilter={handleFilter}
+                    className="hidden xl:table-cell"
+                  />
+                  <DataTableHeader
+                    label="Equipe"
+                    sortKey="equipe"
+                    filterKey="equipe.nome"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['equipe.nome']}
+                    onFilter={handleFilter}
+                    className="hidden xl:table-cell"
+                  />
+                  <DataTableHeader
+                    label="Responsável"
+                    sortKey="responsavel"
+                    filterKey="responsavel.nome_completo"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['responsavel.nome_completo']}
+                    onFilter={handleFilter}
+                    className="hidden lg:table-cell"
+                  />
+                  <DataTableHeader
+                    label="Timeline (Fim)"
+                    sortKey="data_fim"
+                    filterKey="data_fim"
+                    data={projetos}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['data_fim']}
+                    onFilter={handleFilter}
+                    className="hidden xl:table-cell"
+                  />
+                  <th className="px-3 py-2 w-12 text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -757,7 +846,7 @@ export default function ProjetosVisaoGeralPage() {
                       onClick={() => setSelectedProjeto(isPanelOpen ? null : proj)}
                       className={`transition-colors cursor-pointer group ${isSelected ? 'bg-emerald-500/5' : isPanelOpen ? 'bg-muted/50 border-l-2 border-l-emerald-500' : 'hover:bg-muted/30'}`}
                     >
-                      <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-2 text-center whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <input 
                           type="checkbox" 
                           checked={isSelected}
@@ -765,27 +854,29 @@ export default function ProjetosVisaoGeralPage() {
                           className="w-4 h-4 rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background cursor-pointer"
                         />
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <div className="text-zinc-300 font-mono text-xs">{proj.codigo || '-'}</div>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
                         <p className={`font-bold transition-colors ${isPanelOpen ? 'text-emerald-500' : 'text-foreground group-hover:text-emerald-500'} flex items-center gap-1.5`}>
                           {proj.titulo}
                           <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </p>
-                        <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                          <span className="bg-muted px-1 rounded">{proj.codigo}</span>
-                          {proj.departamento && <> · {proj.departamento.nome}</>}
-                        </p>
                       </td>
-                      <td className="px-4 py-3.5 hidden md:table-cell">
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <div className="text-zinc-300">{proj.departamento?.nome || '-'}</div>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap hidden md:table-cell">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border ${st.color}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />{st.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 hidden lg:table-cell">
+                      <td className="px-3 py-2 whitespace-nowrap hidden lg:table-cell">
                         <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${pr.color}`}>
                           <span className={`w-2 h-2 rounded-full ${pr.dot}`} />{proj.prioridade}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 hidden xl:table-cell">
+                      <td className="px-3 py-2 whitespace-nowrap hidden xl:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
                             <span className="text-[10px] font-bold text-emerald-600">
@@ -797,7 +888,15 @@ export default function ProjetosVisaoGeralPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 hidden lg:table-cell">
+                      <td className="px-3 py-2 whitespace-nowrap hidden xl:table-cell text-xs font-semibold text-foreground">
+                        {proj.equipe ? (
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                            {proj.equipe.nome}
+                          </div>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap hidden lg:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
                             <span className="text-[10px] font-bold text-emerald-600">
@@ -809,13 +908,13 @@ export default function ProjetosVisaoGeralPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 hidden xl:table-cell">
+                      <td className="px-3 py-2 whitespace-nowrap hidden xl:table-cell">
                         <span className="flex items-center gap-1.5 text-xs font-mono font-medium text-muted-foreground">
                           <Calendar className="w-3.5 h-3.5" />
                           {proj.data_fim ? new Date(proj.data_fim + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem Prazo'}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-center relative" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-2 whitespace-nowrap text-center relative" onClick={e => e.stopPropagation()}>
                         <button 
                           onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpen ? null : proj.id); }}
                           className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/50 rounded-md transition-all focus:outline-none"

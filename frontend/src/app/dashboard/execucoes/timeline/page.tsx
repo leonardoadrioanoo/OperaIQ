@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/ui';
 import Link from 'next/link';
+import { ExecucoesTabs } from '../ExecucoesTabs';
 
 const API = 'http://localhost:3002';
 
@@ -139,22 +140,31 @@ export default function ExecucoesTimelinePage() {
   }, [projetos, searchTerm]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="w-full space-y-8 animate-in fade-in duration-500 pb-20">
       
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border/50 pb-6 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-4">
-        <div>
+      <div className="flex flex-col border-b border-border/50 pb-6 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-4">
+        
+        {/* Top Row */}
+        <div className="flex justify-between items-start w-full mb-2">
           <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Timeline do Portfólio' }]} />
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3 mt-2">
-            <CalendarClock className="w-7 h-7 text-emerald-500" />
-            Roadmap Temporal
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Mapeamento preditivo de entregas classificado por risco e SLA.
-          </p>
+          <ExecucoesTabs />
         </div>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+
+        {/* Bottom Row */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
+              <CalendarClock className="w-7 h-7 text-emerald-500" />
+              Roadmap Temporal
+            </h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Mapeamento preditivo de entregas classificado por risco e SLA.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto relative">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Rastrear execução específica..."
@@ -162,6 +172,8 @@ export default function ExecucoesTimelinePage() {
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full h-10 bg-muted/20 border border-border/60 rounded-lg pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-emerald-500/50 focus:bg-background shadow-sm transition-all"
           />
+          </div>
+        </div>
         </div>
       </div>
 
@@ -174,7 +186,7 @@ export default function ExecucoesTimelinePage() {
         <div className="relative">
           
           {/* Eixo Central da Timeline */}
-          <div className="absolute left-[23px] md:left-[180px] top-4 bottom-0 w-[2px] bg-border/40 z-0" />
+          <div className="absolute left-[23px] md:left-[200px] top-4 bottom-0 w-[2px] bg-border/40 z-0" />
 
           <div className="space-y-12 relative z-10">
             {buckets.map((bucket, index) => {
@@ -182,13 +194,13 @@ export default function ExecucoesTimelinePage() {
               if (bucket.items.length === 0 && searchTerm) return null; // Esconde no search se vazio
 
               return (
-                <div key={bucket.id} className="relative flex flex-col md:flex-row gap-6 md:gap-12 animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${index * 100}ms` }}>
+                <div key={bucket.id} className="relative flex flex-col md:flex-row gap-6 md:gap-10 animate-in slide-in-from-bottom-4 duration-500 fill-mode-both" style={{ animationDelay: `${index * 100}ms` }}>
                   
                   {/* Bucket Header (Esquerda) */}
-                  <div className="md:w-[150px] shrink-0 pt-2 flex flex-row md:flex-col items-center md:items-end gap-4 md:gap-1 relative z-20 bg-background md:bg-transparent pr-4 md:pr-0">
+                  <div className="md:w-[180px] shrink-0 pt-2 flex flex-row md:flex-col items-center md:items-end gap-4 md:gap-1 relative z-20 bg-background md:bg-transparent pr-4 md:pr-6">
                     
                     {/* O Node da Timeline */}
-                    <div className={`absolute left-0 md:-right-[29px] md:left-auto top-2 w-12 h-12 rounded-full border-4 border-background bg-background flex items-center justify-center shadow-sm z-20`}>
+                    <div className={`absolute left-0 md:-right-[44px] md:left-auto top-2 w-12 h-12 rounded-full border-4 border-background bg-background flex items-center justify-center shadow-sm z-20`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bucket.color.replace('text', 'bg').replace('500', '500/10')}`}>
                         <Icon className={`w-4 h-4 ${bucket.color}`} />
                       </div>

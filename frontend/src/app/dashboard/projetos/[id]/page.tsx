@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import { useAuthStore } from '@/store/authStore';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 
 const API = 'http://localhost:3002';
 
@@ -37,6 +38,7 @@ type ProjetoForm = {
   timezone?: string;
   equipe_id?: string;
   visibilidade: string;
+  orcamento_previsto?: number;
 };
 
 const TIPOS = ['Desenvolvimento de Software', 'Implantação', 'Migração', 'Infraestrutura', 'Marketing', 'Consultoria', 'Pesquisa', 'Financeiro', 'RH', 'Comercial', 'Outro'];
@@ -84,11 +86,14 @@ export default function ProjetoJiraViewPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'workspace' | 'sprints' | 'tudo' | 'comentarios' | 'historico'>('workspace');
   const [novoComentario, setNovoComentario] = useState('');
-  const [localComments, setLocalComments] = useState<any[]>([]);
+  const [atividades, setAtividades] = useState<any[]>([]);
 
   const [activeAccordion, setActiveAccordion] = useState<string | null>('gerais');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [isDescricaoDirty, setIsDescricaoDirty] = useState(false);
+  const [isSavingDescricao, setIsSavingDescricao] = useState(false);
 
-  const { register, handleSubmit, reset, watch } = useForm<ProjetoForm>();
+  const { register, handleSubmit, reset, watch, setValue } = useForm<ProjetoForm>();
   
   const currentMetodologia = watch('metodologia');
 
@@ -100,14 +105,15 @@ export default function ProjetoJiraViewPage() {
         if (!session || cancelled) return;
         const headers = { Authorization: `Bearer ${session.access_token}` };
         
-        const [pRes, cRes, dRes, eRes, tRes, sRes, portRes] = await Promise.all([
+        const [pRes, cRes, dRes, eRes, tRes, sRes, portRes, actRes] = await Promise.all([
           fetch(`${API}/api/projetos/${id}`, { headers }),
           fetch(`${API}/api/colaboradores`, { headers }),
           fetch(`${API}/api/departamentos`, { headers }),
           fetch(`${API}/api/equipes`, { headers }),
           fetch(`${API}/api/tarefas?projeto_id=${id}`, { headers }),
           fetch(`${API}/api/sprints?projeto_id=${id}`, { headers }),
-          fetch(`${API}/api/portfolios`, { headers })
+          fetch(`${API}/api/portfolios`, { headers }),
+          fetch(`${API}/api/projetos/${id}/atividades`, { headers })
         ]);
 
         if (pRes.ok) {
@@ -118,6 +124,7 @@ export default function ProjetoJiraViewPage() {
           const tData = tRes.ok ? await tRes.json() : [];
           const sData = sRes.ok ? await sRes.json() : [];
           const portData = portRes.ok ? await portRes.json() : [];
+          const actData = actRes.ok ? await actRes.json() : [];
 
           if (!cancelled) {
             setColaboradores(Array.isArray(cData) ? cData : cData.colaboradores || []);
@@ -126,6 +133,7 @@ export default function ProjetoJiraViewPage() {
             setPortfolios(Array.isArray(portData) ? portData : portData.portfolios || []);
             setTarefas(Array.isArray(tData) ? tData : tData.tarefas || []);
             setSprints(sData);
+            setAtividades(Array.isArray(actData) ? actData : []);
             
             setProjeto(pData);
             reset({
@@ -148,25 +156,23 @@ export default function ProjetoJiraViewPage() {
     return () => { cancelled = true; };
   }, [id, router, reset]);
 
-  const onSubmit = async (data: ProjetoForm) => {
-    setIsSubmitting(true);
+  const handleAutoSave = async (data: ProjetoForm) => {
+    if (isLoading) return;
+    setSaveStatus('saving');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast.error('Sessão expirada.'); return; }
+      if (!session) { setSaveStatus('idle'); return; }
 
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
+          // @ts-ignore
           if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
           } else {
             formData.append(key, key === 'visibilidade' ? String(value).toLowerCase() : String(value));
           }
         }
-      });
-
-      arquivos.forEach(file => {
-        formData.append('arquivos', file);
       });
 
       const res = await fetch(`${API}/api/projetos/${id}`, {
@@ -176,19 +182,57 @@ export default function ProjetoJiraViewPage() {
       });
 
       if (res.ok) {
-        const p = await res.json();
-        setProjeto(p);
-        setArquivos([]);
-        toast.success('Projeto atualizado com sucesso!');
-        router.push('/dashboard/projetos/visao-geral');
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
       } else {
-        const j = await res.json().catch(() => ({}));
-        toast.error(j.error || 'Erro ao atualizar projeto');
+        setSaveStatus('idle');
       }
     } catch {
-      toast.error('Não foi possível conectar ao servidor.');
-    } finally {
-      setIsSubmitting(false);
+      setSaveStatus('idle');
+    }
+  };
+
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (isLoading || name === 'descricao') return;
+      const handler = setTimeout(() => {
+        handleAutoSave(value as ProjetoForm);
+      }, 1000);
+      return () => clearTimeout(handler);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, isLoading]);
+
+  const handleSaveDescricao = async () => {
+    setIsSavingDescricao(true);
+    await handleAutoSave(watch() as ProjetoForm);
+    setIsSavingDescricao(false);
+    setIsDescricaoDirty(false);
+  };
+
+  const handleUploadMedia = async (file: File) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+
+      const formData = new FormData();
+      formData.append('arquivo', file);
+
+      const res = await fetch(`${API}/api/projetos/${id}/upload-midia`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const errData = await res.json();
+      toast.error(errData.error || 'Erro ao fazer upload da mídia.');
+      return null;
+    } catch (e: any) {
+      toast.error('Erro de conexão ao fazer upload.');
+      return null;
     }
   };
 
@@ -398,7 +442,7 @@ export default function ProjetoJiraViewPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans pb-24">
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[1500px] w-full mx-auto p-4 md:p-8 flex relative transition-all duration-300">
+      <form className="max-w-[1500px] w-full mx-auto p-4 md:p-8 flex relative transition-all duration-300">
         
         {/* ========================================================= */}
         {/* COLUNA ESQUERDA - CONTEÚDO PRINCIPAL */}
@@ -438,10 +482,16 @@ export default function ProjetoJiraViewPage() {
           {/* Descrição */}
           <div className="mb-10">
             <h2 className="text-[15px] font-semibold mb-3 text-foreground/90">Descrição</h2>
-            <textarea 
-              {...register('descricao')}
-              className="w-full min-h-[140px] bg-muted/10 border border-border hover:border-emerald-500/50 focus:bg-background focus:border-emerald-500 rounded-lg p-4 text-[14px] leading-relaxed text-foreground transition-all outline-none resize-y shadow-sm"
-              placeholder="Adicione uma descrição detalhada..."
+            <RichTextEditor 
+              value={watch('descricao') || ''}
+              onChange={(val) => { 
+                setValue('descricao', val, { shouldDirty: true, shouldValidate: true });
+                setIsDescricaoDirty(true);
+              }}
+              onSave={handleSaveDescricao}
+              onUploadMedia={handleUploadMedia}
+              isSaving={isSavingDescricao}
+              hasChanges={isDescricaoDirty}
             />
           </div>
 
@@ -471,17 +521,30 @@ export default function ProjetoJiraViewPage() {
                   </a>
                 ))}
                 {/* Novos Anexos (Em Memória) */}
-                {arquivos.map((arq, idx) => (
+                {arquivos.map((arq, idx) => {
+                  const isImage = arq.type.startsWith('image/');
+                  const previewUrl = isImage ? URL.createObjectURL(arq) : '';
+
+                  return (
                   <div key={`new-${idx}`} className="group relative w-40 h-28 border-2 border-dashed border-emerald-500/50 rounded-lg overflow-hidden bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors flex flex-col justify-end">
                     <button type="button" onClick={() => setArquivos(a => a.filter((_, i) => i !== idx))} className="absolute top-1.5 right-1.5 z-20 w-5 h-5 bg-red-500 text-white rounded flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow">X</button>
-                    <div className="absolute inset-0 flex items-center justify-center text-emerald-500/50">
-                      <Download className="w-8 h-8" />
-                    </div>
+                    {isImage ? (
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110 cursor-pointer" 
+                        style={{ backgroundImage: `url(${previewUrl})` }} 
+                        onClick={() => window.open(previewUrl, '_blank')}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-emerald-500/50">
+                        <Download className="w-8 h-8" />
+                      </div>
+                    )}
                     <div className="relative z-10 w-full p-2 bg-background/90 backdrop-blur text-[11px] font-medium text-foreground truncate border-t border-border">
                       {arq.name}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -500,16 +563,30 @@ export default function ProjetoJiraViewPage() {
                   className="w-full min-h-[140px] p-4 text-[14px] leading-relaxed bg-transparent outline-none resize-y text-foreground placeholder:text-muted-foreground"
                 />
                 <div className="flex items-center justify-end px-3 py-2 bg-muted/30 border-t border-border">
-                  <button type="button" onClick={() => {
+                  <button type="button" onClick={async () => {
                     if(!novoComentario.trim()) return;
-                    setLocalComments(prev => [{
-                       id: Math.random(),
-                       texto: novoComentario,
-                       data: new Date().toISOString(),
-                       autor: 'Eu (Local)'
-                    }, ...prev]);
-                    setNovoComentario('');
-                    toast.success('Comentário registrado!');
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session) return;
+                      const res = await fetch(`${API}/api/projetos/${id}/comentarios`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({ texto: novoComentario })
+                      });
+                      if (res.ok) {
+                        const newComment = await res.json();
+                        setAtividades(prev => [newComment, ...prev]);
+                        setNovoComentario('');
+                        toast.success('Comentário registrado!');
+                      } else {
+                        toast.error('Erro ao enviar comentário.');
+                      }
+                    } catch (err) {
+                      toast.error('Erro na conexão.');
+                    }
                   }} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition-colors">
                     <Send className="w-3 h-3" /> Enviar
                   </button>
@@ -521,7 +598,7 @@ export default function ProjetoJiraViewPage() {
             <div className="flex items-center gap-6 border-b border-border mb-6 overflow-x-auto no-scrollbar">
               <button type="button" onClick={() => setActiveTab('workspace')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'workspace' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Workspace</button>
               <button type="button" onClick={() => setActiveTab('sprints')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'sprints' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Histórico de Sprints</button>
-              <button type="button" onClick={() => setActiveTab('tudo')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'tudo' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Informações Gerais</button>
+              <button type="button" onClick={() => setActiveTab('tudo')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'tudo' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Tudo</button>
               <button type="button" onClick={() => setActiveTab('comentarios')} className={`pb-3 text-[14px] font-medium transition-colors whitespace-nowrap ${activeTab === 'comentarios' ? 'text-foreground border-b-2 border-emerald-600' : 'text-muted-foreground hover:text-foreground'}`}>Comentários</button>
               <button type="button" onClick={() => setActiveTab('historico')} className={`pb-3 text-[14px] font-medium transition-colors whitespace-nowrap ${activeTab === 'historico' ? 'text-foreground border-b-2 border-emerald-600' : 'text-muted-foreground hover:text-foreground'}`}>Histórico</button>
             </div>
@@ -798,96 +875,158 @@ export default function ProjetoJiraViewPage() {
                 })()}
               </div>
             )}
-            {(activeTab === 'tudo' || activeTab === 'comentarios') && (
-              <div className="animate-in fade-in duration-300">
-                {/* Comentários Locais (Simulados) */}
-                {localComments.map(lc => (
-                  <div key={lc.id} className="flex gap-4 mb-6">
-                    <div className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                      EU
+            {(activeTab === 'tudo') && (
+              <div className="animate-in fade-in duration-300 relative pl-6 border-l-2 border-border/60 space-y-8 mt-6 ml-2">
+                
+                {/* Comentário Inicial do Projeto */}
+                {projeto?.comentario_inicial && (
+                  <div className="relative">
+                    <div className="absolute -left-[35px] top-1 w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-[9px] font-bold ring-4 ring-background shadow-sm">
+                      {initials(projeto.gerente?.nome_completo || 'S')}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 -mt-1">
                       <div className="flex items-baseline gap-2 mb-1.5">
-                        <span className="font-semibold text-[14px] text-foreground hover:underline cursor-pointer">
-                          {lc.autor}
-                        </span>
-                        <span className="text-[12px] text-muted-foreground">
-                          {new Date(lc.data).toLocaleDateString('pt-BR')} às {new Date(lc.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+                        <span className="font-semibold text-[13px] text-foreground">{projeto.gerente?.nome_completo || 'Criador do Projeto'}</span>
+                        <span className="text-[11px] text-muted-foreground text-emerald-500 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">Descrição Inicial</span>
                       </div>
-                      <div className="text-[14px] text-foreground whitespace-pre-wrap leading-relaxed mt-1 bg-muted/20 border border-border/50 p-3 rounded-lg">
-                        {lc.texto}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Comentário Inicial */}
-                {projeto.comentario_inicial && (
-                  <div className="flex gap-4 mb-6">
-                    <div className="w-9 h-9 rounded-full bg-slate-700 text-white flex items-center justify-center text-[12px] font-bold shrink-0">
-                      {initials(projeto.gerente?.nome_completo)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-baseline gap-2 mb-1.5">
-                        <span className="font-semibold text-[14px] text-foreground hover:underline cursor-pointer">
-                          {projeto.gerente?.nome_completo || 'Criador do Projeto'}
-                        </span>
-                        <span className="text-[12px] text-muted-foreground">
-                          {new Date(projeto.criado_em).toLocaleDateString('pt-BR')} às {new Date(projeto.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <div className="text-[14px] text-foreground whitespace-pre-wrap leading-relaxed mt-1 bg-muted/20 border border-border/50 p-3 rounded-lg">
+                      <div className="text-[13px] text-foreground whitespace-pre-wrap leading-relaxed mt-1 bg-muted/20 border border-border/50 p-3 rounded-lg max-w-3xl">
                         {projeto.comentario_inicial}
-                      </div>
-                      <div className="flex items-center gap-4 mt-2.5 text-[12px] font-medium text-muted-foreground">
-                        <button type="button" className="hover:text-foreground transition-colors">Responder</button>
-                        <button type="button" className="hover:text-foreground transition-colors">Editar</button>
-                        <button type="button" className="hover:text-red-500 transition-colors">Excluir</button>
                       </div>
                     </div>
                   </div>
                 )}
+
+                {/* Lista de Atividades Reais */}
+                {atividades.map(act => {
+                  const dateObj = new Date(act.criado_em);
+                  const dataStr = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase();
+                  const horaStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                  if (act.tipo === 'comentario') {
+                    return (
+                      <div key={act.id} className="relative">
+                        <div className="absolute -left-[35px] top-1 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold ring-4 ring-background shadow-sm">
+                          {initials(act.autor?.nome_completo || 'U')}
+                        </div>
+                        <div className="flex-1 -mt-1">
+                          <div className="flex items-baseline gap-2 mb-1.5">
+                            <span className="font-semibold text-[13px] text-foreground">{act.autor?.nome_completo || 'Usuário'}</span>
+                            <span className="text-[11px] text-muted-foreground">{dataStr} às {horaStr}</span>
+                          </div>
+                          <div className="text-[13px] text-foreground whitespace-pre-wrap leading-relaxed mt-1 bg-muted/10 border border-border/50 p-3 rounded-lg max-w-3xl">
+                            {act.texto}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Histórico
+                  return (
+                    <div key={act.id} className="relative">
+                      <div className="absolute -left-[29px] top-1.5 w-3 h-3 bg-slate-400 rounded-full ring-4 ring-background shadow-sm" />
+                      <div className="text-[10px] font-bold text-muted-foreground mb-2 tracking-wider flex items-center gap-2">
+                        <span className="bg-muted px-1.5 py-0.5 rounded text-foreground">{dataStr}</span> às {horaStr}
+                      </div>
+                      <div className="bg-muted/10 border border-border/40 rounded-lg p-3 text-[13px] shadow-sm max-w-2xl">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="font-semibold text-foreground">{act.autor?.nome_completo || 'Sistema'}</span>
+                          <span className="text-muted-foreground">{act.texto}</span>
+                        </div>
+                        
+                        {act.detalhes && Object.keys(act.detalhes).length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-border/30 space-y-1.5">
+                            {Object.entries(act.detalhes).map(([key, changes]: [string, any]) => (
+                              <div key={key} className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium bg-background border border-border/40 p-1.5 rounded-md w-fit">
+                                <span className="text-muted-foreground capitalize mr-1">{key.replace('_id', '').replace('_', ' ')}:</span>
+                                {changes.from ? (
+                                  <>
+                                    <span className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground line-through max-w-[120px] truncate" title={String(changes.from)}>{String(changes.from)}</span>
+                                    <span className="text-muted-foreground">→</span>
+                                  </>
+                                ) : null}
+                                <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 rounded border border-emerald-500/20 max-w-[120px] truncate" title={String(changes.to)}>{String(changes.to)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {atividades.length === 0 && !projeto?.comentario_inicial && (
+                  <div className="text-sm text-muted-foreground italic py-4">Nenhuma atividade registrada ainda.</div>
+                )}
               </div>
             )}
 
-            {/* CONTEÚDO: HISTÓRICO (Timeline) */}
-            {(activeTab === 'tudo' || activeTab === 'historico') && (
-              <div className="animate-in fade-in duration-300 relative pl-5 border-l-2 border-border/60 space-y-8 mt-6">
-                
-                <div className="relative">
-                  <div className="absolute -left-[27px] w-3 h-3 bg-emerald-600 rounded-full ring-4 ring-background" />
-                  <div className="text-[11px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">Hoje</div>
-                  <div className="bg-muted/10 border border-border/60 rounded-lg p-3 text-[13px] shadow-sm max-w-2xl">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-foreground">Leonardo Luzolo</span>
-                      <span className="text-[11px] text-muted-foreground">09:31</span>
+            {(activeTab === 'comentarios') && (
+              <div className="animate-in fade-in duration-300 relative pl-6 border-l-2 border-border/60 space-y-8 mt-6 ml-2">
+                {atividades.filter(a => a.tipo === 'comentario').map(act => {
+                  const dateObj = new Date(act.criado_em);
+                  return (
+                    <div key={act.id} className="relative">
+                      <div className="absolute -left-[35px] top-1 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold ring-4 ring-background shadow-sm">
+                        {initials(act.autor?.nome_completo || 'U')}
+                      </div>
+                      <div className="flex-1 -mt-1">
+                        <div className="flex items-baseline gap-2 mb-1.5">
+                          <span className="font-semibold text-[13px] text-foreground">{act.autor?.nome_completo || 'Usuário'}</span>
+                          <span className="text-[11px] text-muted-foreground">{dateObj.toLocaleDateString('pt-BR')} às {dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div className="text-[13px] text-foreground whitespace-pre-wrap leading-relaxed mt-1 bg-muted/10 border border-border/50 p-3 rounded-lg max-w-3xl">
+                          {act.texto}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-muted-foreground">
-                      alterou o <strong className="text-foreground">Status</strong>
-                    </p>
-                    <div className="flex items-center gap-2 mt-2 font-medium">
-                        <span className="px-2 py-0.5 bg-muted rounded text-muted-foreground line-through">Planejamento</span>
-                        <span className="text-muted-foreground">→</span>
-                        <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded border border-emerald-500/20">Em Andamento</span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
+                {atividades.filter(a => a.tipo === 'comentario').length === 0 && (
+                  <div className="text-sm text-muted-foreground italic py-4">Nenhum comentário registrado.</div>
+                )}
+              </div>
+            )}
 
-                <div className="relative">
-                  <div className="absolute -left-[27px] w-3 h-3 bg-slate-400 rounded-full ring-4 ring-background" />
-                  <div className="text-[11px] font-bold text-muted-foreground mb-2 uppercase tracking-wider">12 Jul 2026</div>
-                  <div className="bg-muted/10 border border-border/60 rounded-lg p-3 text-[13px] shadow-sm max-w-2xl">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-foreground">Sistema</span>
-                      <span className="text-[11px] text-muted-foreground">10:00</span>
+            {(activeTab === 'historico') && (
+              <div className="animate-in fade-in duration-300 relative pl-6 border-l-2 border-border/60 space-y-8 mt-6 ml-2">
+                {atividades.filter(a => a.tipo === 'historico').map(act => {
+                  const dateObj = new Date(act.criado_em);
+                  return (
+                    <div key={act.id} className="relative">
+                      <div className="absolute -left-[29px] top-1.5 w-3 h-3 bg-slate-400 rounded-full ring-4 ring-background shadow-sm" />
+                      <div className="text-[10px] font-bold text-muted-foreground mb-2 tracking-wider flex items-center gap-2">
+                        <span className="bg-muted px-1.5 py-0.5 rounded text-foreground">{dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase()}</span> às {dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div className="bg-muted/10 border border-border/40 rounded-lg p-3 text-[13px] shadow-sm max-w-2xl">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="font-semibold text-foreground">{act.autor?.nome_completo || 'Sistema'}</span>
+                          <span className="text-muted-foreground">{act.texto}</span>
+                        </div>
+                        
+                        {act.detalhes && Object.keys(act.detalhes).length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-border/30 space-y-1.5">
+                            {Object.entries(act.detalhes).map(([key, changes]: [string, any]) => (
+                              <div key={key} className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium bg-background border border-border/40 p-1.5 rounded-md w-fit">
+                                <span className="text-muted-foreground capitalize mr-1">{key.replace('_id', '').replace('_', ' ')}:</span>
+                                {changes.from ? (
+                                  <>
+                                    <span className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground line-through max-w-[120px] truncate" title={String(changes.from)}>{String(changes.from)}</span>
+                                    <span className="text-muted-foreground">→</span>
+                                  </>
+                                ) : null}
+                                <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 rounded border border-emerald-500/20 max-w-[120px] truncate" title={String(changes.to)}>{String(changes.to)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-muted-foreground">
-                      Projeto criado e inicializado.
-                    </p>
-                  </div>
-                </div>
-
+                  );
+                })}
+                {atividades.filter(a => a.tipo === 'historico').length === 0 && (
+                  <div className="text-sm text-muted-foreground italic py-4">Nenhum histórico registrado.</div>
+                )}
               </div>
             )}
           </div>
@@ -915,29 +1054,19 @@ export default function ProjetoJiraViewPage() {
             {/* Bloco de Controle Superior (Ações -> Status -> Progresso) */}
             <div className="mb-6 flex flex-col gap-3">
               
-              {/* Salvar & Cancelar Button Group */}
-              <div className="w-full flex rounded-md overflow-hidden shadow-sm">
-                <button 
-                  type="button"
-                  onClick={() => router.push('/dashboard/projetos/visao-geral')}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 h-9 bg-red-600 hover:bg-red-700 text-white text-[13px] font-medium transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancelar
-                </button>
-                
-                {/* Separador */}
-                <div className="w-[1px] h-9 bg-background/20" />
-                
-                <button 
-                  type="button"
-                  onClick={handleSubmit(onSubmit)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-medium transition-colors disabled:opacity-50"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                  Salvar
-                </button>
+              {/* Auto-Save Indicator */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status do Workspace</span>
+                {saveStatus === 'saving' && (
+                  <div className="flex items-center gap-1.5 text-amber-500 text-[11px] font-bold animate-pulse">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
+                  </div>
+                )}
+                {saveStatus === 'saved' && (
+                  <div className="flex items-center gap-1.5 text-emerald-500 text-[11px] font-bold">
+                    <Check className="w-3 h-3" /> Alterações salvas
+                  </div>
+                )}
               </div>
 
               {/* Status Select */}
@@ -1381,8 +1510,8 @@ export default function ProjetoJiraViewPage() {
                       });
                       if (res.ok) {
                         const novaSprint = await res.json();
-                        setSprints(prev => [novaSprint, ...prev]);
-                        setProjeto(prev => prev ? { ...prev, sprint_atual: (prev.sprint_atual || 1) + 1 } : prev);
+                        setSprints((prev: any[]) => [novaSprint, ...prev]);
+                        setProjeto((prev: any) => prev ? { ...prev, sprint_atual: (prev.sprint_atual || 1) + 1 } : prev);
                       }
                     }
                   } catch (err) {
@@ -1390,7 +1519,7 @@ export default function ProjetoJiraViewPage() {
                   }
 
                   // Limpar da tela localmente
-                  setTarefas(prev => prev.filter(t => t.status !== 'Concluído'));
+                  setTarefas((prev: any[]) => prev.filter(t => t.status !== 'Concluído'));
 
                   setTimeout(() => {
                     toast.success('Sprint oficializada! Tarefas entregues foram arquivadas.');

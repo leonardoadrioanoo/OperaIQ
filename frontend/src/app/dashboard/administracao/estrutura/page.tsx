@@ -9,8 +9,8 @@ const ESTRUTURA_CARDS = [
     title: "Departamentos",
     description: "Crie e gerencie os departamentos da empresa com hierarquia, gestor responsável e centro de custo.",
     icon: Component,
-    color: "text-indigo-400",
-    bg: "bg-indigo-400/10",
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
     badge: "CRUD Completo",
     href: "/dashboard/administracao/estrutura/departamentos",
   },
@@ -18,8 +18,8 @@ const ESTRUTURA_CARDS = [
     title: "Cargos",
     description: "Cadastre os cargos vinculados a cada departamento e defina a hierarquia entre eles.",
     icon: Briefcase,
-    color: "text-amber-400",
-    bg: "bg-amber-400/10",
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
     badge: "CRUD Completo",
     href: "/dashboard/administracao/estrutura/cargos",
   },
@@ -27,8 +27,8 @@ const ESTRUTURA_CARDS = [
     title: "Equipes",
     description: "Organize Times, Squads, Comitês e Grupos de Trabalho com líderes e integrantes.",
     icon: Users,
-    color: "text-fuchsia-400",
-    bg: "bg-fuchsia-400/10",
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10",
     badge: "Com Integrantes",
     href: "/dashboard/administracao/estrutura/equipes",
   },
@@ -45,7 +45,7 @@ export default function EstruturaPage() {
             <span className="text-zinc-300">Estrutura Organizacional</span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Network className="w-8 h-8 text-indigo-500" />
+            <Network className="w-8 h-8 text-emerald-500" />
             Estrutura Organizacional
           </h1>
           <p className="text-zinc-400 mt-2">

@@ -4,14 +4,17 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Users, Plus, Search, Filter, Loader2, Edit, ChevronRight, X, ChevronDown } from 'lucide-react';
+import { Users, Plus, Search, Filter, Loader2, Edit, ChevronRight, X, ChevronDown, MoreVertical, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui';
+import { Input, DataTableHeader } from '@/components/ui';
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchUsers = async () => {
@@ -41,13 +44,90 @@ export default function UsuariosPage() {
 
   const getInitials = (name: string) => name ? name.split(' ').filter(Boolean).slice(0,2).map(n => n[0].toUpperCase()).join('') : '?';
 
-  const filteredUsers = users.filter(u => {
-    const term = searchTerm.toLowerCase();
-    return term === '' ||
-      (u.nome_completo && u.nome_completo.toLowerCase().includes(term)) ||
-      (u.email && u.email.toLowerCase().includes(term)) ||
-      (u.cargo && u.cargo.toLowerCase().includes(term));
-  });
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const handleFilter = (key: string, value: string | null) => {
+    setColumnFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredUsers = React.useMemo(() => {
+    let filtrados = users;
+    
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      filtrados = filtrados.filter(u => 
+        (u.nome_completo && u.nome_completo.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.cargo && u.cargo.toLowerCase().includes(q))
+      );
+    }
+
+    Object.entries(columnFilters).forEach(([key, value]) => {
+      if (!value) return;
+      filtrados = filtrados.filter(p => {
+        const parts = key.split('.');
+        let val: any = p;
+        for (const pt of parts) val = val?.[pt];
+        return String(val) === value;
+      });
+    });
+
+    if (!sortConfig) return filtrados;
+    return [...filtrados].sort((a, b) => {
+      let aValue: any = a[sortConfig.key] || '';
+      let bValue: any = b[sortConfig.key] || '';
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [users, searchTerm, sortConfig, columnFilters]);
+
+  const changeStatus = async (userId: string, newStatus: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ status_conta: newStatus })
+      });
+      if (res.ok) {
+        toast.success(`Status atualizado para ${newStatus}`);
+        setMenuOpenId(null);
+        fetchUsers();
+      } else {
+        toast.error('Erro ao atualizar status');
+      }
+    } catch {
+      toast.error('Erro de conexão');
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este colaborador?')) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${userId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      if (res.ok) {
+        toast.success('Colaborador excluído com sucesso');
+        setMenuOpenId(null);
+        fetchUsers();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Erro ao excluir colaborador');
+      }
+    } catch {
+      toast.error('Erro de conexão');
+    }
+  };
 
   return (
     <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
@@ -103,60 +183,119 @@ export default function UsuariosPage() {
 
       {/* Table */}
       <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-left text-sm text-muted-foreground">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
               <tr>
-                <th className="px-6 py-4 rounded-tl-xl">Colaborador</th>
-                <th className="px-6 py-4">Cargo</th>
-                <th className="px-6 py-4">Departamento / Equipe</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right rounded-tr-xl">Ações</th>
+                <DataTableHeader
+                  label="Referência"
+                  sortKey="codigo_perfis"
+                  filterKey="codigo_perfis"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['codigo_perfis']}
+                  onFilter={handleFilter}
+                  className="rounded-tl-xl px-3 py-2"
+                />
+                <DataTableHeader
+                  label="Nome"
+                  sortKey="nome_completo"
+                  filterKey="nome_completo"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['nome_completo']}
+                  onFilter={handleFilter}
+                  className="px-3 py-2"
+                />
+                <DataTableHeader
+                  label="Cargo"
+                  sortKey="cargo"
+                  filterKey="cargo"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['cargo']}
+                  onFilter={handleFilter}
+                  className="px-3 py-2"
+                />
+                <DataTableHeader
+                  label="Departamento"
+                  sortKey="departamento"
+                  filterKey="departamento"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['departamento']}
+                  onFilter={handleFilter}
+                  className="px-3 py-2"
+                />
+                <DataTableHeader
+                  label="Equipe"
+                  sortKey="equipe"
+                  filterKey="equipe"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['equipe']}
+                  onFilter={handleFilter}
+                  className="px-3 py-2"
+                />
+                <DataTableHeader
+                  label="Status"
+                  sortKey="status_conta"
+                  filterKey="status_conta"
+                  data={users}
+                  currentSort={sortConfig}
+                  onSort={requestSort}
+                  currentFilter={columnFilters['status_conta']}
+                  onFilter={handleFilter}
+                  className="px-3 py-2"
+                />
+                <th className="px-3 py-2 text-center rounded-tr-xl">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
                     Nenhum colaborador encontrado.
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map(user => (
-                  <tr key={user.id} className="hover:bg-muted/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-900/50 border border-emerald-500/20 flex items-center justify-center text-emerald-300 font-semibold flex-shrink-0 overflow-hidden">
-                          {user.foto_url ? (
-                             <img src={user.foto_url} alt="Avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            getInitials(user.nome_completo)
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-foreground font-medium">
-                            {user.nome_completo}
-                            {user.matricula && <span className="ml-2 text-[10px] font-normal text-zinc-500 uppercase">#{user.matricula}</span>}
-                          </div>
-                          <div className="text-xs text-zinc-500 mt-0.5">{user.email}</div>
-                        </div>
+                filteredUsers.map(user => {
+                  const hasProjects = user.colaborador_projetos && user.colaborador_projetos.length > 0;
+                  return (
+                  <tr 
+                    key={user.id} 
+                    onClick={() => router.push(`/dashboard/administracao/perfis/usuarios/${user.id}`)}
+                    className="hover:bg-muted/50 transition-colors group cursor-pointer"
+                  >
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-zinc-300 font-mono text-xs">{user.codigo_perfis || '-'}</div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-foreground font-medium whitespace-nowrap">
+                        {user.nome_completo}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <div className="text-zinc-300">{user.cargo || '-'}</div>
-                      <div className="text-xs text-zinc-500 mt-0.5">{user.filial || 'Matriz'}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <div className="text-zinc-300">{user.departamento || '-'}</div>
-                      <div className="text-xs text-zinc-500 mt-0.5">{user.equipe || 'Sem equipe'}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-zinc-300">{user.equipe || '-'}</div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
                         user.status_conta === 'Ativo' 
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
@@ -166,17 +305,47 @@ export default function UsuariosPage() {
                         {user.status_conta}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-2 whitespace-nowrap text-center relative" onClick={e => e.stopPropagation()}>
                       <button 
-                        onClick={() => router.push(`/dashboard/administracao/perfis/usuarios/${user.id}`)}
-                        className="inline-flex items-center justify-center p-2 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
-                        title="Ver / Editar Perfil"
+                        onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === user.id ? null : user.id); }}
+                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/50 rounded-md transition-all focus:outline-none"
                       >
-                        <ChevronRight className="w-5 h-5" />
+                        <MoreVertical className="w-4 h-4" />
                       </button>
+                      
+                      {menuOpenId === user.id && (
+                        <div className="absolute right-8 top-10 w-48 bg-background border border-border/80 rounded-lg shadow-xl py-1 z-[999] text-left animate-in fade-in zoom-in-95 duration-100">
+                          <button onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/administracao/perfis/usuarios/${user.id}`); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-muted flex items-center gap-2">
+                            <Edit className="w-3.5 h-3.5" /> Ver / Editar Perfil
+                          </button>
+                          
+                          {user.status_conta === 'Ativo' ? (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(user.id, 'Inativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-zinc-400 hover:bg-muted flex items-center gap-2">
+                              <PowerOff className="w-3.5 h-3.5" /> Inativar Colaborador
+                            </button>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(user.id, 'Ativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-emerald-400 hover:bg-muted flex items-center gap-2">
+                              <Power className="w-3.5 h-3.5" /> Ativar Colaborador
+                            </button>
+                          )}
+                          
+                          <div className="h-[1px] w-full bg-border/50 my-1" />
+                          
+                          {hasProjects ? (
+                            <div className="px-3 py-2 text-[11px] font-medium text-zinc-500 flex items-center gap-2 cursor-not-allowed" title="Não é possível excluir usuário vinculado a projetos. Inative-o em vez disso.">
+                              <Trash2 className="w-3.5 h-3.5" /> Excluir (Bloqueado)
+                            </div>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-500/10 flex items-center gap-2">
+                              <Trash2 className="w-3.5 h-3.5" /> Excluir Permanentemente
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

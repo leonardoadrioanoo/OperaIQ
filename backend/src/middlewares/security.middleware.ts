@@ -114,11 +114,15 @@ export function logSecurityEvent(
 // ──────────────────────────────────────────────────────────────────────────────
 export function requestSizeGuard(req: Request, res: Response, next: NextFunction) {
   const contentLength = parseInt(req.headers['content-length'] || '0');
-  const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+  let MAX_BYTES = 5 * 1024 * 1024; // 5MB
+
+  if (req.originalUrl.includes('/upload')) {
+    MAX_BYTES = 100 * 1024 * 1024; // 100MB para uploads
+  }
 
   if (contentLength > MAX_BYTES) {
     logSecurityEvent('OVERSIZED_PAYLOAD', req, { size: contentLength });
-    return res.status(413).json({ error: 'Payload muito grande. Limite é 5MB.' });
+    return res.status(413).json({ error: `Payload muito grande. Limite é ${MAX_BYTES / (1024 * 1024)}MB.` });
   }
   next();
 }

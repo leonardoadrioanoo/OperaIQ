@@ -11,6 +11,7 @@ import { Breadcrumb } from '@/components/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { ExecucoesTabs } from '../ExecucoesTabs';
 
 const API = 'http://localhost:3002';
 
@@ -187,23 +188,31 @@ export default function KanbanPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500 pb-12 h-full flex flex-col min-h-[calc(100vh-6rem)]">
+    <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12 h-full flex flex-col min-h-[calc(100vh-6rem)]">
       
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border/50 pb-4 shrink-0">
-        <div>
+      <div className="flex flex-col border-b border-border/50 pb-4 shrink-0">
+        
+        {/* Top Row: Breadcrumb + Tabs */}
+        <div className="flex justify-between items-start w-full mb-2">
           <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Kanban do Portfólio' }]} />
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2 mt-2">
-            <KanbanSquare className="w-6 h-6 text-emerald-500" />
-            Quadro Kanban
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Arraste e solte os projetos para atualizar as fases de execução em tempo real.
-          </p>
+          <ExecucoesTabs />
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          {/* QUICK FILTERS SAAS */}
-          <div className="hidden lg:flex items-center gap-2 mr-2 border-r border-border/50 pr-4">
+
+        {/* Bottom Row: Title + Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
+              <KanbanSquare className="w-6 h-6 text-emerald-500" />
+              Quadro Kanban
+            </h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Arraste e solte os projetos para atualizar as fases de execução em tempo real.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* QUICK FILTERS SAAS */}
+          <div className="hidden xl:flex items-center gap-2 mx-2 border-x border-border/50 px-4">
             <button 
               onClick={() => setFilterMeus(!filterMeus)}
               className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${filterMeus ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted'}`}
@@ -237,6 +246,7 @@ export default function KanbanPage() {
           <Link href="/dashboard/projetos/visao-geral" className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm">
             <Plus className="w-4 h-4" /> Novo Projeto
           </Link>
+        </div>
         </div>
       </div>
 

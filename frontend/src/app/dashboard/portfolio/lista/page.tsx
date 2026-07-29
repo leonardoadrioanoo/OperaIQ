@@ -126,23 +126,23 @@ export default function PortfolioListaPage() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(val);
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="w-full space-y-8 animate-in fade-in duration-500 pb-12">
       
       {/* HEADER MINIMALISTA */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-6">
+      <div className="flex items-center justify-between border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight flex items-center gap-3">
             <FolderOpen className="w-5 h-5 text-emerald-500" />
             Portflios Estratgicos
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Agrupamentos e oramentos de alto nvel.
           </p>
         </div>
 
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-emerald-500 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-emerald-600 text-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-emerald-500 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Novo Portflio
@@ -151,11 +151,11 @@ export default function PortfolioListaPage() {
 
       {/* SMART FILTERS SIMPLES */}
       <div className="flex items-center gap-2">
-        <div className="bg-black/20 border border-white/5 rounded-md px-3 py-1.5 flex items-center gap-2 text-sm text-slate-300 w-64 focus-within:border-emerald-500 transition-colors">
-          <Search className="w-4 h-4 text-slate-500" />
-          <input type="text" placeholder="Buscar portflios..." className="bg-transparent border-none outline-none w-full placeholder:text-slate-600 text-white" />
+        <div className="bg-background border border-border/60 rounded-md px-3 py-1.5 flex items-center gap-2 text-sm text-muted-foreground w-64 focus-within:border-emerald-500 transition-colors">
+          <Search className="w-4 h-4 text-muted-foreground" />
+          <input type="text" placeholder="Buscar portflios..." className="bg-transparent border-none outline-none w-full placeholder:text-muted-foreground text-foreground" />
         </div>
-        <button className="bg-white/5 hover:bg-white/10 border border-transparent rounded-md px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-slate-300 transition-colors">
+        <button className="bg-muted hover:bg-border border border-transparent rounded-md px-3 py-1.5 flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors">
           <Filter className="w-3.5 h-3.5" /> Filtrar
         </button>
       </div>
@@ -163,30 +163,30 @@ export default function PortfolioListaPage() {
       {/* LISTAGEM FLAT */}
       <div className="space-y-1">
         {isLoading ? (
-          <div className="text-sm text-slate-500 animate-pulse">Carregando dados...</div>
+          <div className="text-sm text-muted-foreground animate-pulse">Carregando dados...</div>
         ) : portfolios.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-white/10 rounded-lg">
-            <FolderOpen className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 text-sm">Nenhum portflio cadastrado.</p>
+          <div className="text-center py-12 border border-dashed border-border rounded-lg">
+            <FolderOpen className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">Nenhum portflio cadastrado.</p>
           </div>
         ) : (
           portfolios.map((port) => (
             <div 
               key={port.id} 
               onClick={() => router.push(`/dashboard/portfolio/${port.id}`)}
-              className="border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] rounded-lg p-4 transition-colors flex items-center justify-between group cursor-pointer"
+              className="border border-border/60 bg-background hover:bg-muted/50 rounded-lg p-4 transition-colors flex items-center justify-between group cursor-pointer"
             >
               
               <div className="flex flex-col flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-[15px] font-medium text-slate-200">{port.titulo}</h3>
-                  <span className="bg-white/5 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded text-slate-400">
+                  <h3 className="text-[15px] font-medium text-foreground">{port.titulo}</h3>
+                  <span className="bg-muted text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded text-muted-foreground">
                     {port.status}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mb-2 truncate max-w-lg">{port.descricao || 'Sem descrio.'}</p>
-                <div className="flex items-center gap-4 text-xs text-slate-400">
-                  <span>Sponsor: <strong className="text-slate-300 font-medium">{port.sponsor?.nome_completo || 'N/A'}</strong></span>
+                <p className="text-xs text-muted-foreground mb-2 truncate max-w-lg">{port.descricao || 'Sem descrio.'}</p>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>Sponsor: <strong className="text-muted-foreground font-medium">{port.sponsor?.nome_completo || 'N/A'}</strong></span>
                   <span></span>
                   <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> Projetos: 0</span>
                 </div>
@@ -194,12 +194,12 @@ export default function PortfolioListaPage() {
 
               <div className="flex items-center gap-8 text-right shrink-0">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Budget</span>
-                  <span className="text-sm font-semibold text-white">
-                    {formatCurrency(port.consumed || 0)} <span className="text-slate-500 font-normal">/ {formatCurrency(port.orcamento_alocado || 0)}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Budget</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {formatCurrency(port.consumed || 0)} <span className="text-muted-foreground font-normal">/ {formatCurrency(port.orcamento_alocado || 0)}</span>
                   </span>
                 </div>
-                <button className="text-slate-600 hover:text-white transition-colors opacity-0 group-hover:opacity-100 p-2">
+                <button className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 p-2">
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
               </div>
@@ -212,40 +212,40 @@ export default function PortfolioListaPage() {
       {/* MODAL PADRO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#0f141f] border border-white/10 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="p-5 border-b border-white/5">
-              <h3 className="text-lg font-medium text-white">Criar Novo Portflio</h3>
+          <div className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-5 border-b border-border/60">
+              <h3 className="text-lg font-medium text-foreground">Criar Novo Portflio</h3>
             </div>
             
             <form onSubmit={handleCreate} className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Ttulo do Portflio</label>
+                <label className="text-xs font-medium text-muted-foreground">Ttulo do Portflio</label>
                 <input 
                   type="text" 
                   required
                   value={novoTitulo}
                   onChange={e => setNovoTitulo(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Orçamento Alocado (R$)</label>
+                <label className="text-xs font-medium text-muted-foreground">Orçamento Alocado (R$)</label>
                 <input 
                   type="number" 
                   value={novoOrcamento}
                   onChange={e => setNovoOrcamento(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">Status</label>
+                  <label className="text-xs font-medium text-muted-foreground">Status</label>
                   <select 
                     value={novoStatus}
                     onChange={e => setNovoStatus(e.target.value)}
-                    className="w-full bg-[#161b22] border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
                   >
                     <option value="Ativo">Ativo</option>
                     <option value="Em Planejamento">Em Planejamento</option>
@@ -253,11 +253,11 @@ export default function PortfolioListaPage() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">Sponsor Executivo</label>
+                  <label className="text-xs font-medium text-muted-foreground">Sponsor Executivo</label>
                   <select 
                     value={novoSponsor}
                     onChange={e => setNovoSponsor(e.target.value)}
-                    className="w-full bg-[#161b22] border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors"
                   >
                     <option value="">Selecione (Opcional)</option>
                     {colaboradores.map(c => (
@@ -268,11 +268,11 @@ export default function PortfolioListaPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Descrição (Opcional)</label>
+                <label className="text-xs font-medium text-muted-foreground">Descrição (Opcional)</label>
                 <textarea 
                   value={novaDescricao}
                   onChange={e => setNovaDescricao(e.target.value)}
-                  className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors min-h-[80px] resize-none"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-emerald-500 transition-colors min-h-[80px] resize-none"
                 />
               </div>
 
@@ -280,13 +280,13 @@ export default function PortfolioListaPage() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-medium transition-colors"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground rounded-md text-sm font-medium transition-colors"
                 >
                   Criar Portflio
                 </button>

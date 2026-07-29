@@ -8,12 +8,12 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import {
   Users, Plus, Search, Edit2, Trash2, X, Loader2, Check,
-  ChevronRight, UserPlus, UserMinus, Crown
+  ChevronRight, UserPlus, UserMinus, Crown, MoreVertical, Edit, Power, PowerOff
 } from 'lucide-react';
 import Link from 'next/link';
 import { getModulePermissions } from '@/lib/permissions';
 import { useAuthStore } from '@/store/authStore';
-import { Input, Select, Textarea } from '@/components/ui';
+import { Input, Select, Textarea, DataTableHeader } from '@/components/ui';
 import FormField from '@/components/ui/form-field';
 
 const TIPOS_EQUIPE = ['Time', 'Squad', 'Comitê', 'Grupo de Trabalho', 'Comunidade', 'Outro'];
@@ -23,8 +23,8 @@ const equipeSchema = z.object({
   nome: z.string().min(2, 'Obrigatório'),
   tipo: z.string().min(1, 'Obrigatório'),
   descricao: z.string().optional(),
-  lider_id: z.string().optional().or(z.literal('')),
-  departamento_id: z.string().optional().or(z.literal('')),
+  lider_nome: z.string().optional().or(z.literal('')),
+  departamento_nome: z.string().optional().or(z.literal('')),
   status: z.string().default('ativo'),
 });
 
@@ -40,6 +40,8 @@ export default function EquipesPage() {
   const [isEquipeModalOpen, setIsEquipeModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [liderNome, setLiderNome] = useState('');
+  const [departamentoNome, setDepartamentoNome] = useState('');
 
   // Modal de integrantes (detalhe da equipe)
   const [selectedEquipe, setSelectedEquipe] = useState<any | null>(null);
@@ -48,6 +50,9 @@ export default function EquipesPage() {
   const [novoIntegrantePapel, setNovoIntegrantePapel] = useState('Colaborador');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
@@ -97,17 +102,21 @@ export default function EquipesPage() {
   const openModal = (equipe?: any) => {
     if (equipe) {
       setEditingId(equipe.id);
+      setLiderNome(equipe.lider?.nome_completo || '');
+      setDepartamentoNome(equipe.departamento?.nome || '');
       reset({
         nome: equipe.nome,
         tipo: equipe.tipo,
         descricao: equipe.descricao || '',
-        lider_id: equipe.lider_id || '',
-        departamento_id: equipe.departamento_id || '',
+        lider_nome: equipe.lider?.nome_completo || '',
+        departamento_nome: equipe.departamento?.nome || '',
         status: equipe.status || 'ativo'
       });
     } else {
       setEditingId(null);
-      reset({ status: 'ativo', tipo: 'Time', lider_id: '', departamento_id: '' });
+      setLiderNome('');
+      setDepartamentoNome('');
+      reset({ status: 'ativo', tipo: 'Time', lider_nome: '', departamento_nome: '' });
     }
     setIsEquipeModalOpen(true);
   };
@@ -117,11 +126,42 @@ export default function EquipesPage() {
     setIsDetailOpen(true);
   };
 
-  const onSubmit = async (data: EquipeForm) => {
+    const onSubmit = async (data: EquipeForm) => {
     setIsSaving(true);
     try {
       const session = await getSession();
       if (!session) return;
+
+      let lider_id = '';
+      if (data.lider_nome) {
+        const liderMatch = colaboradores.find(c => c.nome_completo.toLowerCase() === data.lider_nome!.toLowerCase());
+        if (!liderMatch) {
+          toast.error(`Líder "${data.lider_nome}" não encontrado.`);
+          setIsSaving(false);
+          return;
+        }
+        lider_id = liderMatch.id;
+      }
+
+      let departamento_id = '';
+      if (data.departamento_nome) {
+        const depMatch = departamentos.find(d => d.nome.toLowerCase() === data.departamento_nome!.toLowerCase());
+        if (!depMatch) {
+          toast.error(`Departamento "${data.departamento_nome}" não encontrado.`);
+          setIsSaving(false);
+          return;
+        }
+        departamento_id = depMatch.id;
+      }
+
+      const payload = {
+        nome: data.nome,
+        tipo: data.tipo,
+        descricao: data.descricao,
+        status: data.status,
+        lider_id,
+        departamento_id
+      };
 
       const url = editingId ? `http://localhost:3002/api/equipes/${editingId}` : `http://localhost:3002/api/equipes`;
       const method = editingId ? 'PUT' : 'POST';
@@ -129,7 +169,7 @@ export default function EquipesPage() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -205,11 +245,70 @@ export default function EquipesPage() {
     } catch { toast.error('Erro de conexão.'); }
   };
 
-  const filteredEquipes = equipes.filter(e => 
-    searchTerm === '' || 
-    e.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    e.tipo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const changeStatus = async (id: string, currentEquipe: any, newStatus: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/equipes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ ...currentEquipe, lider_id: currentEquipe.lider_id || undefined, departamento_id: currentEquipe.departamento_id || undefined, status: newStatus })
+      });
+      if (res.ok) {
+        toast.success(`Status atualizado para ${newStatus}`);
+        setMenuOpenId(null);
+        fetchData();
+      } else {
+        toast.error('Erro ao atualizar status');
+      }
+    } catch {
+      toast.error('Erro de conexão');
+    }
+  };
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    setSortConfig({ key, direction });
+  };
+
+  const handleFilter = (key: string, value: string | null) => {
+    setColumnFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredEquipes = React.useMemo(() => {
+    let filtrados = equipes;
+    
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      filtrados = filtrados.filter(e => 
+        e.nome.toLowerCase().includes(q) || 
+        e.tipo.toLowerCase().includes(q)
+      );
+    }
+
+    Object.entries(columnFilters).forEach(([key, value]) => {
+      if (!value) return;
+      filtrados = filtrados.filter(p => {
+        const parts = key.split('.');
+        let val: any = p;
+        for (const pt of parts) val = val?.[pt];
+        return String(val) === value;
+      });
+    });
+
+    if (!sortConfig) return filtrados;
+    return [...filtrados].sort((a, b) => {
+      let aValue: any = a[sortConfig.key] || '';
+      let bValue: any = b[sortConfig.key] || '';
+      if (sortConfig.key === 'lider') { aValue = a.lider?.nome_completo || ''; bValue = b.lider?.nome_completo || ''; }
+      if (sortConfig.key === 'departamento') { aValue = a.departamento?.nome || ''; bValue = b.departamento?.nome || ''; }
+      if (sortConfig.key === 'membros') { aValue = a.equipe_integrantes?.length || 0; bValue = b.equipe_integrantes?.length || 0; }
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [equipes, searchTerm, sortConfig, columnFilters]);
 
   const TIPO_COLORS: Record<string, string> = {
     'Time': 'bg-blue-500/10 text-blue-400',
@@ -228,17 +327,17 @@ export default function EquipesPage() {
           <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
             <span>Administração</span>
             <span>/</span>
-            <Link href="/dashboard/administracao/estrutura" className="hover:text-fuchsia-400">Estrutura Organizacional</Link>
+            <Link href="/dashboard/administracao/estrutura" className="hover:text-emerald-400">Estrutura Organizacional</Link>
             <span>/</span>
             <span className="text-zinc-300">Equipes</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6 text-fuchsia-500" />
+            <Users className="w-6 h-6 text-emerald-500" />
             Equipes
           </h1>
         </div>
         {perms.p_criar && (
-          <button onClick={() => openModal()} className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-fuchsia-900/20 transition-all">
+          <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
             <Plus className="w-4 h-4" />
             Nova Equipe
           </button>
@@ -248,7 +347,7 @@ export default function EquipesPage() {
       {/* Tabela */}
       <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
-          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-fuchsia-500/30 transition-colors w-full max-w-sm">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
             <Search className="w-4 h-4 text-zinc-500 shrink-0" />
             <input
               type="text"
@@ -267,57 +366,135 @@ export default function EquipesPage() {
         </div>
 
         {isLoading ? (
-          <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-fuchsia-500" /></div>
+          <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[300px]">
             <table className="w-full text-left text-sm text-muted-foreground">
               <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
                 <tr>
-                  <th className="px-4 py-3 rounded-tl-lg">Equipe</th>
-                  <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Líder</th>
-                  <th className="px-4 py-3">Departamento</th>
-                  <th className="px-4 py-3 text-center">Membros</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right rounded-tr-lg">Ações</th>
+                  <DataTableHeader
+                    label="Equipe"
+                    sortKey="nome"
+                    filterKey="nome"
+                    data={equipes}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['nome']}
+                    onFilter={handleFilter}
+                    className="rounded-tl-lg"
+                  />
+                  <DataTableHeader
+                    label="Tipo"
+                    sortKey="tipo"
+                    filterKey="tipo"
+                    data={equipes}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['tipo']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Líder"
+                    sortKey="lider"
+                    filterKey="lider.nome_completo"
+                    data={equipes}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['lider.nome_completo']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Departamento"
+                    sortKey="departamento"
+                    filterKey="departamento.nome"
+                    data={equipes}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['departamento.nome']}
+                    onFilter={handleFilter}
+                  />
+                  <DataTableHeader
+                    label="Membros"
+                    sortKey="membros"
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    align="center"
+                  />
+                  <DataTableHeader
+                    label="Status"
+                    sortKey="status"
+                    filterKey="status"
+                    data={equipes}
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    currentFilter={columnFilters['status']}
+                    onFilter={handleFilter}
+                    align="center"
+                  />
+                  <th className="px-3 py-2 text-center rounded-tr-lg whitespace-nowrap">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredEquipes.map(equipe => (
-                  <tr key={equipe.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => openDetail(equipe)}>
-                    <td className="px-4 py-3 font-medium text-foreground">{equipe.nome}</td>
-                    <td className="px-4 py-3">
+                  <tr key={equipe.id} className="hover:bg-muted/50 cursor-pointer group" onClick={() => openModal(equipe)}>
+                    <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{equipe.nome}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${TIPO_COLORS[equipe.tipo] || TIPO_COLORS['Outro']}`}>
                         {equipe.tipo}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{equipe.lider?.nome_completo || '-'}</td>
-                    <td className="px-4 py-3">{equipe.departamento?.nome || '-'}</td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 whitespace-nowrap">{equipe.lider?.nome_completo || '-'}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{equipe.departamento?.nome || '-'}</td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 text-xs">
                         <Users className="w-3.5 h-3.5 text-zinc-500" />
                         {equipe.equipe_integrantes?.length || 0}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${equipe.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
                         {equipe.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2">
-                        {perms.p_editar && (
-                          <button onClick={(e) => { e.stopPropagation(); openModal(equipe); }} className="p-1.5 text-zinc-500 hover:text-fuchsia-400 hover:bg-fuchsia-400/10 rounded transition-colors">
-                            <Edit2 className="w-4 h-4" />
+                    <td className="px-3 py-2 text-center relative whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === equipe.id ? null : equipe.id); }}
+                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/50 rounded-md transition-all focus:outline-none"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      
+                      {menuOpenId === equipe.id && (
+                        <div className="absolute right-8 top-10 w-48 bg-background border border-border/80 rounded-lg shadow-xl py-1 z-[999] text-left animate-in fade-in zoom-in-95 duration-100">
+                          <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); openDetail(equipe); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-muted flex items-center gap-2">
+                            <ChevronRight className="w-3.5 h-3.5" /> Ver Detalhes
                           </button>
-                        )}
-                        {perms.p_excluir && (
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(equipe.id); }} className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                        <ChevronRight className="w-4 h-4 text-zinc-600" />
-                      </div>
+                          {perms.p_editar && (
+                            <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); openModal(equipe); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-foreground hover:bg-muted flex items-center gap-2">
+                              <Edit2 className="w-3.5 h-3.5" /> Editar Equipe
+                            </button>
+                          )}
+                          
+                          {equipe.status === 'ativo' ? (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(equipe.id, equipe, 'inativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-zinc-400 hover:bg-muted flex items-center gap-2">
+                              <PowerOff className="w-3.5 h-3.5" /> Inativar Equipe
+                            </button>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); changeStatus(equipe.id, equipe, 'ativo'); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-emerald-400 hover:bg-muted flex items-center gap-2">
+                              <Power className="w-3.5 h-3.5" /> Ativar Equipe
+                            </button>
+                          )}
+
+                          {perms.p_excluir && (
+                            <>
+                              <div className="h-[1px] w-full bg-border/50 my-1" />
+                              <button onClick={(e) => { e.stopPropagation(); setMenuOpenId(null); handleDelete(equipe.id); }} className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-500/10 flex items-center gap-2">
+                                <Trash2 className="w-3.5 h-3.5" /> Excluir Permanentemente
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -336,7 +513,7 @@ export default function EquipesPage() {
           <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Users className="w-5 h-5 text-fuchsia-500" />
+                <Users className="w-5 h-5 text-emerald-500" />
                 {editingId ? 'Editar Equipe' : 'Nova Equipe'}
               </h3>
               <button onClick={() => setIsEquipeModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
@@ -345,12 +522,12 @@ export default function EquipesPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2 space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Nome da Equipe *</label>
-                  <input {...register('nome')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50" />
+                  <input {...register('nome')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50" />
                   {errors.nome && <span className="text-xs text-rose-400">{errors.nome.message}</span>}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Tipo *</label>
-                  <select {...register('tipo')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                  <select {...register('tipo')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50">
                     {TIPOS_EQUIPE.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -358,30 +535,46 @@ export default function EquipesPage() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-zinc-400">Descrição</label>
-                <textarea {...register('descricao')} rows={2} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50" />
+                <textarea {...register('descricao')} rows={2} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Líder</label>
-                  <select {...register('lider_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
-                    <option value="">Selecione um líder...</option>
-                    {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
-                  </select>
+                  <input 
+                    {...register('lider_nome')}
+                    value={liderNome}
+                    onChange={e => { setLiderNome(e.target.value); register('lider_nome').onChange(e); }}
+                    list="equipes-lider-list"
+                    placeholder="Pesquisar líder..."
+                    className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50"
+                    autoComplete="off"
+                  />
+                  <datalist id="equipes-lider-list">
+                    {colaboradores.map(c => <option key={c.id} value={c.nome_completo} />)}
+                  </datalist>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Departamento</label>
-                  <select {...register('departamento_id')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
-                    <option value="">Nenhum (Raiz)</option>
-                    {departamentos.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
-                  </select>
+                  <input 
+                    {...register('departamento_nome')}
+                    value={departamentoNome}
+                    onChange={e => { setDepartamentoNome(e.target.value); register('departamento_nome').onChange(e); }}
+                    list="equipes-departamento-list"
+                    placeholder="Pesquisar departamento..."
+                    className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50"
+                    autoComplete="off"
+                  />
+                  <datalist id="equipes-departamento-list">
+                    {departamentos.map(d => <option key={d.id} value={d.nome} />)}
+                  </datalist>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-zinc-400">Status</label>
-                  <select {...register('status')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-fuchsia-500/50">
+                  <select {...register('status')} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50">
                     <option value="ativo">Ativo</option>
                     <option value="inativo">Inativo</option>
                   </select>
@@ -390,7 +583,7 @@ export default function EquipesPage() {
 
               <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
                 <button type="button" onClick={() => setIsEquipeModalOpen(false)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white transition-colors">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">
+                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all">
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Salvar Equipe
                 </button>
@@ -423,7 +616,37 @@ export default function EquipesPage() {
             </div>
 
             <div className="overflow-y-auto flex-1 p-5 space-y-5">
+              
+              {/* Informações da Equipe */}
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-foreground border-b border-white/10 pb-2">Informações da Equipe</h4>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-zinc-500 block text-xs">Departamento</span>
+                    <span className="text-zinc-300">{selectedEquipe.departamento?.nome || 'Raiz'}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-xs">Status</span>
+                    <span className={`inline-block px-2 py-0.5 mt-1 rounded-full text-[10px] font-semibold uppercase ${selectedEquipe.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
+                      {selectedEquipe.status}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedEquipe.descricao && (
+                  <div>
+                    <span className="text-zinc-500 block text-xs">Descrição</span>
+                    <p className="text-zinc-300 mt-1">{selectedEquipe.descricao}</p>
+                  </div>
+                )}
+              </div>
+
               {/* Adicionar Integrante */}
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-foreground">Integrantes da Equipe</h4>
+              </div>
+              
               {perms.p_editar && (
                 <div className="flex gap-2">
                   <Select
@@ -446,7 +669,7 @@ export default function EquipesPage() {
                   <button
                     onClick={handleAddMember}
                     disabled={!novoIntegranteId || isAddingMember}
-                    className="p-2.5 bg-fuchsia-600 hover:bg-fuchsia-700 text-white rounded-lg disabled:opacity-40 transition-all"
+                    className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-40 transition-all"
                   >
                     {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                   </button>

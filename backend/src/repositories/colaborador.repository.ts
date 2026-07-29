@@ -15,7 +15,7 @@ export class ColaboradorRepository {
       .from('perfis')
       .select(
         'id, nome_completo, cargo, filial, status_conta, email, foto_url, is_admin, ' +
-        'departamento, equipe, matricula, gestor_id, perfil_acesso, sys_perfil_acesso_id'
+        'departamento, equipe, matricula, gestor_id, perfil_acesso, sys_perfil_acesso_id, codigo_perfis'
       )
       .eq('empresa_id', empresaId)
       .order('nome_completo', { ascending: true });

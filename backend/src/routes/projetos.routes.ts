@@ -10,7 +10,7 @@ const BUCKET = 'projetos-arquivos';
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
 });
 
 // Helper: extrai empresa_id do perfil autenticado ou via query ao DB
@@ -41,7 +41,8 @@ const listProjetos: RequestHandler = async (req: any, res: Response): Promise<vo
         *,
         gerente:gerente_id(id, nome_completo, email),
         responsavel:responsavel_id(id, nome_completo, email),
-        departamento:departamento_id(id, nome)
+        departamento:departamento_id(id, nome),
+        equipe:equipe_id(id, nome)
       `)
       .eq('empresa_id', empresa_id)
       .order('criado_em', { ascending: false });
@@ -245,7 +246,7 @@ const updateProjeto: RequestHandler = async (req: any, res: Response): Promise<v
 
     const { data: existing, error: errCheck } = await supabaseAdmin
       .from('sys_projetos')
-      .select('id, codigo, anexos')
+      .select('*')
       .eq('id', id)
       .eq('empresa_id', empresa_id)
       .single();
@@ -325,6 +326,33 @@ const updateProjeto: RequestHandler = async (req: any, res: Response): Promise<v
 
     if (error) throw error;
     
+    // ========================================================
+    // Registrar Histórico de Alterações (Activities)
+    // ========================================================
+    const changedFields: any = {};
+    for (const key of Object.keys(updates)) {
+      if (key === 'anexos') continue;
+      if (JSON.stringify(updates[key]) !== JSON.stringify(existing[key])) {
+        changedFields[key] = { from: existing[key], to: updates[key] };
+      }
+    }
+
+    if (Object.keys(changedFields).length > 0) {
+      let textoHistorico = 'atualizou as informações do projeto.';
+      if (changedFields.status) textoHistorico = 'alterou o Status';
+      else if (changedFields.responsavel_id) textoHistorico = 'alterou o Responsável';
+      else if (changedFields.descricao) textoHistorico = 'atualizou a Descrição';
+
+      await supabaseAdmin.from('sys_projetos_atividades').insert({
+        projeto_id: id,
+        autor_id: req.userId,
+        tipo: 'historico',
+        texto: textoHistorico,
+        detalhes: changedFields
+      });
+    }
+    // ========================================================
+    
     await AuditoriaService.log({
       empresa_id,
       ator_id: req.userId!,
@@ -374,6 +402,108 @@ const deleteProjeto: RequestHandler = async (req: any, res: Response): Promise<v
 };
 
 // ============================================================================
+// 6. Upload Mídia Descrição
+// ============================================================================
+const uploadMidiaDescricao: RequestHandler = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const empresa_id = await getEmpresaId(req);
+    const file = req.file as Express.Multer.File;
+
+    if (!file) {
+      res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+      return;
+    }
+
+    const uniqueHash = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-]/g, '_');
+    const storagePath = `${empresa_id}/editor/${id}_${uniqueHash}_${safeName}`;
+    
+    const { error: storageError } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .upload(storagePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false,
+      });
+
+    if (storageError) throw storageError;
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from(BUCKET)
+      .getPublicUrl(storagePath);
+
+    res.json({ url: urlData.publicUrl, type: file.mimetype, name: file.originalname });
+  } catch (err: any) {
+    console.error('Erro ao fazer upload de mídia:', err.message);
+    res.status(500).json({ error: `Erro no servidor: ${err.message}` });
+  }
+};
+
+// ============================================================================
+// 7. Atividades (Histórico e Comentários)
+// ============================================================================
+const getAtividades: RequestHandler = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const empresa_id = await getEmpresaId(req);
+
+    // Verificar se projeto pertence à empresa
+    const { data: proj, error: errProj } = await supabaseAdmin
+      .from('sys_projetos')
+      .select('id')
+      .eq('id', id)
+      .eq('empresa_id', empresa_id)
+      .single();
+
+    if (errProj || !proj) {
+      res.status(404).json({ error: 'Projeto não encontrado.' });
+      return;
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('sys_projetos_atividades')
+      .select(`
+        id, tipo, texto, detalhes, criado_em,
+        autor:perfis!autor_id(nome_completo)
+      `)
+      .eq('projeto_id', id)
+      .order('criado_em', { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const postComentario: RequestHandler = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { texto } = req.body;
+    const empresa_id = await getEmpresaId(req);
+
+    const { data, error } = await supabaseAdmin
+      .from('sys_projetos_atividades')
+      .insert({
+        projeto_id: id,
+        autor_id: req.userId,
+        tipo: 'comentario',
+        texto
+      })
+      .select(`
+        id, tipo, texto, detalhes, criado_em,
+        autor:perfis!autor_id(nome_completo)
+      `)
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ============================================================================
 // Registro das rotas
 // ============================================================================
 router.use(authMiddleware);
@@ -382,6 +512,10 @@ router.get('/',     requirePermission('Projetos', 'p_visualizar'), listProjetos)
 router.get('/:id',  requirePermission('Projetos', 'p_visualizar'), getProjetoById);
 router.post('/',    requirePermission('Projetos', 'p_criar'),      upload.array('arquivos'), createProjeto);
 router.put('/:id',  requirePermission('Projetos', 'p_editar'),     upload.array('arquivos'), updateProjeto);
+router.post('/:id/upload-midia', requirePermission('Projetos', 'p_editar'), upload.single('arquivo'), uploadMidiaDescricao);
 router.delete('/:id', requirePermission('Projetos', 'p_excluir'),  deleteProjeto);
+
+router.get('/:id/atividades', requirePermission('Projetos', 'p_visualizar'), getAtividades);
+router.post('/:id/comentarios', requirePermission('Projetos', 'p_editar'), postComentario);
 
 export default router;

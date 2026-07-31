@@ -111,12 +111,8 @@ export const MODULOS: ModuloDefinition[] = [
     key: 'Portfólio',
     title: 'Portfólio',
     icon: 'FolderOpen',
-    href: '/dashboard/portfolio',
+    href: '/dashboard/portfolio/lista',
     acoes: ['p_visualizar', 'p_criar', 'p_editar', 'p_excluir', 'p_aprovar', 'p_exportar'],
-    submenus: [
-      { title: 'Meus Portfólios', href: '/dashboard/portfolio/lista' },
-      { title: 'Objetivos Estratégicos', href: '/dashboard/portfolio/objetivos' },
-    ],
   },
   {
     key: 'Roadmap',

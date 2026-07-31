@@ -258,15 +258,12 @@ export default function ExecucoesListaPage() {
       <div className="flex flex-col">
         
         {/* Top Row */}
-        <div className="flex flex-col w-full mb-4">
-          <div className="mb-4">
-            <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Rastreamento de Entregas' }]} />
-          </div>
-          <ExecucoesTabs />
+        <div className="flex justify-between items-start w-full mb-2">
+          <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Rastreamento de Entregas' }]} />
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-3">
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Controladoria de Execução
@@ -308,6 +305,11 @@ export default function ExecucoesListaPage() {
             <Download className="w-3.5 h-3.5" /> Exportar (CSV)
           </button>
         </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="w-full mb-2">
+          <ExecucoesTabs />
         </div>
       </div>
 

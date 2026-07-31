@@ -108,28 +108,30 @@ export default function RecursosAlocacaoPage() {
   }, [workloadData]);
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12">
       
-      {/* HEADER PRINCIPAL */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-border/50 pb-4">
-        <div className="pt-2 md:pt-0">
-          <Breadcrumb items={[{ label: 'Recursos' }, { label: 'Matriz de Alocação (Swimlanes)' }]} />
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3 mt-2">
-            <LayoutGrid className="w-7 h-7 text-emerald-500" />
+      {/* 1. HEADER B2B MINIMALISTA */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2 border-b border-border/40 pb-6">
+        <div className="w-full">
+          <div className="w-full mb-4">
+            <Breadcrumb items={[{ label: 'Recursos' }, { label: 'Matriz de Alocação' }]} />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Matriz Preditiva de Workload
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Diagnóstico visual de gargalos, sobrecarga e disponibilidade de liderança técnica.
+          <p className="text-xs text-muted-foreground mt-1">
+            Diagnóstico técnico de gargalos, sobrecarga e disponibilidade de recursos.
           </p>
         </div>
-        <div className="relative w-full md:w-80 z-10">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        
+        <div className="relative w-full md:w-80 shrink-0">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Filtrar matriz por pessoa ou projeto..."
+            placeholder="Filtrar por recurso ou projeto..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full h-10 bg-background border border-border/60 rounded-lg pl-9 pr-4 text-sm text-foreground focus:outline-none focus:border-emerald-500/50 shadow-sm transition-colors"
+            className="w-full h-8 bg-transparent border border-border/40 rounded-md pl-8 pr-3 text-xs text-foreground focus:outline-none focus:border-foreground transition-all"
           />
         </div>
       </div>
@@ -138,67 +140,58 @@ export default function RecursosAlocacaoPage() {
         <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
       ) : (
         <>
-          {/* DASHBOARD DE KPIs (INTELIGÊNCIA) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-background border border-border/60 rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Target className="w-6 h-6 text-emerald-500" />
+          {/* 2. STATS HUD (Linear Style) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <Target className="w-3.5 h-3.5" />
+                Capacidade Ideal
+              </span>
+              <div className="flex items-end gap-1.5">
+                <span className="text-2xl font-mono text-foreground">{kpis.disponiveis}</span>
+                <span className="text-[9px] font-bold text-emerald-500 mb-1 uppercase tracking-wider">Pessoas Livres</span>
               </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capacidade Ideal</p>
-                <div className="flex items-end gap-2 mt-1">
-                  <span className="text-2xl font-black text-foreground leading-none">{kpis.disponiveis}</span>
-                  <span className="text-sm font-semibold text-emerald-500">pessoas</span>
-                </div>
-              </div>
-              <div className="absolute top-0 right-0 p-3 opacity-10"><Target className="w-16 h-16 text-emerald-500" /></div>
             </div>
 
-            <div className="bg-background border border-border/60 rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <AlertCircle className="w-6 h-6 text-red-500" />
+            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Risco de Sobrecarga
+              </span>
+              <div className="flex items-end gap-1.5">
+                <span className="text-2xl font-mono text-foreground">{kpis.sobrecarregados}</span>
+                <span className="text-[9px] font-bold text-red-500 mb-1 uppercase tracking-wider">Gargalos Críticos</span>
               </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Risco de Sobrecarga</p>
-                <div className="flex items-end gap-2 mt-1">
-                  <span className="text-2xl font-black text-foreground leading-none">{kpis.sobrecarregados}</span>
-                  <span className="text-sm font-semibold text-red-500">gargalos</span>
-                </div>
-              </div>
-              <div className="absolute top-0 right-0 p-3 opacity-10"><AlertCircle className="w-16 h-16 text-red-500" /></div>
             </div>
 
-            <div className="bg-background border border-border/60 rounded-xl p-5 flex items-center gap-4 relative overflow-hidden group">
-              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Zap className="w-6 h-6 text-blue-500" />
+            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5" />
+                Volume em Operação
+              </span>
+              <div className="flex items-end gap-1.5">
+                <span className="text-2xl font-mono text-foreground">{projetos.length}</span>
+                <span className="text-[9px] font-bold text-blue-500 mb-1 uppercase tracking-wider">Projetos Ativos</span>
               </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Volume em Operação</p>
-                <div className="flex items-end gap-2 mt-1">
-                  <span className="text-2xl font-black text-foreground leading-none">{projetos.length}</span>
-                  <span className="text-sm font-semibold text-blue-500">projetos</span>
-                </div>
-              </div>
-              <div className="absolute top-0 right-0 p-3 opacity-10"><Zap className="w-16 h-16 text-blue-500" /></div>
             </div>
           </div>
 
-          {/* SWIMLANE MATRIX (O coração da funcionalidade premium) */}
-          <div className="bg-background border border-border/50 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-4 bg-muted/20 border-b border-border/50 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <UsersRound className="w-4 h-4 text-emerald-500" />
+          {/* 3. MATRIZ OPERACIONAL (Técnica) */}
+          <div className="border border-border/40 rounded-md bg-transparent overflow-hidden flex flex-col">
+            <div className="px-4 py-3 bg-muted/10 border-b border-border/40 flex items-center justify-between">
+              <h2 className="text-xs font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
+                <UsersRound className="w-3.5 h-3.5" />
                 Matriz Operacional (Swimlanes)
               </h2>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Ordenado por criticidade de carga
+              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                Ordenado por criticidade
               </span>
             </div>
 
-            <div className="divide-y divide-border/40">
+            <div className="divide-y divide-border/20">
               {workloadData.length === 0 ? (
                 <div className="p-12 text-center text-muted-foreground">
-                  <p className="font-semibold text-sm">Nenhum dado corresponde ao filtro atual.</p>
+                  <p className="font-semibold text-xs">Nenhum dado corresponde ao filtro atual.</p>
                 </div>
               ) : (
                 workloadData.map((colab, index) => {
@@ -206,54 +199,54 @@ export default function RecursosAlocacaoPage() {
                   const iniciais = nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                   const carga = colab.carga;
                   
-                  // Lógica do Motor de Capacidade
-                  let capStatus = { label: 'Livre / Ideal', bg: 'bg-emerald-500/10', color: 'text-emerald-500', bar: 'bg-emerald-500', pct: Math.max((carga/5)*100, 5) };
-                  if (carga >= 5) capStatus = { label: 'Sobrecarga Máxima', bg: 'bg-red-500/10', color: 'text-red-500', bar: 'bg-red-500', pct: 100 };
-                  else if (carga >= 3) capStatus = { label: 'Alta Demanda', bg: 'bg-amber-500/10', color: 'text-amber-500', bar: 'bg-amber-500', pct: (carga/5)*100 };
+                  // Lógica do Motor de Capacidade (Cores Corporativas)
+                  let capStatus = { label: 'Livre / Ideal', color: 'text-emerald-500', bar: 'bg-emerald-500', pct: Math.max((carga/5)*100, 5) };
+                  if (carga >= 5) capStatus = { label: 'Sobrecarga Crítica', color: 'text-red-500', bar: 'bg-red-500', pct: 100 };
+                  else if (carga >= 3) capStatus = { label: 'Alta Demanda', color: 'text-amber-500', bar: 'bg-amber-500', pct: (carga/5)*100 };
 
                   return (
-                    <div key={colab.id} className="flex flex-col xl:flex-row hover:bg-muted/5 transition-colors animate-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+                    <div key={colab.id} className="flex flex-col xl:flex-row hover:bg-muted/5 transition-colors">
                       
-                      {/* EIXO Y: Perfil do Recurso (Fixado à esquerda em telas grandes) */}
-                      <div className="xl:w-[350px] shrink-0 p-5 border-b xl:border-b-0 xl:border-r border-border/40 bg-background/50 flex flex-col justify-between">
-                        <div className="flex items-start gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 shadow-sm ${capStatus.bg} ${capStatus.color} border-current/20`}>
-                            <span className="text-sm font-black">{iniciais}</span>
+                      {/* EIXO Y: Perfil do Recurso */}
+                      <div className="xl:w-[280px] shrink-0 p-4 border-b xl:border-b-0 xl:border-r border-border/20 bg-transparent flex flex-col justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-sm flex items-center justify-center border shrink-0 bg-background ${capStatus.color} border-border/40`}>
+                            <span className="text-[10px] font-black">{iniciais}</span>
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-sm text-foreground leading-tight">{nome}</h3>
-                            <p className="text-[11px] font-semibold text-muted-foreground mt-0.5 flex items-center gap-1">
-                              <Building2 className="w-3 h-3" /> {colab.departamento || 'Institucional'}
+                          <div className="flex-1 overflow-hidden">
+                            <h3 className="font-semibold text-xs text-foreground truncate">{nome}</h3>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                              <Building2 className="w-2.5 h-2.5" /> {colab.departamento || 'Sem Departamento'}
                             </p>
                           </div>
                         </div>
 
                         {/* Medidor de Pressão */}
-                        <div className="mt-5">
-                          <div className="flex justify-between items-end mb-1.5">
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${capStatus.color}`}>
+                        <div className="mt-4">
+                          <div className="flex justify-between items-end mb-1">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider ${capStatus.color}`}>
                               {capStatus.label}
                             </span>
-                            <span className="text-xs font-black text-foreground">
-                              {carga} <span className="text-[10px] font-medium text-muted-foreground font-mono">/ ∞</span>
+                            <span className="text-[10px] font-mono text-foreground">
+                              {carga} <span className="text-[9px] text-muted-foreground">/ ∞</span>
                             </span>
                           </div>
-                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div className={`h-full ${capStatus.bar} transition-all duration-1000 ease-out`} style={{ width: `${capStatus.pct}%` }} />
+                          <div className="h-1 w-full bg-muted rounded-none overflow-hidden">
+                            <div className={`h-full ${capStatus.bar} transition-all duration-500`} style={{ width: `${capStatus.pct}%` }} />
                           </div>
                         </div>
                       </div>
 
                       {/* EIXO X: Projetos Ativos (Swimlane Horizontal) */}
-                      <div className="flex-1 p-5 overflow-x-auto no-scrollbar">
+                      <div className="flex-1 p-4 overflow-x-auto no-scrollbar">
                         {colab.projetosAtivos.length === 0 ? (
-                          <div className="h-full min-h-[100px] rounded-xl border border-dashed border-border/60 bg-muted/10 flex items-center justify-center">
-                            <span className="text-xs font-semibold text-muted-foreground italic flex items-center gap-2">
-                              <Activity className="w-4 h-4 opacity-50" /> Operacionalmente disponível (Sem alocações)
+                          <div className="h-full min-h-[80px] rounded-md border border-dashed border-border/40 bg-transparent flex items-center justify-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                              <Activity className="w-3.5 h-3.5" /> Operacionalmente disponível
                             </span>
                           </div>
                         ) : (
-                          <div className="flex items-stretch gap-4 min-w-max">
+                          <div className="flex items-stretch gap-3 min-w-max">
                             {colab.projetosAtivos.map(p => {
                               const isLate = p.data_fim && new Date(p.data_fim) < new Date() && p.status !== 'Concluído';
                               
@@ -261,31 +254,31 @@ export default function RecursosAlocacaoPage() {
                                 <Link 
                                   key={p.id}
                                   href={`/dashboard/projetos/${p.id}`}
-                                  className={`group relative flex flex-col justify-between w-[260px] p-4 rounded-xl border hover:shadow-md transition-all bg-background cursor-pointer ${
-                                    isLate ? 'border-red-500/50 hover:border-red-500 bg-red-500/5' : 'border-border/60 hover:border-emerald-500/50'
+                                  className={`group flex flex-col justify-between w-[220px] p-3 rounded-md border transition-colors cursor-pointer bg-background ${
+                                    isLate ? 'border-red-500/30 hover:border-red-500/60' : 'border-border/40 hover:border-foreground/40'
                                   }`}
                                 >
                                   <div>
                                     <div className="flex justify-between items-start mb-2">
-                                      <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded border border-border/50 group-hover:bg-background">
+                                      <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted/30 px-1 rounded">
                                         {p.codigo}
                                       </span>
                                       {p.prioridade === 'Urgente' && (
-                                        <AlertCircle className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+                                        <AlertCircle className="w-3 h-3 text-red-500" />
                                       )}
                                     </div>
-                                    <h4 className="text-sm font-bold text-foreground leading-tight group-hover:text-emerald-500 transition-colors line-clamp-2">
+                                    <h4 className="text-xs font-semibold text-foreground leading-snug group-hover:text-emerald-500 transition-colors line-clamp-2">
                                       {p.titulo}
                                     </h4>
                                   </div>
 
-                                  <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/30 px-2 py-0.5 rounded">
+                                  <div className="mt-3 pt-2 border-t border-border/30 flex items-center justify-between">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                                       {p.status}
                                     </span>
                                     {p.data_fim && (
-                                      <span className={`text-[10px] font-mono font-bold ${isLate ? 'text-red-500' : 'text-muted-foreground'}`}>
-                                        {new Date(p.data_fim + 'T12:00:00').toLocaleDateString('pt-BR').slice(0,5)}
+                                      <span className={`text-[9px] font-mono font-bold ${isLate ? 'text-red-500' : 'text-foreground'}`}>
+                                        {new Date(p.data_fim + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                       </span>
                                     )}
                                   </div>

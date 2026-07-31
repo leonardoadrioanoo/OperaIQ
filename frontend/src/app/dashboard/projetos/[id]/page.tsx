@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
-  ChevronDown, Paperclip, MoreHorizontal, AlertCircle, Save, Loader2, 
-  Briefcase, Building2, Calendar, Users, Shield, Download, ChevronRight, ChevronLeft, Send, X, DollarSign, Check, Flame, Trophy
+  ChevronDown, Paperclip, MoreHorizontal, AlertCircle, Save, Loader2,
+  Briefcase, Building2, Calendar, Users, Shield, Download, ChevronRight, ChevronLeft, Send, X, DollarSign, Check, Flame, Trophy, Target, FolderKanban, Activity
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -30,6 +30,7 @@ type ProjetoForm = {
   patrocinador_id?: string;
   cliente?: string;
   portfolio_id?: string;
+  kr_id?: string;
   programa?: string;
   data_inicio: string;
   data_fim: string;
@@ -54,49 +55,66 @@ export default function ProjetoJiraViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [projeto, setProjeto] = useState<any>(null);
-  
+
   const { profile, company } = useAuthStore();
   const permissoesProjeto = profile?.permissoes?.find(p => p.modulo === 'projetos');
   const podeCriar = profile?.is_admin || permissoesProjeto?.p_criar;
-  
+
   const currencySymbol = new Intl.NumberFormat(company?.idioma || 'pt-BR', { style: 'currency', currency: company?.moeda || 'BRL' }).formatToParts(0).find(x => x.type === 'currency')?.value || 'R$';
   const podeEditar = profile?.is_admin || permissoesProjeto?.p_editar;
-  
+
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
+  const [objetivos, setObjetivos] = useState<any[]>([]);
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [tarefas, setTarefas] = useState<any[]>([]);
   const [sprints, setSprints] = useState<any[]>([]);
-  
+
   // Controle de Histórico de Sprint
   const [expandedSprint, setExpandedSprint] = useState<string | null>(null);
   const [sprintTasks, setSprintTasks] = useState<any[]>([]);
   const [isLoadingSprintTasks, setIsLoadingSprintTasks] = useState(false);
-  
+
   // Controle do Modal de Nova Tarefa
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTaskData, setNewTaskData] = useState({ titulo: '', descricao: '', responsavel_id: '', prioridade: 'Normal', story_points: 0 });
-  
+
   // Controle de Visualização da Tarefa (Detalhes)
   const [selectedTask, setSelectedTask] = useState<any>(null);
-  
+
   // Controle de Encerramento de Sprint
   const [isEndSprintModalOpen, setIsEndSprintModalOpen] = useState(false);
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'workspace' | 'sprints' | 'tudo' | 'comentarios' | 'historico'>('workspace');
   const [novoComentario, setNovoComentario] = useState('');
   const [atividades, setAtividades] = useState<any[]>([]);
 
-  const [activeAccordion, setActiveAccordion] = useState<string | null>('gerais');
+  const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [isDescricaoDirty, setIsDescricaoDirty] = useState(false);
   const [isSavingDescricao, setIsSavingDescricao] = useState(false);
 
   const { register, handleSubmit, reset, watch, setValue } = useForm<ProjetoForm>();
-  
+
+  // Ref para medir a posição real da sidebar e posicionar a linha divisória
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [lineLeft, setLineLeft] = useState<number>(0);
+
+  useEffect(() => {
+    const updateLinePosition = () => {
+      if (sidebarRef.current && isSidebarOpen) {
+        const rect = sidebarRef.current.getBoundingClientRect();
+        setLineLeft(rect.left); // posição exata da borda esquerda da sidebar
+      }
+    };
+    updateLinePosition();
+    window.addEventListener('resize', updateLinePosition);
+    return () => window.removeEventListener('resize', updateLinePosition);
+  }, [isSidebarOpen]);
+
   const currentMetodologia = watch('metodologia');
 
   useEffect(() => {
@@ -106,8 +124,8 @@ export default function ProjetoJiraViewPage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session || cancelled) return;
         const headers = { Authorization: `Bearer ${session.access_token}` };
-        
-        const [pRes, cRes, dRes, eRes, tRes, sRes, portRes, actRes] = await Promise.all([
+
+        const [pRes, cRes, dRes, eRes, tRes, sRes, portRes, actRes, objRes] = await Promise.all([
           fetch(`${API}/api/projetos/${id}`, { headers }),
           fetch(`${API}/api/colaboradores`, { headers }),
           fetch(`${API}/api/departamentos`, { headers }),
@@ -115,7 +133,8 @@ export default function ProjetoJiraViewPage() {
           fetch(`${API}/api/tarefas?projeto_id=${id}`, { headers }),
           fetch(`${API}/api/sprints?projeto_id=${id}`, { headers }),
           fetch(`${API}/api/portfolios`, { headers }),
-          fetch(`${API}/api/projetos/${id}/atividades`, { headers })
+          fetch(`${API}/api/projetos/${id}/atividades`, { headers }),
+          fetch(`${API}/api/objetivos`, { headers })
         ]);
 
         if (pRes.ok) {
@@ -127,20 +146,24 @@ export default function ProjetoJiraViewPage() {
           const sData = sRes.ok ? await sRes.json() : [];
           const portData = portRes.ok ? await portRes.json() : [];
           const actData = actRes.ok ? await actRes.json() : [];
+          const objData = objRes.ok ? await objRes.json() : [];
 
           if (!cancelled) {
             setColaboradores(Array.isArray(cData) ? cData : cData.colaboradores || []);
             setDepartamentos(Array.isArray(dData) ? dData : []);
             setEquipes(Array.isArray(eData) ? eData : eData.equipes || []);
             setPortfolios(Array.isArray(portData) ? portData : portData.portfolios || []);
+            setObjetivos(Array.isArray(objData) ? objData : objData.objetivos || []);
             setTarefas(Array.isArray(tData) ? tData : tData.tarefas || []);
             setSprints(sData);
             setAtividades(Array.isArray(actData) ? actData : []);
-            
+
             setProjeto(pData);
             reset({
               ...pData,
               visibilidade: pData.visibilidade ? pData.visibilidade.charAt(0).toUpperCase() + pData.visibilidade.slice(1) : 'Departamento',
+              kr_id: pData.kr_id || pData.kr?.id || '',
+              portfolio_id: pData.portfolio_id || '',
             });
             setIsLoading(false);
           }
@@ -167,7 +190,7 @@ export default function ProjetoJiraViewPage() {
 
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value !== undefined && value !== null) {
           // @ts-ignore
           if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
@@ -187,9 +210,13 @@ export default function ProjetoJiraViewPage() {
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
       } else {
+        const errData = await res.json().catch(() => null);
+        console.error("ERRO DE API NO AUTOSAVE:", errData);
+        toast.error(`Falha ao salvar: ${errData?.error || 'Erro desconhecido. O kr_id existe na tabela?'}`);
         setSaveStatus('idle');
       }
     } catch {
+      toast.error('Erro de conexão ao salvar.');
       setSaveStatus('idle');
     }
   };
@@ -204,6 +231,42 @@ export default function ProjetoJiraViewPage() {
     });
     return () => subscription.unsubscribe();
   }, [watch, isLoading]);
+
+  const portfolioForm = watch('portfolio_id');
+  const [objetivosFiltrados, setObjetivosFiltrados] = useState<any[]>([]);
+
+  const krFormId = watch('kr_id');
+
+  useEffect(() => {
+    let filtered = [];
+    if (portfolioForm) {
+      filtered = objetivos.filter((o: any) => o.portfolio_id === portfolioForm);
+    } else {
+      filtered = objetivos;
+    }
+    
+    // Regra Estrita: Se o Portfólio mudar, o KR deve ser validado.
+    // Se o KR não pertencer ao novo portfólio, resetamos o campo.
+    if (krFormId) {
+      const isKrValidInNewList = filtered.some(o => o.krs?.some((k: any) => k.id === krFormId));
+      if (!isKrValidInNewList) {
+        setValue('kr_id', '', { shouldDirty: true }); // Aciona watch() que salva automaticamente no banco!
+      }
+    }
+    
+    setObjetivosFiltrados(filtered);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portfolioForm, objetivos]);
+
+  const krSelecionadoObj = React.useMemo(() => {
+    if (!krFormId) return null;
+    for (const o of objetivos) {
+      const found = o.krs?.find((k: any) => k.id === krFormId);
+      if (found) return found;
+    }
+    if (projeto?.kr?.id === krFormId) return projeto.kr;
+    return null;
+  }, [krFormId, objetivos, projeto]);
 
   const handleSaveDescricao = async () => {
     setIsSavingDescricao(true);
@@ -241,11 +304,11 @@ export default function ProjetoJiraViewPage() {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskData.titulo.trim()) return toast.error('Título da tarefa é obrigatório');
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      
+
       const payload = {
         projeto_id: id,
         titulo: newTaskData.titulo,
@@ -283,7 +346,7 @@ export default function ProjetoJiraViewPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      
+
       const res = await fetch(`${API}/api/sprints/encerrar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
@@ -338,7 +401,7 @@ export default function ProjetoJiraViewPage() {
     const newStatus = currentStatus === 'Concluído' ? 'A Fazer' : 'Concluído';
     // Optimistic UI update (Atualização imediata para parecer super rápido)
     setTarefas(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -348,7 +411,7 @@ export default function ProjetoJiraViewPage() {
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error();
-      
+
       if (newStatus === 'Concluído') {
         confetti({
           particleCount: 80,
@@ -422,7 +485,7 @@ export default function ProjetoJiraViewPage() {
     const isOpen = activeAccordion === id;
     return (
       <div className="border-b border-border/30 last:border-0">
-        <div 
+        <div
           className="group cursor-pointer flex items-center justify-between text-xs font-semibold text-foreground py-2.5 hover:bg-muted/30 transition-colors"
           onClick={() => toggleAccordion(id)}
         >
@@ -439,17 +502,18 @@ export default function ProjetoJiraViewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans pb-24">
-      <form className="max-w-[1500px] w-full mx-auto p-4 md:p-8 flex relative transition-all duration-300">
-        
-        {/* ========================================================= */}
-        {/* COLUNA ESQUERDA - CONTEÚDO PRINCIPAL */}
-        {/* ========================================================= */}
-        <div className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarOpen ? 'pr-8 xl:pr-12' : 'pr-0'}`}>
-          
+    <form
+      className="-mx-6 -my-4 flex items-stretch bg-background text-foreground font-sans min-h-[calc(100vh-64px)] relative"
+    >
+      {/* ========================================================= */}
+      {/* COLUNA ESQUERDA - CONTEÚDO PRINCIPAL (dita o tamanho da página) */}
+      {/* ========================================================= */}
+      <div className="flex-1 min-w-0">
+        <div className="px-8 pt-8 pb-24">
+
           {/* Título e Botões rápidos */}
           <div className="mb-6">
-            
+
             {/* Breadcrumb (Top Left) */}
             <div className="text-xs font-mono text-muted-foreground flex items-center gap-2 mb-2">
               <Link href="/dashboard/projetos/visao-geral" className="hover:text-foreground transition-colors">PROJETOS</Link>
@@ -457,12 +521,12 @@ export default function ProjetoJiraViewPage() {
               <span className="text-foreground">{projeto.codigo || 'PRJ-000'}</span>
             </div>
 
-            <input 
+            <input
               {...register('titulo')}
               className="text-2xl font-bold text-foreground leading-tight mb-3 w-full bg-transparent border border-transparent hover:border-border/40 focus:border-border rounded px-1 -ml-1 transition-all outline-none"
               placeholder="Nome do Projeto"
             />
-            
+
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <label className="flex items-center gap-1.5 px-2.5 py-1.5 bg-transparent border border-border/40 hover:bg-muted rounded text-xs font-medium transition-colors cursor-pointer text-muted-foreground hover:text-foreground">
                 <Paperclip className="w-3.5 h-3.5" /> Anexar
@@ -480,9 +544,9 @@ export default function ProjetoJiraViewPage() {
           {/* Descrição */}
           <div className="mb-10">
             <h2 className="text-[15px] font-semibold mb-3 text-foreground/90">Descrição</h2>
-            <RichTextEditor 
+            <RichTextEditor
               value={watch('descricao') || ''}
-              onChange={(val) => { 
+              onChange={(val) => {
                 setValue('descricao', val, { shouldDirty: true, shouldValidate: true });
                 setIsDescricaoDirty(true);
               }}
@@ -540,20 +604,20 @@ export default function ProjetoJiraViewPage() {
           {/* Nova Seção de Comentários / Atividades */}
           <div className="mt-12">
             <h2 className="text-[15px] font-semibold mb-4 text-foreground/90">Atividades</h2>
-            
+
             {/* Input de Novo Comentário (Sempre Visível) */}
             <div className="mb-6">
               <div className="w-full border border-border/40 rounded-md bg-transparent focus-within:border-foreground transition-all overflow-hidden flex flex-col">
-                <textarea 
+                <textarea
                   value={novoComentario}
                   onChange={e => setNovoComentario(e.target.value)}
-                  placeholder="Escreva um comentário ou atualização..." 
+                  placeholder="Escreva um comentário ou atualização..."
                   className="w-full min-h-[80px] p-3 text-xs leading-relaxed bg-transparent outline-none resize-y text-foreground placeholder:text-muted-foreground"
                 />
                 <div className="flex items-center justify-between px-3 py-2 bg-muted/10 border-t border-border/40">
                   <span className="text-[10px] text-muted-foreground font-medium">Use Markdown para formatar.</span>
                   <button type="button" onClick={async () => {
-                    if(!novoComentario.trim()) return;
+                    if (!novoComentario.trim()) return;
                     try {
                       const { data: { session } } = await supabase.auth.getSession();
                       if (!session) return;
@@ -593,12 +657,12 @@ export default function ProjetoJiraViewPage() {
             </div>
 
             {/* CONTEÚDO DAS TABS */}
-            
+
             {/* ABA: HISTÓRICO DE SPRINTS */}
             {activeTab === 'sprints' && (
               <div className="animate-in fade-in duration-500 mb-10">
                 <div className="w-full">
-                  
+
                   {sprints.length === 0 ? (
                     <div className="bg-muted/10 border border-dashed border-border/50 rounded-xl p-8 text-center text-sm text-muted-foreground">
                       Nenhuma sprint encerrada até o momento.
@@ -629,7 +693,7 @@ export default function ProjetoJiraViewPage() {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {isExpanded && (
                               <div className="bg-muted/10 border-t border-border/50 p-4">
                                 <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Entregas Desta Sprint</h5>
@@ -640,8 +704,8 @@ export default function ProjetoJiraViewPage() {
                                 ) : (
                                   <div className="space-y-2">
                                     {sprintTasks.map(task => (
-                                      <div 
-                                        key={task.id} 
+                                      <div
+                                        key={task.id}
                                         onClick={() => setSelectedTask(task)}
                                         className="flex items-center justify-between p-2.5 bg-background border border-border/40 rounded-lg shadow-sm cursor-pointer hover:border-emerald-500/40 transition-colors group"
                                       >
@@ -676,13 +740,13 @@ export default function ProjetoJiraViewPage() {
                 </div>
               </div>
             )}
-            
+
             {/* NOVO: WORKSPACE DINÂMICO DE METODOLOGIA */}
             {activeTab === 'workspace' && (
               <div className="animate-in fade-in duration-500 mb-10">
                 {(() => {
                   const met = currentMetodologia || projeto.metodologia || 'Cascata';
-                  
+
                   if (met === 'Scrum' || met === 'Ágil') {
                     const totalPts = tarefas.reduce((a, b) => a + (b.story_points || 0), 0);
                     const donePts = tarefas.filter(t => t.status === 'Concluído').reduce((a, b) => a + (b.story_points || 0), 0);
@@ -745,7 +809,7 @@ export default function ProjetoJiraViewPage() {
                       </div>
                     );
                   }
-                  
+
                   if (met === 'Kanban') {
                     return (
                       <div className="bg-transparent mt-2">
@@ -755,21 +819,21 @@ export default function ProjetoJiraViewPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {['A Fazer', 'Em Progresso', 'Feito'].map((col) => {
-                            const colTasks = tarefas.filter(t => 
+                            const colTasks = tarefas.filter(t =>
                               (col === 'A Fazer' && (!t.status || t.status === 'A Fazer')) ||
                               (col === 'Em Progresso' && t.status === 'Em Progresso') ||
                               (col === 'Feito' && t.status === 'Concluído')
                             );
 
                             return (
-                              <div 
-                                key={col} 
+                              <div
+                                key={col}
                                 className="bg-muted/10 border border-border/30 rounded-md p-2 min-h-[300px]"
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={(e) => handleDropKanban(e, col)}
                               >
                                 <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2.5 flex justify-between items-center px-1">
-                                  {col} 
+                                  {col}
                                   <span className="text-foreground">{colTasks.length}</span>
                                 </div>
                                 <div className="space-y-2">
@@ -779,8 +843,8 @@ export default function ProjetoJiraViewPage() {
                                     </div>
                                   )}
                                   {colTasks.map(t => (
-                                    <div 
-                                      key={t.id} 
+                                    <div
+                                      key={t.id}
                                       draggable
                                       onDragStart={(e) => handleDragStart(e, t.id)}
                                       onClick={() => setSelectedTask(t)}
@@ -821,11 +885,11 @@ export default function ProjetoJiraViewPage() {
                       <div className="p-4">
                         <div className="relative pl-6 border-l-2 border-border/50 space-y-6">
                           {tarefas.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma tarefa cascata mapeada.</p>}
-                          {tarefas.sort((a,b) => (a.ordem || 0) - (b.ordem || 0)).map((t, idx) => {
+                          {tarefas.sort((a, b) => (a.ordem || 0) - (b.ordem || 0)).map((t, idx) => {
                             const isDone = t.status === 'Concluído';
                             const isDoing = t.status === 'Em Progresso';
                             const isBlocked = t.status === 'Bloqueado';
-                            
+
                             let color = 'bg-muted';
                             if (isDone) color = 'bg-emerald-500';
                             else if (isDoing) color = 'bg-amber-500';
@@ -838,9 +902,8 @@ export default function ProjetoJiraViewPage() {
                                   {idx + 1}. {t.titulo}
                                 </h4>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-[11px] font-bold ${
-                                    isDone ? 'text-emerald-500' : isDoing ? 'text-amber-500' : isBlocked ? 'text-red-500' : 'text-muted-foreground'
-                                  }`}>
+                                  <span className={`text-[11px] font-bold ${isDone ? 'text-emerald-500' : isDoing ? 'text-amber-500' : isBlocked ? 'text-red-500' : 'text-muted-foreground'
+                                    }`}>
                                     {isDone ? 'Concluído' : isDoing ? 'Em andamento' : isBlocked ? 'Bloqueado' : 'Na Fila'}
                                   </span>
                                   {t.responsavel && (
@@ -861,7 +924,7 @@ export default function ProjetoJiraViewPage() {
             )}
             {(activeTab === 'tudo') && (
               <div className="animate-in fade-in duration-300 relative pl-6 border-l-2 border-border/60 space-y-8 mt-6 ml-2">
-                
+
                 {/* Comentário Inicial do Projeto */}
                 {projeto?.comentario_inicial && (
                   <div className="relative">
@@ -917,7 +980,7 @@ export default function ProjetoJiraViewPage() {
                           <span className="font-semibold text-foreground">{act.autor?.nome_completo || 'Sistema'}</span>
                           <span className="text-muted-foreground">{act.texto}</span>
                         </div>
-                        
+
                         {act.detalhes && Object.keys(act.detalhes).length > 0 && (
                           <div className="mt-2 pt-2 border-t border-border/30 space-y-1.5">
                             {Object.entries(act.detalhes).map(([key, changes]: [string, any]) => (
@@ -987,7 +1050,7 @@ export default function ProjetoJiraViewPage() {
                           <span className="font-semibold text-foreground">{act.autor?.nome_completo || 'Sistema'}</span>
                           <span className="text-muted-foreground">{act.texto}</span>
                         </div>
-                        
+
                         {act.detalhes && Object.keys(act.detalhes).length > 0 && (
                           <div className="mt-2 pt-2 border-t border-border/30 space-y-1.5">
                             {Object.entries(act.detalhes).map(([key, changes]: [string, any]) => (
@@ -1013,31 +1076,33 @@ export default function ProjetoJiraViewPage() {
                 )}
               </div>
             )}
-          </div>
         </div>
+      </div>
+      </div>
 
-        {/* BOTÃO FLUTUANTE DE RECOLHER SIDEBAR */}
-        {/* ========================================================= */}
-        <div className="relative">
-          <button 
-            type="button" 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute top-2 -left-4 z-40 w-8 h-8 bg-background border border-border shadow-sm rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300"
-            title={isSidebarOpen ? 'Recolher Painel' : 'Expandir Painel'}
-          >
-            {isSidebarOpen ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
-        </div>
+      {/* ========================================================= */}
+      {/* LINHA DIVISÓRIA + BOTÃO TOGGLE (filho flex, estica naturalmente) */}
+      {/* ========================================================= */}
+      <div className="relative w-px bg-border shrink-0 h-auto">
+        <button
+          type="button"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="sticky top-10 -ml-[13.5px] z-40 w-7 h-7 bg-background border border-border shadow-sm rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300"
+          title={isSidebarOpen ? 'Recolher Painel' : 'Expandir Painel'}
+        >
+          {isSidebarOpen ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        </button>
+      </div>
 
-        {/* ========================================================= */}
-        {/* COLUNA DIREITA - SIDEBAR NOTION-STYLE */}
-        {/* ========================================================= */}
-        <div className={`shrink-0 transition-all duration-300 overflow-visible ${isSidebarOpen ? 'w-[320px] xl:w-[340px] opacity-100 border-l border-border pl-6' : 'w-0 opacity-0 pointer-events-none'}`}>
-          <div className="sticky top-6 w-full">
-            
+      {/* ========================================================= */}
+      {/* COLUNA DIREITA - SIDEBAR (conteúdo sticky, scrollbar na direita) */}
+      {/* ========================================================= */}
+      <div className={`shrink-0 transition-all duration-300 h-auto ${isSidebarOpen ? 'w-[320px] xl:w-[340px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+        <div className="sticky top-6 w-full max-h-[calc(100vh-64px-48px)] overflow-y-auto overflow-x-hidden px-6 pb-8">
+
             {/* Bloco de Controle Superior (Ações -> Status -> Progresso) */}
             <div className="mb-6 flex flex-col gap-3">
-              
+
               {/* Auto-Save Indicator */}
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status do Workspace</span>
@@ -1055,8 +1120,8 @@ export default function ProjetoJiraViewPage() {
 
               {/* Status Select */}
               <div className="relative w-full">
-                <select 
-                  {...register('status')} 
+                <select
+                  {...register('status')}
                   className="w-full appearance-none bg-background border border-border/60 hover:border-border focus:border-foreground text-xs font-semibold text-foreground px-3 h-8 rounded transition-colors cursor-pointer pr-8 outline-none shadow-sm"
                 >
                   {STATUS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -1066,8 +1131,8 @@ export default function ProjetoJiraViewPage() {
 
               {/* Responsável Select */}
               <div className="relative w-full">
-                <select 
-                  {...register('responsavel_id')} 
+                <select
+                  {...register('responsavel_id')}
                   className="w-full appearance-none bg-background border border-border/60 hover:border-border focus:border-foreground text-xs font-medium text-foreground px-3 h-8 rounded transition-colors cursor-pointer pr-8 outline-none shadow-sm"
                 >
                   <option value="">Atribuir Responsável...</option>
@@ -1078,18 +1143,31 @@ export default function ProjetoJiraViewPage() {
 
               {/* Barra de Progresso */}
               {(() => {
-                const progressoWorkspace = tarefas.length > 0 
-                  ? Math.round((tarefas.filter(t => t.status === 'Concluído').length / tarefas.length) * 100)
+                const totalPtsWorkspace = tarefas.reduce((acc, t) => acc + (t.story_points || 0), 0);
+                const donePtsWorkspace = tarefas.filter(t => t.status === 'Concluído').reduce((acc, t) => acc + (t.story_points || 0), 0);
+                const progressoWorkspace = totalPtsWorkspace > 0 
+                  ? Math.round((donePtsWorkspace / totalPtsWorkspace) * 100) 
                   : 0;
-                
+
+                const stConfig: Record<string, { color: string; bg: string }> = {
+                  'Rascunho':     { color: 'text-zinc-500', bg: 'bg-zinc-500' },
+                  'Planejamento': { color: 'text-blue-500', bg: 'bg-blue-500' },
+                  'Em Andamento': { color: 'text-emerald-500', bg: 'bg-emerald-500' },
+                  'Pausado':      { color: 'text-amber-500', bg: 'bg-amber-500' },
+                  'Concluído':    { color: 'text-emerald-500', bg: 'bg-emerald-500' },
+                  'Cancelado':    { color: 'text-red-500', bg: 'bg-red-500' },
+                };
+                const projStatus = watch('status') || 'Planejamento';
+                const stColor = stConfig[projStatus] || stConfig['Planejamento'];
+
                 return (
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
                       <span>Progresso do Workspace</span>
-                      <span className="text-emerald-500">{progressoWorkspace}%</span>
+                      <span className={`${stColor.color}`}>{progressoWorkspace}%</span>
                     </div>
                     <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progressoWorkspace}%` }} />
+                      <div className={`h-full ${stColor.bg} rounded-full transition-all duration-1000`} style={{ width: `${progressoWorkspace}%` }} />
                     </div>
                   </div>
                 );
@@ -1099,7 +1177,7 @@ export default function ProjetoJiraViewPage() {
 
             {/* Accordions */}
             <div className="space-y-1">
-              
+
               {renderAccordionItem('gerais', Briefcase, '1. Informações Gerais', (
                 <>
                   <div className="grid grid-cols-[110px_1fr] items-center gap-2">
@@ -1155,13 +1233,6 @@ export default function ProjetoJiraViewPage() {
                       {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
                     </select>
                   </div>
-                  <div className="grid grid-cols-[110px_1fr] items-center gap-2">
-                    <label className="text-muted-foreground text-[12px] font-medium">Portfólio</label>
-                    <select {...register('portfolio_id')} className={selectClass}>
-                      <option value="">Opcional (Nenhum)</option>
-                      {portfolios.map(p => <option key={p.id} value={p.id}>{p.titulo}</option>)}
-                    </select>
-                  </div>
                 </>
               ))}
 
@@ -1205,11 +1276,59 @@ export default function ProjetoJiraViewPage() {
                 </>
               ))}
 
+              {renderAccordionItem('alinhamento', Target, '6. Alinhamento Estratégico', (
+                <>
+                  <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+                    <label className="text-muted-foreground text-[12px] font-medium">Portfólio</label>
+                    <select {...register('portfolio_id')} className={selectClass}>
+                      <option value="">Nenhum (Opcional)</option>
+                      {portfolios.map((p: any) => <option key={p.id} value={p.id}>{p.titulo}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+                    <label className="text-muted-foreground text-[12px] font-medium">Meta (KR)</label>
+                    <select 
+                      {...register('kr_id')}
+                      value={watch('kr_id') || ''}
+                      className={selectClass} 
+                      disabled={!portfolioForm || objetivosFiltrados.length === 0}
+                    >
+                      <option value="">Business As Usual (BAU)</option>
+                      {objetivosFiltrados.map((obj: any) => (
+                        <optgroup key={obj.id} label={`Objetivo: ${obj.titulo}`}>
+                          {obj.krs?.map((kr: any) => (
+                            <option key={kr.id} value={kr.id}>{kr.titulo}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+
+                  {krSelecionadoObj && (
+                    <div className="mt-3 pt-3 border-t border-border/40">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                          <Target className="w-3.5 h-3.5 text-emerald-500" />
+                          Progresso da Meta
+                        </span>
+                        <span className="text-[11px] font-mono text-emerald-600 font-medium">
+                          {krSelecionadoObj.progresso || 0} / {krSelecionadoObj.alvo} {krSelecionadoObj.unidade}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-border/50 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.min(100, ((krSelecionadoObj.progresso || 0) / (krSelecionadoObj.alvo || 1)) * 100)}%` }} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ))}
+
             </div>
           </div>
         </div>
-
-      </form>
 
       {/* ========================================================= */}
       {/* MODAL DE DELEGAÇÃO DE TAREFA (PREMIUM) */}
@@ -1229,11 +1348,11 @@ export default function ProjetoJiraViewPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleCreateTask} className="p-6 space-y-5">
               <div>
                 <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Título da Tarefa</label>
-                <input 
+                <input
                   autoFocus
                   required
                   value={newTaskData.titulo}
@@ -1248,7 +1367,7 @@ export default function ProjetoJiraViewPage() {
                   <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" /> Delegar Para (Responsável)
                   </label>
-                  <select 
+                  <select
                     value={newTaskData.responsavel_id}
                     onChange={e => setNewTaskData(prev => ({ ...prev, responsavel_id: e.target.value }))}
                     className="w-full h-10 bg-background border border-border hover:border-emerald-500/50 focus:border-emerald-500 rounded-lg px-3 text-sm outline-none transition-all cursor-pointer appearance-none"
@@ -1261,7 +1380,7 @@ export default function ProjetoJiraViewPage() {
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Prioridade</label>
-                  <select 
+                  <select
                     value={newTaskData.prioridade}
                     onChange={e => setNewTaskData(prev => ({ ...prev, prioridade: e.target.value }))}
                     className="w-full h-10 bg-background border border-border hover:border-emerald-500/50 focus:border-emerald-500 rounded-lg px-3 text-sm outline-none transition-all cursor-pointer appearance-none"
@@ -1277,7 +1396,7 @@ export default function ProjetoJiraViewPage() {
               {(currentMetodologia === 'Scrum' || currentMetodologia === 'Ágil') && (
                 <div>
                   <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Story Points (Esforço)</label>
-                  <input 
+                  <input
                     type="number"
                     min="0"
                     value={newTaskData.story_points}
@@ -1289,7 +1408,7 @@ export default function ProjetoJiraViewPage() {
 
               <div>
                 <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">Detalhes da Execução</label>
-                <textarea 
+                <textarea
                   value={newTaskData.descricao}
                   onChange={e => setNewTaskData(prev => ({ ...prev, descricao: e.target.value }))}
                   className="w-full min-h-[100px] bg-background border border-border hover:border-emerald-500/50 focus:border-emerald-500 rounded-lg p-3 text-sm outline-none transition-all resize-y"
@@ -1316,23 +1435,21 @@ export default function ProjetoJiraViewPage() {
       {selectedTask && (
         <div className="fixed inset-0 z-[105] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-background border border-border rounded-2xl w-full max-w-[600px] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            
+
             {/* Header */}
             <div className="px-6 py-4 border-b border-border/50 flex justify-between items-start bg-muted/5">
               <div className="pr-4">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    selectedTask.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-500' :
-                    selectedTask.status === 'Em Progresso' ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-muted text-muted-foreground'
-                  }`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${selectedTask.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-500' :
+                      selectedTask.status === 'Em Progresso' ? 'bg-amber-500/10 text-amber-500' :
+                        'bg-muted text-muted-foreground'
+                    }`}>
                     {selectedTask.status || 'A Fazer'}
                   </span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    selectedTask.prioridade === 'Urgente' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 
-                    selectedTask.prioridade === 'Alta' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 
-                    'bg-background border border-border/50 text-muted-foreground'
-                  }`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${selectedTask.prioridade === 'Urgente' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                      selectedTask.prioridade === 'Alta' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                        'bg-background border border-border/50 text-muted-foreground'
+                    }`}>
                     {selectedTask.prioridade || 'Normal'}
                   </span>
                 </div>
@@ -1342,10 +1459,10 @@ export default function ProjetoJiraViewPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             {/* Body */}
             <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
-              
+
               {/* Metadados */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-muted/20 border border-border/50 rounded-lg p-3">
@@ -1361,7 +1478,7 @@ export default function ProjetoJiraViewPage() {
                     <span className="text-sm font-semibold text-muted-foreground italic">No Backlog (Sem dono)</span>
                   )}
                 </div>
-                
+
                 {(currentMetodologia === 'Scrum' || currentMetodologia === 'Ágil') && (
                   <div className="bg-muted/20 border border-border/50 rounded-lg p-3">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">Esforço (Story Points)</span>
@@ -1410,9 +1527,9 @@ export default function ProjetoJiraViewPage() {
       {isEndSprintModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-background border border-border rounded-2xl w-full max-w-[500px] shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden flex flex-col animate-in zoom-in-90 duration-300 relative">
-            
+
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-600" />
-            
+
             <div className="p-8 text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
                 <Trophy className="w-8 h-8 text-emerald-500" />
@@ -1465,8 +1582,8 @@ export default function ProjetoJiraViewPage() {
               <button type="button" onClick={() => setIsEndSprintModalOpen(false)} className="px-4 py-2.5 hover:bg-muted text-sm font-semibold text-muted-foreground hover:text-foreground rounded-lg transition-colors">
                 Cancelar
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={async () => {
                   try {
                     if (typeof confetti === 'function') {
@@ -1478,7 +1595,7 @@ export default function ProjetoJiraViewPage() {
                         colors: ['#10b981', '#34d399', '#f59e0b', '#3b82f6']
                       });
                     }
-                  } catch (e) {}
+                  } catch (e) { }
 
                   // AÇÃO REAL: Mover as tarefas para Arquivado e criar Sprint
                   const tarefasConcluidas = tarefas.filter(t => t.status === 'Concluído');
@@ -1491,7 +1608,7 @@ export default function ProjetoJiraViewPage() {
                       const res = await fetch(`${API}/api/sprints/encerrar`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                           projeto_id: id,
                           numero: projeto?.sprint_atual || 1,
                           total_tarefas: tarefas.length,
@@ -1517,17 +1634,17 @@ export default function ProjetoJiraViewPage() {
                     toast.success('Sprint oficializada! Tarefas entregues foram arquivadas.');
                     setIsEndSprintModalOpen(false);
                   }, 800);
-                }} 
+                }}
                 className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-sm font-semibold text-white rounded-lg transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
               >
                 <Flame className="w-4 h-4" /> Encerrar Oficialmente
               </button>
-            </div>
-
           </div>
+
         </div>
+      </div>
       )}
 
-    </div>
+    </form>
   );
 }

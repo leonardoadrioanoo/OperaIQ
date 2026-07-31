@@ -15,7 +15,7 @@ export function ExecucoesTabs() {
   ];
 
   return (
-    <div className="flex items-center gap-6 border-b border-border/40 overflow-x-auto mb-6">
+    <div className="flex items-center gap-6 border-b border-border/40 overflow-x-auto mb-4 w-full">
       {TABS.map(tab => {
         const Icon = tab.icon;
         const isActive = pathname === tab.href;

@@ -48,6 +48,7 @@ type ProjetoForm = {
   patrocinador_id?: string;
   cliente?: string;
   portfolio_id?: string;
+  kr_id?: string;
   programa?: string;
 
   // Seção 3 — Planejamento
@@ -124,6 +125,7 @@ export default function NovoProjetoPage() {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [equipes, setEquipes] = useState<any[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
+  const [objetivos, setObjetivos] = useState<any[]>([]);
   const [arquivos, setArquivos] = useState<File[]>([]);
 
   // =====================================================
@@ -147,15 +149,16 @@ export default function NovoProjetoPage() {
 
   const departamentoSelecionado = watch('departamento_id');
   const visibilidadeSelecionada = watch('visibilidade');
+  const portfolioSelecionado = watch('portfolio_id');
 
   const [colaboradoresFiltrados, setColaboradoresFiltrados] = useState<any[]>([]);
   const [equipesFiltradas, setEquipesFiltradas] = useState<any[]>([]);
+  const [objetivosFiltrados, setObjetivosFiltrados] = useState<any[]>([]);
 
   useEffect(() => {
     if (departamentoSelecionado) {
       const dept = departamentos.find(d => d.id === departamentoSelecionado);
       if (dept) {
-        // Colaboradores usa o nome do departamento no perfil (ou o id, dependendo da versão, checamos os 2)
         setColaboradoresFiltrados(colaboradores.filter(c => c.departamento === dept.nome || c.departamento_id === dept.id));
         setEquipesFiltradas(equipes.filter(e => e.departamento_id === dept.id));
       } else {
@@ -167,6 +170,14 @@ export default function NovoProjetoPage() {
       setEquipesFiltradas(equipes);
     }
   }, [departamentoSelecionado, departamentos, colaboradores, equipes]);
+
+  useEffect(() => {
+    if (portfolioSelecionado) {
+      setObjetivosFiltrados(objetivos.filter(o => o.portfolio_id === portfolioSelecionado));
+    } else {
+      setObjetivosFiltrados(objetivos);
+    }
+  }, [portfolioSelecionado, objetivos]);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +205,11 @@ export default function NovoProjetoPage() {
         .then(r => r.ok ? r.json() : [])
         .then(d => { if (!cancelled) setPortfolios(Array.isArray(d) ? d : d.portfolios || []); })
         .catch(() => {});
+
+      fetch(`${API}/api/objetivos`, { headers: h })
+        .then(r => r.ok ? r.json() : [])
+        .then(d => { if (!cancelled) setObjetivos(Array.isArray(d) ? d : d.objetivos || []); })
+        .catch(() => {});
     });
     return () => { cancelled = true; };
   }, []);
@@ -219,6 +235,7 @@ export default function NovoProjetoPage() {
       formData.append('gerente_id', data.gerente_id);
       if (data.patrocinador_id) formData.append('patrocinador_id', data.patrocinador_id);
       if (data.portfolio_id) formData.append('portfolio_id', data.portfolio_id);
+      if (data.kr_id) formData.append('kr_id', data.kr_id);
       formData.append('data_inicio', data.data_inicio);
       formData.append('data_fim', data.data_fim);
       if (data.equipe_id) formData.append('equipe_id', data.equipe_id);
@@ -448,6 +465,25 @@ export default function NovoProjetoPage() {
                 <option value="">Opcional (Nenhum)</option>
                 {portfolios.map((p: any) => <option key={p.id} value={p.id}>{p.titulo}</option>)}
               </select>
+            </div>
+            <div>
+              <label className={labelClass}>
+                <Target className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-emerald-500" />
+                Alinhamento Estratégico (KR)
+              </label>
+              <select {...register('kr_id')} className={inputClass} disabled={objetivosFiltrados.length === 0}>
+                <option value="">Projeto Operacional (BAU - Sem KR)</option>
+                {objetivosFiltrados.map((obj: any) => (
+                  <optgroup key={obj.id} label={`🎯 ${obj.titulo}`}>
+                    {obj.krs?.map((kr: any) => (
+                      <option key={kr.id} value={kr.id}>↳ KR: {kr.titulo}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {portfolioSelecionado && objetivosFiltrados.length === 0 && (
+                <p className="text-[11px] text-amber-500 mt-1">Nenhum KR encontrado neste portfólio.</p>
+              )}
             </div>
             <div>
               <label className={labelClass}>Programa</label>

@@ -25,10 +25,10 @@ type Projeto = {
   responsavel?: { nome_completo: string };
 };
 
-const STATUS_CONFIG: Record<string, { color: string; bg: string; dot: string }> = {
-  'Planejamento': { color: 'text-blue-500',   bg: 'bg-blue-500/10',   dot: 'bg-blue-500' },
-  'Em Andamento': { color: 'text-emerald-500',bg: 'bg-emerald-500/10',dot: 'bg-emerald-500' },
-  'Pausado':      { color: 'text-amber-500',  bg: 'bg-amber-500/10',  dot: 'bg-amber-500' },
+const STATUS_CONFIG: Record<string, { color: string; bg: string; hoverBg: string; dot: string }> = {
+  'Planejamento': { color: 'text-blue-500',   bg: 'bg-blue-500/10',   hoverBg: 'hover:bg-blue-500/5',   dot: 'bg-blue-500' },
+  'Em Andamento': { color: 'text-emerald-500',bg: 'bg-emerald-500/10',hoverBg: 'hover:bg-emerald-500/5',dot: 'bg-emerald-500' },
+  'Pausado':      { color: 'text-amber-500',  bg: 'bg-amber-500/10',  hoverBg: 'hover:bg-amber-500/5',  dot: 'bg-amber-500' },
 };
 
 type TimeBucket = {
@@ -140,21 +140,18 @@ export default function ExecucoesTimelinePage() {
   }, [projetos, searchTerm]);
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="w-full space-y-4 animate-in fade-in duration-500 pb-20">
       
       {/* HEADER */}
-      <div className="flex flex-col shrink-0 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-4">
+      <div className="flex flex-col shrink-0 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-2">
         
         {/* Top Row */}
-        <div className="flex flex-col w-full mb-4">
-          <div className="mb-4">
-            <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Timeline do Portfólio' }]} />
-          </div>
-          <ExecucoesTabs />
+        <div className="w-full mb-2">
+          <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Timeline do Portfólio' }]} />
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-3">
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Roadmap Temporal
@@ -175,6 +172,11 @@ export default function ExecucoesTimelinePage() {
           />
           </div>
         </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="w-full">
+          <ExecucoesTabs />
         </div>
       </div>
 
@@ -232,9 +234,10 @@ export default function ExecucoesTimelinePage() {
                           <Link
                             key={proj.id}
                             href={`/dashboard/projetos/${proj.id}`}
-                            className="group block bg-background border border-border/40 hover:border-foreground/40 rounded p-3 transition-colors relative"
+                            className={`group block bg-background ${st.hoverBg} border border-border/40 hover:border-foreground/20 overflow-hidden rounded p-3 transition-colors relative`}
                           >
-                            <div className="flex flex-col sm:flex-row justify-between gap-4 relative z-10">
+                            <div className={`absolute top-0 left-0 w-1 h-full ${st.dot}`} />
+                            <div className="flex flex-col sm:flex-row justify-between gap-4 relative z-10 pl-1">
                               
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
@@ -247,13 +250,13 @@ export default function ExecucoesTimelinePage() {
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-xs font-semibold text-foreground hover:text-foreground/80 transition-colors flex items-center gap-1.5">
+                                <h4 className="text-xs font-semibold text-foreground group-hover:text-foreground transition-colors flex items-center gap-1.5">
                                   {proj.titulo}
                                   <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -ml-1 transition-all" />
                                 </h4>
                                 
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                                  <span className="text-[9px] font-semibold text-muted-foreground">
+                                  <span className={`text-[9px] font-semibold ${st.color}`}>
                                     {proj.status}
                                   </span>
                                   <span className="text-[9px] text-border/40">•</span>
@@ -278,7 +281,7 @@ export default function ExecucoesTimelinePage() {
                                 </div>
                                 <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                                   <div 
-                                    className={`h-full ${pct === 100 ? 'bg-muted-foreground' : 'bg-foreground'} transition-all duration-1000 ease-out`} 
+                                    className={`h-full ${st.dot} transition-all duration-1000 ease-out`} 
                                     style={{ width: `${pct}%` }} 
                                   />
                                 </div>

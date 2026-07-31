@@ -33,7 +33,11 @@ type Projeto = {
   orcamento_previsto?: number;
   gerente?: { id: string; nome_completo: string; email: string };
   responsavel?: { id: string; nome_completo: string; email: string };
+  patrocinador?: { id: string; nome_completo: string; email: string };
   departamento?: { id: string; nome: string };
+  equipe?: { id: string; nome: string };
+  portfolio?: { id: string; titulo: string };
+  kr?: { id: string; titulo: string };
   criado_em: string;
   atualizado_em: string;
 };
@@ -75,8 +79,8 @@ function ProjectSlidePanel({
   onClose: () => void;
   onDelete: (id: string) => void;
 }) {
-  if (!projeto) return null;
   const company = useAuthStore(state => state.company);
+  if (!projeto) return null;
   const locale = company?.idioma || 'pt-BR';
   const currency = company?.moeda || 'BRL';
 
@@ -541,18 +545,93 @@ export default function ProjetosVisaoGeralPage() {
 
   const exportToCSV = () => {
     if (sortedProjetos.length === 0) return toast.info('Sem dados para exportar.');
-    const headers = ['Código', 'Título', 'Status', 'Prioridade', 'Data Início', 'Data Fim', 'Orçamento Previsto', 'Departamento'];
+    
+    const headers = [
+      'ID',
+      'Código',
+      'Título',
+      'Descrição',
+      'Objetivo',
+      'Status',
+      'Prioridade',
+      'Tipo de Projeto',
+      'Categoria',
+      'Metodologia',
+      'Visibilidade',
+      'Data Início',
+      'Data Fim',
+      'Orçamento Previsto',
+      'Departamento',
+      'Equipe Base',
+      'Gestor',
+      'Responsável',
+      'Patrocinador',
+      'Portfólio',
+      'Meta (KR)',
+      'Criado Em',
+      'Atualizado Em'
+    ];
+
+    const escapeCSV = (value: any) => {
+      if (value === null || value === undefined) return '';
+      const stringValue = String(value);
+      // Se houver aspas, ponto-e-vírgula ou quebra de linha, envolve em aspas e escapa as aspas internas
+      if (stringValue.includes('"') || stringValue.includes(';') || stringValue.includes('\n') || stringValue.includes('\r')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    // Remove tags HTML (ex: geradas pelo editor de texto rico) para não sujar a planilha
+    const stripHTML = (html: string | undefined | null) => {
+      if (!html) return '';
+      let text = html.replace(/<br\s*\/?>/gi, '\n'); // Transforma <br> em nova linha
+      text = text.replace(/<\/p>|<\/li>|<\/div>|<\/h[1-6]>/gi, '\n'); // Transforma fechamento de blocos em nova linha
+      text = text.replace(/<[^>]+>/g, ''); // Remove todas as outras tags HTML
+      // Decodifica entidades básicas
+      text = text.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      // Remove múltiplas quebras de linha em excesso
+      return text.replace(/\n\s*\n/g, '\n').trim();
+    };
+
     const rows = sortedProjetos.map(p => [
-      p.codigo, `"${p.titulo.replace(/"/g, '""')}"`, p.status, p.prioridade, 
-      p.data_inicio || '', p.data_fim || '', p.orcamento_previsto || 0, `"${p.departamento?.nome || ''}"`
+      escapeCSV(p.id),
+      escapeCSV(p.codigo),
+      escapeCSV(p.titulo),
+      escapeCSV(stripHTML(p.descricao)),
+      escapeCSV(stripHTML(p.objetivo)),
+      escapeCSV(p.status),
+      escapeCSV(p.prioridade),
+      escapeCSV(p.tipo_projeto),
+      escapeCSV(p.categoria),
+      escapeCSV(p.metodologia),
+      escapeCSV(p.visibilidade),
+      escapeCSV(p.data_inicio ? new Date(p.data_inicio).toLocaleDateString('pt-BR') : ''),
+      escapeCSV(p.data_fim ? new Date(p.data_fim).toLocaleDateString('pt-BR') : ''),
+      escapeCSV(p.orcamento_previsto || 0),
+      escapeCSV(p.departamento?.nome),
+      escapeCSV(p.equipe?.nome),
+      escapeCSV(p.gerente?.nome_completo),
+      escapeCSV(p.responsavel?.nome_completo),
+      escapeCSV(p.patrocinador?.nome_completo),
+      escapeCSV(p.portfolio?.titulo),
+      escapeCSV(p.kr?.titulo),
+      escapeCSV(p.criado_em ? new Date(p.criado_em).toLocaleDateString('pt-BR') : ''),
+      escapeCSV(p.atualizado_em ? new Date(p.atualizado_em).toLocaleDateString('pt-BR') : '')
     ]);
-    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Usando ; como separador para compatibilidade nativa com Excel (pt-BR)
+    const csvContent = [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    
+    // Adicionando BOM (Byte Order Mark) para o Excel reconhecer corretamente os acentos em UTF-8
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+    
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `portfolio_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `relatorio_projetos_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    toast.success('Portfólio exportado com sucesso!');
+    toast.success('Relatório complexo exportado com sucesso!');
   };
 
   const totalAtivos    = projetos.filter(p => p.status === 'Em Andamento').length;
@@ -586,44 +665,64 @@ export default function ProjetosVisaoGeralPage() {
       </div>
 
       {/* KPI CARDS (Executivo / Hard Level) */}
-      <div className="bg-background border border-border/60 rounded-lg overflow-hidden">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/60">
-          {[
-            { label: 'Total Registrado', value: projetos.length, color: 'text-foreground', icon: <Briefcase className="w-4 h-4 text-emerald-500" /> },
-            { label: 'Fila Ativa', value: totalAtivos, color: 'text-foreground', icon: <TrendingUp className="w-4 h-4 text-emerald-500" /> },
-            { label: 'Em Retenção', value: totalPausados, color: 'text-foreground', icon: <Pause className="w-4 h-4 text-amber-500" /> },
-            { label: 'Entregues', value: totalConcluidos, color: 'text-foreground', icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" /> },
-          ].map(kpi => (
-            <div key={kpi.label} className="p-4 flex flex-col gap-1 hover:bg-muted/30 transition-colors">
-              <div className="flex items-center gap-2 mb-1">
-                {kpi.icon}
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{kpi.label}</span>
-              </div>
-              <p className={`text-2xl font-mono font-bold ${kpi.color}`}>{kpi.value}</p>
-            </div>
-          ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="border border-blue-500/20 bg-blue-500/5 rounded-md p-4 flex flex-col justify-between h-24 hover:bg-blue-500/10 transition-colors">
+          <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
+            <Briefcase className="w-3.5 h-3.5" />
+            Total Registrado
+          </span>
+          <span className="text-2xl font-mono text-foreground">{projetos.length}</span>
+        </div>
+
+        <div className="border border-emerald-500/20 bg-emerald-500/5 rounded-md p-4 flex flex-col justify-between h-24 hover:bg-emerald-500/10 transition-colors">
+          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+            <TrendingUp className="w-3.5 h-3.5" />
+            Fila Ativa
+          </span>
+          <span className="text-2xl font-mono text-foreground">{totalAtivos}</span>
+        </div>
+
+        <div className="border border-amber-500/20 bg-amber-500/5 rounded-md p-4 flex flex-col justify-between h-24 hover:bg-amber-500/10 transition-colors">
+          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+            <Pause className="w-3.5 h-3.5" />
+            Em Retenção
+          </span>
+          <span className="text-2xl font-mono text-foreground">{totalPausados}</span>
+        </div>
+
+        <div className="border border-cyan-500/20 bg-cyan-500/5 rounded-md p-4 flex flex-col justify-between h-24 hover:bg-cyan-500/10 transition-colors">
+          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Entregues
+          </span>
+          <span className="text-2xl font-mono text-foreground">{totalConcluidos}</span>
         </div>
       </div>
 
       {/* TABS DE STATUS (Minimalista) */}
       <div className="flex items-center gap-6 border-b border-border/60 w-full overflow-x-auto scrollbar-none">
-        {STATUS_LIST.map(s => (
-          <button
-            key={s}
-            onClick={() => { setStatusFiltro(s); setSelectedIds(new Set()); }}
-            className={`relative flex items-center gap-1.5 pb-3 text-xs font-semibold transition-all whitespace-nowrap
-              ${statusFiltro === s ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}
-            `}
-          >
-            {s}
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${statusFiltro === s ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}>
-              {counts[s] || 0}
-            </span>
-            {statusFiltro === s && (
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground rounded-t-full" />
-            )}
-          </button>
-        ))}
+        {STATUS_LIST.map(s => {
+          const st = STATUS_CONFIG[s] || { label: 'Todos', color: 'bg-foreground/10 text-foreground border-border/50', dot: 'bg-foreground' };
+          const isActive = statusFiltro === s;
+          return (
+            <button
+              key={s}
+              onClick={() => { setStatusFiltro(s); setSelectedIds(new Set()); }}
+              className={`relative flex items-center gap-1.5 pb-3 text-xs font-semibold transition-all whitespace-nowrap
+                ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}
+              `}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? st.dot : 'bg-muted-foreground/30'}`} />
+              {s}
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${isActive ? st.color : 'bg-muted/30 text-muted-foreground border-transparent'}`}>
+                {counts[s] || 0}
+              </span>
+              {isActive && (
+                <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${st.dot} rounded-t-full shadow-[0_0_8px_currentColor] opacity-80`} />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* SEARCH & BULK ACTIONS */}

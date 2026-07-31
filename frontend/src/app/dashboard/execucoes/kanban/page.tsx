@@ -31,13 +31,13 @@ type Projeto = {
 
 const COLUMNS = ['Rascunho', 'Planejamento', 'Em Andamento', 'Pausado', 'Concluído', 'Cancelado'];
 
-const STATUS_CONFIG: Record<string, { color: string; border: string; bg: string }> = {
-  'Rascunho':     { color: 'text-muted-foreground', border: 'border-border/30', bg: 'bg-muted/5' },
-  'Planejamento': { color: 'text-foreground',       border: 'border-border/40', bg: 'bg-muted/5' },
-  'Em Andamento': { color: 'text-foreground',       border: 'border-border/40', bg: 'bg-background' },
-  'Pausado':      { color: 'text-muted-foreground', border: 'border-border/30', bg: 'bg-muted/5' },
-  'Concluído':    { color: 'text-muted-foreground', border: 'border-transparent', bg: 'bg-muted/5' },
-  'Cancelado':    { color: 'text-muted-foreground', border: 'border-transparent', bg: 'bg-muted/5' },
+const STATUS_CONFIG: Record<string, { color: string; border: string; bg: string; cardBorder: string }> = {
+  'Rascunho':     { color: 'text-zinc-400',    border: 'border-zinc-500/20',   bg: 'bg-zinc-500/5', cardBorder: 'border-zinc-500/30 hover:border-zinc-500/60' },
+  'Planejamento': { color: 'text-blue-400',    border: 'border-blue-500/20',   bg: 'bg-blue-500/5', cardBorder: 'border-blue-500/30 hover:border-blue-500/60' },
+  'Em Andamento': { color: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/5', cardBorder: 'border-emerald-500/30 hover:border-emerald-500/60' },
+  'Pausado':      { color: 'text-amber-400',   border: 'border-amber-500/20',  bg: 'bg-amber-500/5', cardBorder: 'border-amber-500/30 hover:border-amber-500/60' },
+  'Concluído':    { color: 'text-cyan-400',    border: 'border-cyan-500/20',   bg: 'bg-cyan-500/5', cardBorder: 'border-cyan-500/30 hover:border-cyan-500/60' },
+  'Cancelado':    { color: 'text-rose-400',    border: 'border-rose-500/20',   bg: 'bg-rose-500/5', cardBorder: 'border-rose-500/30 hover:border-rose-500/60' },
 };
 
 const PRIORIDADE_COLORS: Record<string, string> = {
@@ -188,21 +188,18 @@ export default function KanbanPage() {
   };
 
   return (
-    <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12 h-full flex flex-col min-h-[calc(100vh-6rem)]">
+    <div className="w-full space-y-4 animate-in fade-in duration-500 pb-12 h-full flex flex-col min-h-[calc(100vh-6rem)]">
       
       {/* HEADER */}
       <div className="flex flex-col shrink-0">
         
-        {/* Top Row: Breadcrumb + Tabs */}
-        <div className="flex flex-col w-full">
-          <div className="mb-4">
-            <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Kanban do Portfólio' }]} />
-          </div>
-          <ExecucoesTabs />
+        {/* Top Row: Breadcrumb */}
+        <div className="w-full mb-2">
+          <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Kanban do Portfólio' }]} />
         </div>
 
-        {/* Bottom Row: Title + Actions */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+        {/* Title + Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-3">
           <div>
             <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Kanban do Portfólio
@@ -213,6 +210,7 @@ export default function KanbanPage() {
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
             {/* QUICK FILTERS SAAS */}
+
           <div className="hidden xl:flex items-center gap-2 mx-2 border-x border-border/40 px-4">
             <button 
               onClick={() => setFilterMeus(!filterMeus)}
@@ -248,6 +246,11 @@ export default function KanbanPage() {
             <Plus className="w-3.5 h-3.5" /> Novo Projeto
           </Link>
         </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="w-full">
+          <ExecucoesTabs />
         </div>
       </div>
 
@@ -291,7 +294,7 @@ export default function KanbanPage() {
                         draggable
                         onDragStart={(e) => handleDragStart(e, proj.id)}
                         onDragEnd={(e) => handleDragEnd(e, proj.id)}
-                        className={`bg-background border border-border/40 hover:border-foreground/40 rounded p-3 shadow-sm cursor-grab active:cursor-grabbing transition-all group ${draggedId === proj.id ? 'opacity-50' : 'opacity-100'} ${proj.status === 'Concluído' ? 'opacity-60' : ''}`}
+                        className={`bg-background border rounded p-3 shadow-sm cursor-grab active:cursor-grabbing transition-all group ${cfg.cardBorder} ${draggedId === proj.id ? 'opacity-50' : 'opacity-100'} ${proj.status === 'Concluído' ? 'opacity-60' : ''}`}
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">

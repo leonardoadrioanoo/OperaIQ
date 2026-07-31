@@ -102,7 +102,16 @@ export class PortfolioController {
       // Buscar Projetos vinculados
       const { data: projetos } = await supabaseAdmin
         .from('sys_projetos')
-        .select('id, titulo, status, orcamento_previsto, prioridade')
+        .select(`
+          id, 
+          codigo, 
+          titulo, 
+          status, 
+          orcamento_previsto, 
+          prioridade,
+          gerente:gerente_id(id, nome_completo),
+          responsavel:responsavel_id(id, nome_completo)
+        `)
         .eq('portfolio_id', id);
 
       // Buscar OKRs vinculados

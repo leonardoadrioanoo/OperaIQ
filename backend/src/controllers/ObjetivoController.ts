@@ -87,4 +87,29 @@ export class ObjetivoController {
       return res.status(500).json({ error: err.message });
     }
   }
+
+  static async atualizarObjetivo(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { titulo, categoria, status } = req.body;
+
+      // Filter out undefined values to only update what was provided
+      const updates: any = {};
+      if (titulo !== undefined) updates.titulo = titulo;
+      if (categoria !== undefined) updates.categoria = categoria;
+      if (status !== undefined) updates.status = status;
+
+      const { data, error } = await supabaseAdmin
+        .from('sys_objetivos')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
 }

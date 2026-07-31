@@ -41,8 +41,12 @@ const listProjetos: RequestHandler = async (req: any, res: Response): Promise<vo
         *,
         gerente:gerente_id(id, nome_completo, email),
         responsavel:responsavel_id(id, nome_completo, email),
+        patrocinador:patrocinador_id(id, nome_completo, email),
         departamento:departamento_id(id, nome),
-        equipe:equipe_id(id, nome)
+        equipe:equipe_id(id, nome),
+        portfolio:portfolio_id(id, titulo),
+        kr:kr_id(id, titulo),
+        tarefas:sys_tarefas(status, story_points)
       `)
       .eq('empresa_id', empresa_id)
       .order('criado_em', { ascending: false });
@@ -73,7 +77,20 @@ const listProjetos: RequestHandler = async (req: any, res: Response): Promise<vo
 
     const { data, error } = await query;
     if (error) throw error;
-    res.json({ projetos: data });
+
+    // Calcular percentual concluído de forma dinâmica para cada projeto com base nas tarefas (story points)
+    const enrichedData = data.map(p => {
+      const tarefas = p.tarefas || [];
+      const totalPts = tarefas.reduce((acc: number, t: any) => acc + (t.story_points || 0), 0);
+      const donePts = tarefas.filter((t: any) => t.status === 'Concluído').reduce((acc: number, t: any) => acc + (t.story_points || 0), 0);
+      const percentual = totalPts === 0 ? 0 : Math.round((donePts / totalPts) * 100);
+      
+      // Remove tarefas raw do payload para não pesar o tráfego de rede (Timeline só precisa do %)
+      const { tarefas: _, ...rest } = p;
+      return { ...rest, percentual_concluido: percentual };
+    });
+
+    res.json({ projetos: enrichedData });
   } catch (err: any) {
     console.error('Erro ao listar projetos:', err.message);
     res.status(500).json({ error: 'Erro ao listar projetos.' });
@@ -94,7 +111,11 @@ const getProjetoById: RequestHandler = async (req: any, res: Response): Promise<
         *,
         gerente:gerente_id(id, nome_completo, email),
         responsavel:responsavel_id(id, nome_completo, email),
-        departamento:departamento_id(id, nome)
+        patrocinador:patrocinador_id(id, nome_completo, email),
+        departamento:departamento_id(id, nome),
+        equipe:equipe_id(id, nome),
+        portfolio:portfolio_id(id, titulo),
+        kr:kr_id(*)
       `)
       .eq('id', id)
       .eq('empresa_id', empresa_id);
@@ -142,7 +163,7 @@ const createProjeto: RequestHandler = async (req: any, res: Response): Promise<v
       tipo_projeto, categoria, metodologia,
       data_inicio, data_fim, orcamento_previsto,
       gerente_id, departamento_id, equipe_id, responsavel_id,
-      visibilidade, config_ia, tags, comentario_inicial, portfolio_id
+      visibilidade, config_ia, tags, comentario_inicial, portfolio_id, kr_id
     } = req.body;
 
     if (!titulo) {
@@ -211,6 +232,7 @@ const createProjeto: RequestHandler = async (req: any, res: Response): Promise<v
         comentario_inicial: comentario_inicial || null,
         anexos:             anexosData.length ? anexosData : null,
         portfolio_id:       portfolio_id       || null,
+        kr_id:              kr_id              || null,
       })
       .select()
       .single();
@@ -269,6 +291,8 @@ const updateProjeto: RequestHandler = async (req: any, res: Response): Promise<v
     delete updates.equipe;
     delete updates.patrocinador;
     delete updates.anexos;
+    delete updates.kr;
+    delete updates.portfolio;
 
     if (updates.config_ia && typeof updates.config_ia === 'string') {
       updates.config_ia = JSON.parse(updates.config_ia);
@@ -305,7 +329,7 @@ const updateProjeto: RequestHandler = async (req: any, res: Response): Promise<v
     }
 
     // Convert empty strings to null for specific fields, or delete them
-    const nullableFields = ['departamento_id', 'gerente_id', 'patrocinador_id', 'equipe_id', 'responsavel_id', 'data_inicio', 'data_fim', 'comentario_inicial'];
+    const nullableFields = ['departamento_id', 'gerente_id', 'patrocinador_id', 'equipe_id', 'responsavel_id', 'data_inicio', 'data_fim', 'comentario_inicial', 'portfolio_id', 'kr_id'];
     for (const key of Object.keys(updates)) {
       if (updates[key] === '' || updates[key] === 'null' || updates[key] === 'undefined') {
         if (nullableFields.includes(key)) {

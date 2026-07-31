@@ -7,6 +7,7 @@ const router = Router();
 router.use(authMiddleware as any);
 router.get('/', ObjetivoController.listar as any);
 router.post('/', ObjetivoController.criarObjetivo as any);
+router.put('/:id', ObjetivoController.atualizarObjetivo as any);
 router.post('/krs', ObjetivoController.criarKeyResult as any);
 router.patch('/krs/:id/progress', ObjetivoController.atualizarProgressKR as any);
 

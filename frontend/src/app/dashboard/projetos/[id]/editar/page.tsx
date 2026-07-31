@@ -25,6 +25,8 @@ type ProjetoForm = {
   orcamento_previsto?: number;
   gerente_id?: string;
   departamento_id?: string;
+  portfolio_id?: string;
+  kr_id?: string;
 };
 
 export default function EditarProjetoPage() {
@@ -34,6 +36,8 @@ export default function EditarProjetoPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
+  const [objetivos, setObjetivos] = useState<any[]>([]);
   const [projetoTitulo, setProjetoTitulo] = useState('');
   
   const company = useAuthStore(state => state.company);
@@ -47,10 +51,12 @@ export default function EditarProjetoPage() {
       if (!token) return;
       const h = { Authorization: `Bearer ${token}` };
 
-      const [projetoRes, colsRes, depsRes] = await Promise.all([
+      const [projetoRes, colsRes, depsRes, portfRes, objRes] = await Promise.all([
         fetch(`${API}/api/projetos/${id}`, { headers: h }),
         fetch(`${API}/api/colaboradores`, { headers: h }),
         fetch(`${API}/api/departamentos`, { headers: h }),
+        fetch(`${API}/api/portfolios`, { headers: h }),
+        fetch(`${API}/api/objetivos`, { headers: h }),
       ]);
 
       if (projetoRes.ok) {
@@ -66,6 +72,8 @@ export default function EditarProjetoPage() {
           orcamento_previsto: proj.orcamento_previsto || 0,
           gerente_id:         proj.gerente_id || '',
           departamento_id:    proj.departamento_id || '',
+          portfolio_id:       proj.portfolio_id || '',
+          kr_id:              proj.kr_id || '',
         });
       } else {
         toast.error('Projeto não encontrado');
@@ -81,9 +89,30 @@ export default function EditarProjetoPage() {
         setDepartamentos(Array.isArray(depsData) ? depsData : depsData.departamentos || []);
       }
 
+      if (portfRes.ok) {
+        const portfData = await portfRes.json();
+        setPortfolios(Array.isArray(portfData) ? portfData : portfData.portfolios || []);
+      }
+      if (objRes.ok) {
+        const objData = await objRes.json();
+        setObjetivos(Array.isArray(objData) ? objData : objData.objetivos || []);
+      }
+
       setIsLoading(false);
     });
   }, [id, reset, router]);
+
+  const portfolioSelecionado = useForm().watch?.call({ watch: () => {} }, 'portfolio_id') || null; // Will fix properly below
+  const portfolioForm = watch('portfolio_id');
+  const [objetivosFiltrados, setObjetivosFiltrados] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (portfolioForm) {
+      setObjetivosFiltrados(objetivos.filter(o => o.portfolio_id === portfolioForm));
+    } else {
+      setObjetivosFiltrados(objetivos);
+    }
+  }, [portfolioForm, objetivos]);
 
   const onSubmit = async (data: ProjetoForm) => {
     setIsSubmitting(true);
@@ -97,6 +126,8 @@ export default function EditarProjetoPage() {
         departamento_id: data.departamento_id || null,
         data_inicio:     data.data_inicio || null,
         data_fim:        data.data_fim || null,
+        portfolio_id:    data.portfolio_id || null,
+        kr_id:           data.kr_id || null,
       };
 
       const res = await fetch(`${API}/api/projetos/${id}`, {
@@ -266,6 +297,39 @@ export default function EditarProjetoPage() {
                   <option key={d.id} value={d.id}>{d.nome}</option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* BLOCO 4: Alinhamento Estratégico */}
+        <div className="bg-background border border-border/60 rounded-2xl p-6 shadow-sm space-y-5">
+          <div className="flex items-center gap-2 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Alinhamento Estratégico</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className={labelClass}>Portfólio Vinculado</label>
+              <select {...register('portfolio_id')} className={inputClass}>
+                <option value="">Opcional (Nenhum)</option>
+                {portfolios.map((p: any) => <option key={p.id} value={p.id}>{p.titulo}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Key Result Apoiado</label>
+              <select {...register('kr_id')} className={inputClass} disabled={objetivosFiltrados.length === 0}>
+                <option value="">Projeto Operacional (BAU - Sem KR)</option>
+                {objetivosFiltrados.map((obj: any) => (
+                  <optgroup key={obj.id} label={`🎯 ${obj.titulo}`}>
+                    {obj.krs?.map((kr: any) => (
+                      <option key={kr.id} value={kr.id}>↳ KR: {kr.titulo}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {portfolioForm && objetivosFiltrados.length === 0 && (
+                <p className="text-[11px] text-amber-500 mt-1 font-medium">Nenhum KR encontrado neste portfólio.</p>
+              )}
             </div>
           </div>
         </div>

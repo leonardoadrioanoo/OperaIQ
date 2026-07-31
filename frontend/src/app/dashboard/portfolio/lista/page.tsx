@@ -281,9 +281,6 @@ export default function PortfolioListaPage() {
                           <span className="text-xs font-semibold text-foreground group-hover:text-emerald-500 transition-colors">
                             {port.titulo}
                           </span>
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[300px] mt-0.5">
-                            {port.descricao || 'Sem escopo definido.'}
-                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>

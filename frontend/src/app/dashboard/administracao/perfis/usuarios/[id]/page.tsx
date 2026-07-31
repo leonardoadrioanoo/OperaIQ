@@ -379,13 +379,11 @@ export default function ColaboradorDetailPage() {
   return (
     <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4 text-sm text-zinc-500">
-          <span>Administração</span>
-          <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
-          <span>/</span>
-          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-emerald-400">Colaboradores</Link>
-        </div>
+        <Breadcrumb items={[
+          { label: 'Administração' },
+          { label: 'Perfis e Acessos', href: '/dashboard/administracao/perfis' },
+          { label: 'Colaboradores', href: '/dashboard/administracao/perfis/usuarios' }
+        ]} />
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">

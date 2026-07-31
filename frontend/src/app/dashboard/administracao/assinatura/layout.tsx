@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { CreditCard, Zap, FileText, PieChart } from 'lucide-react';
 
+import { Breadcrumb } from '@/components/ui';
+
 export default function AssinaturaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -27,12 +29,10 @@ export default function AssinaturaLayout({ children }: { children: React.ReactNo
     <div className="max-w-7xl space-y-6 animate-in fade-in duration-500">
       
       {/* Breadcrumb Minimalista */}
-      <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-        <span>Administração</span>
-        <span>/</span>
-        <span className="text-zinc-300">Assinatura</span>
-        <span>/</span>
-      </div>
+      <Breadcrumb items={[
+        { label: 'Administração' },
+        { label: 'Assinatura' }
+      ]} />
 
       {/* Navegação por abas (Minimalista) */}
       <div className="flex flex-wrap items-center gap-6 border-b border-border/60 px-1 mt-2">

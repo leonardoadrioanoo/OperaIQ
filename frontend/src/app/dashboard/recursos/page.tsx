@@ -142,35 +142,38 @@ export default function RecursosAlocacaoPage() {
         <>
           {/* 2. STATS HUD (Linear Style) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <div className="overflow-hidden rounded-xl border relative bg-emerald-500/10 backdrop-blur-sm shadow-sm transition-all hover:shadow-md border-emerald-500/20 p-4 flex flex-col justify-between h-24">
+              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2 pl-2">
                 <Target className="w-3.5 h-3.5" />
                 Capacidade Ideal
               </span>
-              <div className="flex items-end gap-1.5">
-                <span className="text-2xl font-mono text-foreground">{kpis.disponiveis}</span>
+              <div className="flex items-end gap-1.5 pl-2">
+                <span className="text-2xl font-mono text-emerald-400 font-semibold">{kpis.disponiveis}</span>
                 <span className="text-[9px] font-bold text-emerald-500 mb-1 uppercase tracking-wider">Pessoas Livres</span>
               </div>
             </div>
 
-            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <div className="overflow-hidden rounded-xl border relative bg-red-500/10 backdrop-blur-sm shadow-sm transition-all hover:shadow-md border-red-500/20 p-4 flex flex-col justify-between h-24">
+              <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+              <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-2 pl-2">
                 <AlertCircle className="w-3.5 h-3.5" />
                 Risco de Sobrecarga
               </span>
-              <div className="flex items-end gap-1.5">
-                <span className="text-2xl font-mono text-foreground">{kpis.sobrecarregados}</span>
+              <div className="flex items-end gap-1.5 pl-2">
+                <span className="text-2xl font-mono text-red-400 font-semibold">{kpis.sobrecarregados}</span>
                 <span className="text-[9px] font-bold text-red-500 mb-1 uppercase tracking-wider">Gargalos Críticos</span>
               </div>
             </div>
 
-            <div className="border border-border/40 bg-transparent rounded-md p-4 flex flex-col justify-between h-24 hover:bg-muted/5 transition-colors">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <div className="overflow-hidden rounded-xl border relative bg-blue-500/10 backdrop-blur-sm shadow-sm transition-all hover:shadow-md border-blue-500/20 p-4 flex flex-col justify-between h-24">
+              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
+              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2 pl-2">
                 <Zap className="w-3.5 h-3.5" />
                 Volume em Operação
               </span>
-              <div className="flex items-end gap-1.5">
-                <span className="text-2xl font-mono text-foreground">{projetos.length}</span>
+              <div className="flex items-end gap-1.5 pl-2">
+                <span className="text-2xl font-mono text-blue-400 font-semibold">{projetos.length}</span>
                 <span className="text-[9px] font-bold text-blue-500 mb-1 uppercase tracking-wider">Projetos Ativos</span>
               </div>
             </div>

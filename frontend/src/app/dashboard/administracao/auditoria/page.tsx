@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Globe2 } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui';
 
 type AuditLog = {
   id: string;
@@ -145,11 +146,10 @@ export default function AuditoriaPage() {
       {/* Header Minimalista com IP / Contexto */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/60 pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            <span>Administração</span>
-            <span>/</span>
-            <span className="text-foreground">Auditoria (Audit Trail)</span>
-          </div>
+          <Breadcrumb items={[
+            { label: 'Administração' },
+            { label: 'Auditoria (Audit Trail)' }
+          ]} />
           <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
             <Activity className="w-6 h-6 text-emerald-500" />
             Auditoria e Logs de Sistema

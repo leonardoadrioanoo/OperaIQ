@@ -10,7 +10,7 @@ import {
   User, Building2, Shield, FileText, Loader2, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
-import { DisplayField, FormField } from '@/components/ui';
+import { DisplayField, FormField, Breadcrumb } from '@/components/ui';
 import {
   PermissaoFlags, emptyPermissao, PERM_COLUMNS, buildModuloPermissaoList
 } from '@/components/ui/permissao-matrix';
@@ -185,13 +185,11 @@ export default function NovoUsuarioWizard() {
     <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-          <span>Administração</span>
-          <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
-          <span>/</span>
-          <Link href="/dashboard/administracao/perfis/usuarios" className="text-zinc-300 hover:text-emerald-400">Colaboradores</Link>
-        </div>
+        <Breadcrumb items={[
+          { label: 'Administração' },
+          { label: 'Perfis e Acessos', href: '/dashboard/administracao/perfis' },
+          { label: 'Colaboradores', href: '/dashboard/administracao/perfis/usuarios' }
+        ]} />
         <h1 className="text-2xl font-bold text-white tracking-tight mt-2">Cadastrar Novo Colaborador</h1>
       </div>
 

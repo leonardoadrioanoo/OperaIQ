@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Network, Building2, Briefcase, Users } from 'lucide-react';
 
+import { Breadcrumb } from '@/components/ui';
+
 export default function EstruturaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -26,12 +28,10 @@ export default function EstruturaLayout({ children }: { children: React.ReactNod
     <div className="max-w-5xl space-y-6 animate-in fade-in duration-500">
       
       {/* Breadcrumb Minimalista */}
-      <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-        <span>Administração</span>
-        <span>/</span>
-        <span className="text-zinc-300">Estrutura Organizacional</span>
-        <span>/</span>
-      </div>
+      <Breadcrumb items={[
+        { label: 'Administração' },
+        { label: 'Estrutura Organizacional' }
+      ]} />
 
       {/* Navegação por abas (Minimalista) */}
       <div className="flex items-center gap-6 border-b border-border/60 px-1 mt-2">

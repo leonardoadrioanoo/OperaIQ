@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Activity, HardDrive, ShieldCheck, Server } from 'lucide-react';
 
+import { Breadcrumb } from '@/components/ui';
+
 export default function InfraestruturaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -26,12 +28,10 @@ export default function InfraestruturaLayout({ children }: { children: React.Rea
     <div className="max-w-7xl space-y-6 animate-in fade-in duration-500">
       
       {/* Breadcrumb Minimalista */}
-      <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        <span>Administração</span>
-        <span>/</span>
-        <span className="text-foreground">Infraestrutura</span>
-        <span>/</span>
-      </div>
+      <Breadcrumb items={[
+        { label: 'Administração' },
+        { label: 'Infraestrutura' }
+      ]} />
 
       {/* Navegação por abas (Minimalista) */}
       <div className="flex flex-wrap items-center gap-6 border-b border-border/60 px-1 mt-2">

@@ -53,6 +53,9 @@ export default function EquipesPage() {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<'integrantes' | 'colaboradores'>('integrantes');
+  const [isLinkingColab, setIsLinkingColab] = useState(false);
+  const [colabSearch, setColabSearch] = useState('');
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
@@ -97,6 +100,47 @@ export default function EquipesPage() {
     if (res.ok) setSelectedEquipe(await res.json());
   };
 
+  const openDetail = (equipe: any) => {
+    setDetailTab('integrantes');
+    setColabSearch('');
+    fetchEquipeDetail(equipe.id);
+    setIsDetailOpen(true);
+  };
+
+  const handleVincularColab = async (colabId: string, equipeNome: string) => {
+    setIsLinkingColab(true);
+    try {
+      const session = await getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${colabId}/vincular`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ equipe: equipeNome }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      toast.success('Colaborador vinculado à equipe.');
+      await fetchData();
+    } catch (e: any) { toast.error(e.message || 'Erro ao vincular.'); }
+    finally { setIsLinkingColab(false); }
+  };
+
+  const handleDesvincularColab = async (colabId: string) => {
+    setIsLinkingColab(true);
+    try {
+      const session = await getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${colabId}/vincular`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ equipe: null }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      toast.success('Colaborador desvinculado.');
+      await fetchData();
+    } catch (e: any) { toast.error(e.message || 'Erro ao desvincular.'); }
+    finally { setIsLinkingColab(false); }
+  };
+
   useEffect(() => { fetchData(); }, []);
 
   const openModal = (equipe?: any) => {
@@ -121,10 +165,8 @@ export default function EquipesPage() {
     setIsEquipeModalOpen(true);
   };
 
-  const openDetail = async (equipe: any) => {
-    await fetchEquipeDetail(equipe.id);
-    setIsDetailOpen(true);
-  };
+
+
 
     const onSubmit = async (data: EquipeForm) => {
     setIsSaving(true);
@@ -320,34 +362,11 @@ export default function EquipesPage() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <span>Administração</span>
-            <span>/</span>
-            <Link href="/dashboard/administracao/estrutura" className="hover:text-emerald-400">Estrutura Organizacional</Link>
-            <span>/</span>
-            <span className="text-zinc-300">Equipes</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-500" />
-            Equipes
-          </h1>
-        </div>
-        {perms.p_criar && (
-          <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
-            <Plus className="w-4 h-4" />
-            Nova Equipe
-          </button>
-        )}
-      </div>
-
+    <div className="space-y-4">
       {/* Tabela */}
-      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
+      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full sm:max-w-sm">
             <Search className="w-4 h-4 text-zinc-500 shrink-0" />
             <input
               type="text"
@@ -362,7 +381,15 @@ export default function EquipesPage() {
               </button>
             )}
           </div>
-          <span className="ml-auto text-xs text-zinc-500">{filteredEquipes.length} de {equipes.length}</span>
+          
+          <div className="flex items-center gap-4 self-end sm:self-auto">
+            {perms.p_criar && (
+              <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-all">
+                <Plus className="w-4 h-4" />
+                Nova Equipe
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -414,8 +441,8 @@ export default function EquipesPage() {
                     onFilter={handleFilter}
                   />
                   <DataTableHeader
-                    label="Membros"
-                    sortKey="membros"
+                    label="Colaboradores"
+                    sortKey="colaboradores"
                     currentSort={sortConfig}
                     onSort={requestSort}
                     align="center"
@@ -448,7 +475,7 @@ export default function EquipesPage() {
                     <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className="inline-flex items-center gap-1 text-xs">
                         <Users className="w-3.5 h-3.5 text-zinc-500" />
-                        {equipe.equipe_integrantes?.length || 0}
+                        {equipe._membros_count ?? equipe.equipe_integrantes?.length ?? 0}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
@@ -506,6 +533,14 @@ export default function EquipesPage() {
           </div>
         )}
       </div>
+
+      {!isLoading && (
+        <div className="flex justify-end pr-2">
+          <span className="text-xs font-medium text-zinc-500">
+            Mostrando {filteredEquipes.length} de {equipes.length} registros
+          </span>
+        </div>
+      )}
 
       {/* Modal Criar/Editar Equipe */}
       {isEquipeModalOpen && (
@@ -615,96 +650,150 @@ export default function EquipesPage() {
               <button onClick={() => setIsDetailOpen(false)} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
 
+            {/* Tabs */}
+            <div className="flex border-b border-border/60 shrink-0">
+              {(['integrantes', 'colaboradores'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setDetailTab(tab)}
+                  className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                    detailTab === tab
+                      ? 'border-emerald-500 text-emerald-400'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {tab === 'integrantes'
+                    ? `Integrantes (${selectedEquipe.equipe_integrantes?.length ?? 0})`
+                    : `Colaboradores (${colaboradores.filter(c => c.equipe === selectedEquipe.nome).length})`}
+                </button>
+              ))}
+            </div>
+
             <div className="overflow-y-auto flex-1 p-5 space-y-5">
-              
-              {/* Informações da Equipe */}
-              <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-foreground border-b border-white/10 pb-2">Informações da Equipe</h4>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-zinc-500 block text-xs">Departamento</span>
-                    <span className="text-zinc-300">{selectedEquipe.departamento?.nome || 'Raiz'}</span>
-                  </div>
-                  <div>
-                    <span className="text-zinc-500 block text-xs">Status</span>
-                    <span className={`inline-block px-2 py-0.5 mt-1 rounded-full text-[10px] font-semibold uppercase ${selectedEquipe.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
-                      {selectedEquipe.status}
-                    </span>
-                  </div>
-                </div>
 
-                {selectedEquipe.descricao && (
-                  <div>
-                    <span className="text-zinc-500 block text-xs">Descrição</span>
-                    <p className="text-zinc-300 mt-1">{selectedEquipe.descricao}</p>
+              {/* ── ABA INTEGRANTES ── */}
+              {detailTab === 'integrantes' && (
+                <>
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-3">
+                    <h4 className="text-sm font-semibold text-foreground border-b border-white/10 pb-2">Informações da Equipe</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-zinc-500 block text-xs">Departamento</span>
+                        <span className="text-zinc-300">{selectedEquipe.departamento?.nome || 'Raiz'}</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 block text-xs">Status</span>
+                        <span className={`inline-block px-2 py-0.5 mt-1 rounded-full text-[10px] font-semibold uppercase ${selectedEquipe.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-500/10 text-zinc-400'}`}>
+                          {selectedEquipe.status}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedEquipe.descricao && (
+                      <div>
+                        <span className="text-zinc-500 block text-xs">Descrição</span>
+                        <p className="text-zinc-300 mt-1">{selectedEquipe.descricao}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Adicionar Integrante */}
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground">Integrantes da Equipe</h4>
-              </div>
-              
-              {perms.p_editar && (
-                <div className="flex gap-2">
-                  <Select
-                    value={novoIntegranteId}
-                    onChange={(e) => setNovoIntegranteId(e.target.value)}
-                    className=""
-                  >
-                    <option value="">Adicionar colaborador...</option>
-                    {colaboradores
-                      .filter(c => !selectedEquipe.equipe_integrantes?.find((i: any) => i.perfil?.id === c.id))
-                      .map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
-                  </Select>
-                  <Select
-                    value={novoIntegrantePapel}
-                    onChange={(e) => setNovoIntegrantePapel(e.target.value)}
-                    className=""
-                  >
-                    {PAPEIS.map(p => <option key={p} value={p}>{p}</option>)}
-                  </Select>
-                  <button
-                    onClick={handleAddMember}
-                    disabled={!novoIntegranteId || isAddingMember}
-                    className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-40 transition-all"
-                  >
-                    {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                  </button>
-                </div>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-foreground">Integrantes da Equipe</h4>
+                  </div>
+
+                  {perms.p_editar && (
+                    <div className="flex gap-2">
+                      <Select value={novoIntegranteId} onChange={(e) => setNovoIntegranteId(e.target.value)} className="">
+                        <option value="">Adicionar colaborador...</option>
+                        {colaboradores
+                          .filter(c => !selectedEquipe.equipe_integrantes?.find((i: any) => i.perfil?.id === c.id))
+                          .map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
+                      </Select>
+                      <Select value={novoIntegrantePapel} onChange={(e) => setNovoIntegrantePapel(e.target.value)} className="">
+                        {PAPEIS.map(p => <option key={p} value={p}>{p}</option>)}
+                      </Select>
+                      <button onClick={handleAddMember} disabled={!novoIntegranteId || isAddingMember} className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-40 transition-all">
+                        {isAddingMember ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {selectedEquipe.equipe_integrantes?.length === 0 ? (
+                      <p className="text-sm text-zinc-500 text-center py-4">Nenhum integrante ainda.</p>
+                    ) : (
+                      selectedEquipe.equipe_integrantes?.map((i: any) => (
+                        <div key={i.perfil?.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border/60">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-emerald-900/40 rounded-full flex items-center justify-center text-xs text-emerald-300 font-bold ring-1 ring-emerald-500/20">
+                              {i.perfil?.nome_completo?.[0] || '?'}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{i.perfil?.nome_completo}</p>
+                              <p className="text-xs text-zinc-500">{i.papel}</p>
+                            </div>
+                          </div>
+                          {perms.p_editar && (
+                            <button onClick={() => handleRemoveMember(i.perfil?.id)} className="p-1.5 text-zinc-600 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-colors" title="Remover da equipe">
+                              <UserMinus className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
               )}
 
-              {/* Lista de Integrantes */}
-              <div className="space-y-2">
-                {selectedEquipe.equipe_integrantes?.length === 0 ? (
-                  <p className="text-sm text-zinc-500 text-center py-4">Nenhum integrante ainda.</p>
-                ) : (
-                  selectedEquipe.equipe_integrantes?.map((i: any) => (
-                    <div key={i.perfil?.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border/60">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-emerald-900/40 rounded-full flex items-center justify-center text-xs text-emerald-300 font-bold ring-1 ring-emerald-500/20">
-                          {i.perfil?.nome_completo?.[0] || '?'}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{i.perfil?.nome_completo}</p>
-                          <p className="text-xs text-zinc-500">{i.papel}</p>
-                        </div>
-                      </div>
-                      {perms.p_editar && (
-                        <button
-                          onClick={() => handleRemoveMember(i.perfil?.id)}
-                          className="p-1.5 text-zinc-600 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-colors"
-                          title="Remover da equipe"
-                        >
-                          <UserMinus className="w-4 h-4" />
-                        </button>
+              {/* ── ABA COLABORADORES ── */}
+              {detailTab === 'colaboradores' && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Vinculados a esta Equipe</h4>
+                    <div className="space-y-1.5">
+                      {colaboradores.filter(c => c.equipe === selectedEquipe.nome).length === 0 ? (
+                        <p className="text-sm text-zinc-500 py-4 text-center">Nenhum colaborador vinculado via perfil.</p>
+                      ) : (
+                        colaboradores.filter(c => c.equipe === selectedEquipe.nome).map(c => (
+                          <div key={c.id} className="flex items-center justify-between p-2.5 bg-muted/40 rounded-lg border border-border/50">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
+                              <p className="text-xs text-zinc-500">{c.cargo || 'Sem cargo'} · {c.departamento || ''}</p>
+                            </div>
+                            {perms.p_editar && (
+                              <button onClick={() => handleDesvincularColab(c.id)} disabled={isLinkingColab} className="px-2.5 py-1 text-xs font-semibold text-rose-400 border border-rose-500/30 rounded-md hover:bg-rose-500/10 transition-colors disabled:opacity-40">
+                                Desvincular
+                              </button>
+                            )}
+                          </div>
+                        ))
                       )}
                     </div>
-                  ))
-                )}
-              </div>
+                  </div>
+                  {perms.p_editar && (
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Vincular Colaborador</h4>
+                      <input type="text" placeholder="Buscar colaborador..." value={colabSearch} onChange={e => setColabSearch(e.target.value)} className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50 mb-3" />
+                      <div className="space-y-1.5 max-h-52 overflow-y-auto">
+                        {colaboradores
+                          .filter(c => c.equipe !== selectedEquipe.nome)
+                          .filter(c => !colabSearch || c.nome_completo.toLowerCase().includes(colabSearch.toLowerCase()))
+                          .slice(0, 20)
+                          .map(c => (
+                            <div key={c.id} className="flex items-center justify-between p-2.5 bg-muted/20 rounded-lg border border-border/30">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
+                                <p className="text-xs text-zinc-500">{c.equipe ? `Equipe atual: ${c.equipe}` : 'Sem equipe'} · {c.cargo || ''}</p>
+                              </div>
+                              <button onClick={() => handleVincularColab(c.id, selectedEquipe.nome)} disabled={isLinkingColab} className="px-2.5 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/30 rounded-md hover:bg-emerald-500/10 transition-colors disabled:opacity-40">
+                                Vincular
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

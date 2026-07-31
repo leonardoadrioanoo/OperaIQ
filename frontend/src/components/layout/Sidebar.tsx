@@ -78,7 +78,10 @@ export function Sidebar() {
 
       {/* Company Info */}
       <div className="px-4 py-4 shrink-0">
-        <div className="w-full bg-card border border-border/60 rounded-md px-3 py-2 flex items-center justify-between text-sm">
+        <Link 
+          href="/dashboard/administracao/empresa/dados"
+          className="w-full bg-card border border-border/60 hover:bg-white/5 transition-colors rounded-md px-3 py-2 flex items-center justify-between text-sm cursor-pointer"
+        >
           <div className="flex items-center gap-2 text-card-foreground min-w-0">
             <div className="w-7 h-7 bg-emerald-900/60 rounded flex items-center justify-center text-xs text-emerald-300 font-bold flex-shrink-0 overflow-hidden ring-1 ring-emerald-500/20">
               {company?.logo_url ? (
@@ -95,7 +98,7 @@ export function Sidebar() {
             </div>
             <span className="truncate font-medium">{companyName}</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation — gerado dinamicamente a partir de MODULOS */}

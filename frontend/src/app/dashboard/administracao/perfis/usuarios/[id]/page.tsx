@@ -38,7 +38,7 @@ type UpdateColaboradorForm = z.infer<typeof updateColaboradorSchema>;
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-lg font-semibold text-white border-b border-white/5 pb-2">
+    <h3 className="text-lg font-semibold text-white border-b border-border/60 pb-2">
       {children}
     </h3>
   );
@@ -70,8 +70,11 @@ export default function ColaboradorDetailPage() {
   const selectedDepartamento = departamentos.find(d => d.nome === selectedDepartamentoNome);
   const selectedDepartamentoId = selectedDepartamento?.id;
 
-  const filteredCargos = selectedDepartamentoId ? cargos.filter(c => c.departamento_id === selectedDepartamentoId) : [];
-  const filteredEquipes = selectedDepartamentoId ? equipes.filter(e => e.departamento_id === selectedDepartamentoId) : [];
+  const currentCargo = watch('cargo');
+  const currentEquipe = watch('equipe');
+
+  const filteredCargos = selectedDepartamentoId ? cargos.filter(c => c.departamento_id === selectedDepartamentoId) : cargos;
+  const filteredEquipes = selectedDepartamentoId ? equipes.filter(e => e.departamento_id === selectedDepartamentoId) : equipes;
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -397,7 +400,7 @@ export default function ColaboradorDetailPage() {
           
           {activeTab !== 'auditoria' && (
             !isEditing ? (
-              <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors border border-white/5">
+              <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-background hover:bg-muted text-white rounded-lg text-sm font-medium transition-colors border border-border/60">
                 <Edit2 className="w-4 h-4 text-emerald-400" /> Editar
               </button>
             ) : (
@@ -415,7 +418,7 @@ export default function ColaboradorDetailPage() {
       </div>
 
       {/* Card Header */}
-      <div className="bg-gradient-to-r from-[#13131f] to-[#0c0c16] border border-white/5 rounded-2xl p-6 mb-8 flex items-center gap-6">
+      <div className="bg-background border border-border/60 rounded-2xl p-6 mb-8 flex items-center gap-6 shadow-sm">
         <div className="w-20 h-20 rounded-full bg-emerald-900 flex items-center justify-center text-3xl text-emerald-200 font-bold flex-shrink-0 ring-4 ring-emerald-500/20">
           {data.foto_url ? <img src={data.foto_url} alt="Avatar" className="w-full h-full object-cover rounded-full" /> : getInitials(data.nome_completo)}
         </div>
@@ -426,7 +429,7 @@ export default function ColaboradorDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-6 border-b border-white/5 mb-8">
+      <div className="flex items-center gap-6 border-b border-border/60 mb-8">
         {[
           { id: 'pessoal', label: 'Dados Pessoais', icon: User },
           { id: 'organizacional', label: 'Dados Organizacionais', icon: FolderOpen },
@@ -475,27 +478,27 @@ export default function ColaboradorDetailPage() {
                 <Readonly>{data?.empresas?.nome_fantasia || 'N/A'}</Readonly>
               </div>
               <InlineSelect label="Departamento" name="departamento" register={register} isEditing={isEditing} readonlyValue={data?.departamento}>
-                <option value="" className="bg-[#06112a] text-white">Selecione um departamento...</option>
-                {departamentos.map(d => <option key={d.id} value={d.nome} className="bg-[#06112a] text-white">{d.nome}</option>)}
+                <option value="" className="bg-background text-white">Selecione um departamento...</option>
+                {departamentos.map(d => <option key={d.id} value={d.nome} className="bg-background text-white">{d.nome}</option>)}
               </InlineSelect>
-              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing} readonlyValue={data?.cargo} disabled={!selectedDepartamentoId}>
-                <option value="" className="bg-[#06112a] text-white">{selectedDepartamentoId ? 'Selecione um cargo...' : 'Selecione um departamento primeiro'}</option>
-                {data?.cargo && !filteredCargos.find(c => c.nome === data.cargo) && (
-                  <option value={data.cargo} className="bg-[#06112a] text-white">{data.cargo}</option>
+              <InlineSelect label="Cargo" name="cargo" register={register} isEditing={isEditing} readonlyValue={data?.cargo}>
+                <option value="" className="bg-background text-white">Selecione um cargo...</option>
+                {currentCargo && !filteredCargos.find(c => c.nome === currentCargo) && (
+                  <option value={currentCargo} className="bg-background text-white">{currentCargo}</option>
                 )}
-                {filteredCargos.map(c => <option key={c.id} value={c.nome} className="bg-[#06112a] text-white">{c.nome}</option>)}
+                {filteredCargos.map(c => <option key={c.id} value={c.nome} className="bg-background text-white">{c.nome}</option>)}
               </InlineSelect>
               <InlineSelect label="Equipe / Squad" name="equipe" register={register} isEditing={isEditing} readonlyValue={data?.equipe}>
-                <option value="" className="bg-[#06112a] text-white">Selecione uma equipe...</option>
-                {data?.equipe && !filteredEquipes.find(e => e.nome === data.equipe) && (
-                  <option value={data.equipe} className="bg-[#06112a] text-white">{data.equipe}</option>
+                <option value="" className="bg-background text-white">Selecione uma equipe...</option>
+                {currentEquipe && !filteredEquipes.find(e => e.nome === currentEquipe) && (
+                  <option value={currentEquipe} className="bg-background text-white">{currentEquipe}</option>
                 )}
-                {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-[#06112a] text-white">{e.nome}</option>)}
+                {filteredEquipes.map(e => <option key={e.id} value={e.nome} className="bg-background text-white">{e.nome}</option>)}
               </InlineSelect>
               <InlineField label="Matrícula / ID Interno" name="matricula" register={register} isEditing={isEditing} readonlyValue={data?.matricula} />
               <InlineSelect label="Gestor Imediato" name="gestor_id" register={register} isEditing={isEditing} readonlyValue={data?.gestor?.nome_completo}>
-                <option value="" className="bg-[#06112a] text-white">Selecione um gestor...</option>
-                {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-[#06112a] text-white">{u.nome_completo}</option>)}
+                <option value="" className="bg-background text-white">Selecione um gestor...</option>
+                {companyUsers.map(u => <option key={u.id} value={u.id} className="bg-background text-white">{u.nome_completo}</option>)}
               </InlineSelect>
             </div>
           </div>
@@ -507,22 +510,22 @@ export default function ColaboradorDetailPage() {
             <SectionTitle>Dados de Acesso</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <InlineSelect label="Perfil de Acesso" name="sys_perfil_acesso_id" register={register} isEditing={isEditing} readonlyValue={perfisAcesso.find(p => p.id === data?.sys_perfil_acesso_id)?.label || 'Não Definido'}>
-                <option value="" className="bg-[#06112a] text-white">Selecione um perfil...</option>
+                <option value="" className="bg-background text-white">Selecione um perfil...</option>
                 {perfisAcesso.map(preset => (
-                  <option key={preset.id} value={preset.id} className="bg-[#06112a] text-white">
+                  <option key={preset.id} value={preset.id} className="bg-background text-white">
                     {preset.label}
                   </option>
                 ))}
               </InlineSelect>
               <DisplayField label="Descrição do Perfil" value={perfisAcesso.find(p => p.id === (selectedPerfilAcessoId || data?.sys_perfil_acesso_id))?.descricao || data?.sys_perfis_acesso?.descricao || 'Sem descrição vinculada.'} />
               <InlineSelect label="Status da Conta" name="status_conta" register={register} isEditing={isEditing} readonlyValue={data?.status_conta}>
-                <option value="Ativo" className="bg-[#06112a] text-white">Ativo</option>
-                <option value="Inativo" className="bg-[#06112a] text-white">Inativo</option>
-                <option value="Bloqueado" className="bg-[#06112a] text-white">Bloqueado</option>
+                <option value="Ativo" className="bg-background text-white">Ativo</option>
+                <option value="Inativo" className="bg-background text-white">Inativo</option>
+                <option value="Bloqueado" className="bg-background text-white">Bloqueado</option>
               </InlineSelect>
             </div>
 
-            <div className="pt-4 border-t border-white/5">
+            <div className="pt-4 border-t border-border/60">
               <h4 className="text-sm font-medium text-white mb-2">Segurança</h4>
               <button 
                 type="button" 
@@ -542,7 +545,7 @@ export default function ColaboradorDetailPage() {
         {/* PERMISSÕES */}
         {activeTab === 'permissoes' && (
           <div className="space-y-6">
-            <div className="border-b border-white/5 pb-4 mb-6">
+            <div className="border-b border-border/60 pb-4 mb-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Permissões</h3>
                 {isEditing && (

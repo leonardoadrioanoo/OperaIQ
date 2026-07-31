@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { 
   Activity, Server, Database, Cpu, HardDrive, Clock, 
-  RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck
+  RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
@@ -98,186 +97,135 @@ export default function InfraestruturaStatusPage() {
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12">
       
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-end border-b border-border/60 pb-4">
         <div>
-          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <span>Administração</span>
-            <span>/</span>
-            <Link href="/dashboard/administracao/infraestrutura" className="hover:text-white transition-colors">Infraestrutura</Link>
-            <span>/</span>
-            <span className="text-zinc-300">Status do Sistema</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Server className="w-8 h-8 text-cyan-400" />
-            Saúde da Infraestrutura
-          </h1>
-          <p className="text-zinc-400 mt-2">
-            Monitoramento em tempo real dos recursos do servidor, banco de dados e APIs core.
-          </p>
+          <h2 className="text-lg font-semibold text-foreground">Monitoramento do Sistema</h2>
+          <p className="text-sm text-muted-foreground mt-1">Métricas em tempo real da infraestrutura core.</p>
         </div>
-        
         <button 
           onClick={() => fetchStatus(true)}
           disabled={isRefreshing}
-          className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="px-3 py-1.5 bg-background hover:bg-muted border border-border/60 text-foreground rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
         >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Atualizar Agora
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Recarregar
         </button>
       </div>
 
       {status && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          {/* Card: API Status */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                ONLINE
-              </span>
-            </div>
-            <h3 className="text-zinc-400 text-sm font-medium">Backend API (Node.js)</h3>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">Ativo</span>
-            </div>
-            <p className="text-xs text-zinc-500 mt-2 font-mono">v{status.servidor.node_version}</p>
-          </div>
-
-          {/* Card: Banco de Dados */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                <Database className="w-5 h-5 text-cyan-400" />
-              </div>
-              {status.banco_dados.status === 'ONLINE' ? (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-semibold border border-cyan-500/20">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                  CONECTADO
+        <div className="bg-background border border-border/60 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/60">
+            
+            {/* Metric: API */}
+            <div className="p-4 flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Backend API</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="text-xs text-foreground font-medium">Online</span>
                 </span>
-              ) : (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 text-xs font-semibold border border-rose-500/20">
-                  FALHA
+              </div>
+              <div>
+                <div className="text-xl font-semibold text-foreground mt-1">v{status.servidor.node_version}</div>
+                <div className="text-xs text-muted-foreground mt-1 font-mono">Process Node.js</div>
+              </div>
+            </div>
+
+            {/* Metric: DB */}
+            <div className="p-4 flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Database</span>
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${status.banco_dados.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                  <span className="text-xs text-foreground font-medium">{status.banco_dados.status === 'ONLINE' ? 'Conectado' : 'Falha'}</span>
                 </span>
-              )}
-            </div>
-            <h3 className="text-zinc-400 text-sm font-medium">Supabase / PostgreSQL</h3>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">{status.banco_dados.latencia_ms}</span>
-              <span className="text-sm text-zinc-500">ms (ping)</span>
-            </div>
-            <p className="text-xs text-zinc-500 mt-2 font-mono">{status.banco_dados.erro || 'Latência excelente'}</p>
-          </div>
-
-          {/* Card: Uptime */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-xl font-semibold text-foreground mt-1">{status.banco_dados.latencia_ms} <span className="text-sm font-normal text-muted-foreground">ms</span></div>
+                <div className="text-xs text-muted-foreground mt-1 font-mono">PostgreSQL (Ping)</div>
               </div>
             </div>
-            <h3 className="text-zinc-400 text-sm font-medium">Uptime do Servidor (OS)</h3>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-xl font-bold text-white">{formatUptime(status.servidor.uptime_segundos)}</span>
-            </div>
-            <p className="text-xs text-zinc-500 mt-2 font-mono">SO: {status.servidor.plataforma} {status.servidor.arquitetura}</p>
-          </div>
 
-          {/* Card: Segurança */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-amber-400" />
+            {/* Metric: Uptime */}
+            <div className="p-4 flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Uptime</span>
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs font-semibold border border-white/10">
-                PROTEGIDO
-              </span>
+              <div>
+                <div className="text-xl font-semibold text-foreground mt-1">{formatUptime(status.servidor.uptime_segundos)}</div>
+                <div className="text-xs text-muted-foreground mt-1 font-mono">{status.servidor.plataforma} {status.servidor.arquitetura}</div>
+              </div>
             </div>
-            <h3 className="text-zinc-400 text-sm font-medium">Middlewares de Segurança</h3>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white">Ativos</span>
-            </div>
-            <p className="text-xs text-zinc-500 mt-2 font-mono">Rate Limiter & CORS</p>
-          </div>
 
+            {/* Metric: Security */}
+            <div className="p-4 flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Segurança</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              </div>
+              <div>
+                <div className="text-xl font-semibold text-foreground mt-1">Protegido</div>
+                <div className="text-xs text-muted-foreground mt-1 font-mono">Rate Limiter Ativo</div>
+              </div>
+            </div>
+
+          </div>
         </div>
       )}
 
       {/* DETALHES DE HARDWARE (CPU E MEMÓRIA) */}
       {status && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
           
           {/* Memória RAM */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <HardDrive className="w-5 h-5 text-blue-400" />
-              </div>
-              <h2 className="text-lg font-semibold text-white">Memória RAM</h2>
-            </div>
-
-            <div className="space-y-6">
+          <div className="bg-background border border-border/60 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Uso de Memória RAM</h3>
+            
+            <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-zinc-400">Consumo Total do Sistema</span>
-                  <span className="font-mono text-white">{status.memoria.porcentagem_uso}%</span>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Uso Total ({status.memoria.usada_gb} GB de {status.memoria.total_gb} GB)</span>
+                  <span className="font-mono text-foreground font-medium">{status.memoria.porcentagem_uso}%</span>
                 </div>
-                <div className="w-full bg-black/50 rounded-full h-3 border border-white/5 overflow-hidden">
+                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                   <div 
-                    className={`h-full rounded-full transition-all duration-1000 ${Number(status.memoria.porcentagem_uso) > 85 ? 'bg-rose-500' : Number(status.memoria.porcentagem_uso) > 60 ? 'bg-amber-500' : 'bg-blue-500'}`}
+                    className={`h-full transition-all duration-1000 ${Number(status.memoria.porcentagem_uso) > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                     style={{ width: `${status.memoria.porcentagem_uso}%` }}
                   ></div>
                 </div>
-                <div className="flex justify-between text-xs text-zinc-500 mt-2 font-mono">
-                  <span>Usado: {status.memoria.usada_gb} GB</span>
-                  <span>Total: {status.memoria.total_gb} GB</span>
-                </div>
               </div>
 
-              <div className="pt-4 border-t border-white/5">
-                <div className="flex justify-between text-sm items-center">
-                  <span className="text-zinc-400">Alocação do Processo Node (API)</span>
-                  <span className="font-mono font-semibold text-blue-400">{status.memoria.processo_mb} MB</span>
-                </div>
+              <div className="flex justify-between items-center py-2 border-t border-border/60">
+                <span className="text-xs text-muted-foreground">Alocação do Processo (API)</span>
+                <span className="text-xs font-mono font-medium text-foreground">{status.memoria.processo_mb} MB</span>
               </div>
             </div>
           </div>
 
           {/* Processador (CPU) */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-500/10 rounded-lg">
-                <Cpu className="w-5 h-5 text-indigo-400" />
-              </div>
-              <h2 className="text-lg font-semibold text-white">Processador (CPU)</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <span className="block text-xs font-semibold text-zinc-500 mb-1 uppercase">Modelo e Cores</span>
-                <span className="block text-sm text-white">{status.cpu.modelo}</span>
-                <span className="block text-xs text-indigo-400 font-mono mt-1">{status.cpu.nucleos} Núcleos Lógicos</span>
+          <div className="bg-background border border-border/60 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Processador (CPU)</h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-xs mb-1">
+                <span className="text-muted-foreground">{status.cpu.modelo}</span>
+                <span className="font-mono text-foreground">{status.cpu.nucleos} Núcleos</span>
               </div>
 
-              <div className="pt-4 border-t border-white/5">
-                <span className="block text-xs font-semibold text-zinc-500 mb-3 uppercase">Carga Média (Load Average)</span>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-black/30 rounded-xl p-3 border border-white/5 text-center">
-                    <span className="block text-2xl font-bold text-white font-mono">{status.cpu.uso_1m.toFixed(2)}</span>
-                    <span className="block text-xs text-zinc-500 mt-1">Último Minuto</span>
-                  </div>
-                  <div className="bg-black/30 rounded-xl p-3 border border-white/5 text-center">
-                    <span className="block text-2xl font-bold text-white font-mono">{status.cpu.uso_5m.toFixed(2)}</span>
-                    <span className="block text-xs text-zinc-500 mt-1">5 Minutos</span>
-                  </div>
-                  <div className="bg-black/30 rounded-xl p-3 border border-white/5 text-center">
-                    <span className="block text-2xl font-bold text-white font-mono">{status.cpu.uso_15m.toFixed(2)}</span>
-                    <span className="block text-xs text-zinc-500 mt-1">15 Minutos</span>
-                  </div>
+              <div className="grid grid-cols-3 gap-px bg-border/60 border border-border/60 rounded-md overflow-hidden">
+                <div className="bg-background p-2 text-center">
+                  <span className="block text-xs text-muted-foreground mb-1 uppercase tracking-wider">1 Min</span>
+                  <span className="block text-sm font-medium text-foreground font-mono">{status.cpu.uso_1m.toFixed(2)}</span>
+                </div>
+                <div className="bg-background p-2 text-center">
+                  <span className="block text-xs text-muted-foreground mb-1 uppercase tracking-wider">5 Min</span>
+                  <span className="block text-sm font-medium text-foreground font-mono">{status.cpu.uso_5m.toFixed(2)}</span>
+                </div>
+                <div className="bg-background p-2 text-center">
+                  <span className="block text-xs text-muted-foreground mb-1 uppercase tracking-wider">15 Min</span>
+                  <span className="block text-sm font-medium text-foreground font-mono">{status.cpu.uso_15m.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -288,7 +236,7 @@ export default function InfraestruturaStatusPage() {
 
       {status && (
         <div className="text-center mt-8">
-          <p className="text-xs text-zinc-600 font-mono">
+          <p className="text-xs text-muted-foreground font-mono">
             Última leitura: {new Date(status.timestamp).toLocaleTimeString('pt-BR')} • Atualização automática a cada 10s.
           </p>
         </div>

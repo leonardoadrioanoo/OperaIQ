@@ -40,6 +40,8 @@ export interface Company {
   saml_metadata_url?: string | null
   saml_domains?: string | null
   saml_ativo?: boolean
+  moeda?: string | null
+  idioma?: string | null
 }
 
 interface AuthState {
@@ -94,7 +96,9 @@ export const useAuthStore = create<AuthState>((set) => ({
             saml_entity_id,
             saml_metadata_url,
             saml_domains,
-            saml_ativo
+            saml_ativo,
+            moeda,
+            idioma
           )
         `)
         .eq('id', userId)
@@ -135,7 +139,9 @@ export const useAuthStore = create<AuthState>((set) => ({
               saml_entity_id: empresaData.saml_entity_id,
               saml_metadata_url: empresaData.saml_metadata_url,
               saml_domains: empresaData.saml_domains,
-              saml_ativo: empresaData.saml_ativo
+              saml_ativo: empresaData.saml_ativo,
+              moeda: empresaData.moeda,
+              idioma: empresaData.idioma
             }
           : null
 

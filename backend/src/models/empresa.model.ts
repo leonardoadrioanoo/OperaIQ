@@ -60,4 +60,5 @@ export interface UpdateEmpresaDTO {
   idioma?: string;
   fuso_horario?: string;
   moeda?: string;
+  logo_url?: string;
 }

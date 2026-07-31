@@ -32,4 +32,7 @@ router.put('/:id/permissoes', ctrl.atualizarPermissoes);
 // Rota dedicada para redefinir o MFA de um colaborador (apagar fatores)
 router.post('/:id/reset-mfa', ctrl.resetMFA);
 
+// Rota leve para vincular/desvincular campos organizacionais (departamento, cargo, equipe)
+router.patch('/:id/vincular', ctrl.vincular);
+
 export default router;

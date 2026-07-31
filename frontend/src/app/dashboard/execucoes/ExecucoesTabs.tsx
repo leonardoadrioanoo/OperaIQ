@@ -15,7 +15,7 @@ export function ExecucoesTabs() {
   ];
 
   return (
-    <div className="flex bg-muted/20 p-1 rounded-lg border border-border/50 h-9">
+    <div className="flex items-center gap-6 border-b border-border/40 overflow-x-auto mb-6">
       {TABS.map(tab => {
         const Icon = tab.icon;
         const isActive = pathname === tab.href;
@@ -23,13 +23,13 @@ export function ExecucoesTabs() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+            className={`flex items-center gap-2 pb-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2 relative top-[1px] ${
               isActive 
-                ? 'bg-background shadow-sm text-foreground' 
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                ? 'text-emerald-500 border-emerald-500' 
+                : 'text-muted-foreground border-transparent hover:text-foreground'
             }`}
           >
-            <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-500' : ''}`} />
+            <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-500' : 'opacity-70'}`} />
             <span className="hidden sm:inline">{tab.label}</span>
           </Link>
         );

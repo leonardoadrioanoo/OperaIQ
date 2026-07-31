@@ -145,80 +145,41 @@ export default function MatrizPermissaoPage() {
   }
 
   return (
-    <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-          <span>Administração</span>
-          <span>/</span>
-          <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
-          <span>/</span>
-          <span className="text-zinc-300">Matriz de Permissões</span>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
+      {/* Seleção de Perfil - Minimalista */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background border border-border/60 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Shield className="w-5 h-5 text-emerald-500" />
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-              <ListChecks className="w-7 h-7 text-emerald-400" /> Matriz de Permissões
-            </h1>
-            <p className="text-zinc-400 mt-1 text-sm">
-              Configure as permissões padrão de cada perfil. As alterações são aplicadas automaticamente a todos os usuários vinculados.
+            <h2 className="text-sm font-semibold text-foreground">Perfil de Acesso</h2>
+            <p className="text-xs text-muted-foreground">
+              {selectedPerfil 
+                ? 'Permissões aplicadas automaticamente a todos os usuários deste perfil.'
+                : 'Selecione um perfil para configurar as permissões corporativas.'}
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Seleção de Perfil */}
-      <div className="bg-[#13131f] border border-white/5 rounded-2xl p-5">
-        <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Selecione o Perfil</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {perfis.map((perfil) => (
-            <button
-              key={perfil.id}
-              onClick={() => setSelectedPerfilId(perfil.id)}
-              className={`flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all ${
-                selectedPerfilId === perfil.id
-                  ? 'border-emerald-500 bg-emerald-600/15 text-white shadow-lg shadow-emerald-900/20'
-                  : 'border-border/60 text-muted-foreground hover:border-emerald-500/40 hover:bg-emerald-600/5'
-              }`}
-            >
-              <span className="text-xs font-semibold leading-tight text-foreground">{perfil.label}</span>
-              {perfil.descricao && (
-                <span className="text-[11px] text-zinc-400 leading-relaxed">{perfil.descricao}</span>
-              )}
-            </button>
+        <select
+          value={selectedPerfilId}
+          onChange={(e) => setSelectedPerfilId(e.target.value)}
+          className="w-full sm:w-72 bg-background border border-border/60 rounded-lg px-3 py-2 text-sm font-medium text-foreground focus:border-emerald-500 focus:outline-none transition-colors"
+        >
+          <option value="" disabled>Selecione um perfil...</option>
+          {perfis.map((p) => (
+            <option key={p.id} value={p.id}>{p.label}</option>
           ))}
-        </div>
+        </select>
       </div>
-
-      {/* Aviso de sincronização */}
-      {selectedPerfil && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-sm text-amber-300">
-          <RefreshCw className="w-4 h-4 flex-shrink-0" />
-          <span>
-            Ao salvar, as permissões serão aplicadas automaticamente a todos os usuários com o perfil <strong>{selectedPerfil.label}</strong> que não possuam permissões individuais customizadas.
-          </span>
-        </div>
-      )}
 
       {/* Matriz de Permissões */}
       {selectedPerfilId ? (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-white">{selectedPerfil?.label}</h2>
-                <p className="text-xs text-zinc-500">
-                  Clique nos checkboxes para configurar as permissões. Use os cabeçalhos para marcar/desmarcar em massa.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="space-y-4">
 
           {/* Cabeçalho com toggle em massa */}
-          <div className="bg-[#13131f] border border-white/5 rounded-2xl overflow-hidden">
+          <div className="bg-background border border-border/60 rounded-2xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto max-h-[520px] overflow-y-auto scrollbar-thin scrollbar-thumb-border/60">
               <table className="w-full text-left text-sm text-muted-foreground min-w-max">
-                <thead className="bg-muted/40 text-xs uppercase font-semibold sticky top-0 z-10 backdrop-blur-sm">
+                <thead className="bg-muted/50 text-xs uppercase font-medium text-muted-foreground sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-foreground w-48">Módulo</th>
                     {PERM_COLUMNS.map((col) => (
@@ -236,7 +197,7 @@ export default function MatrizPermissaoPage() {
                 </thead>
                 <tbody>
                   {moduloPermissaoList.map((mod) => (
-                    <tr key={mod.modulo} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                    <tr key={mod.modulo} className="border-b border-border/60 hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-foreground whitespace-nowrap">{mod.modulo}</td>
                       {PERM_COLUMNS.map((col) => {
                         const checked = mod.permissoes[col.key] ?? false;

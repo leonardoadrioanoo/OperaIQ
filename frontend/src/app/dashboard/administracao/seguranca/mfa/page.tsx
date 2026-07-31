@@ -19,6 +19,18 @@ export default function MFASettingsPage() {
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [gracePeriodDays, setGracePeriodDays] = useState(7);
   const [applyToAdminsOnly, setApplyToAdminsOnly] = useState(false);
+  
+  // Track original settings to show/hide save button
+  const [originalSettings, setOriginalSettings] = useState({
+    mfaEnabled: false,
+    gracePeriodDays: 7,
+    applyToAdminsOnly: false
+  });
+
+  const hasChanges = 
+    mfaEnabled !== originalSettings.mfaEnabled || 
+    gracePeriodDays !== originalSettings.gracePeriodDays || 
+    applyToAdminsOnly !== originalSettings.applyToAdminsOnly;
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -30,6 +42,12 @@ export default function MFASettingsPage() {
           setMfaEnabled(data.mfa_obrigatorio || false);
           setGracePeriodDays(data.mfa_dias_carencia || 7);
           setApplyToAdminsOnly(data.mfa_publico_alvo === 'admins');
+          
+          setOriginalSettings({
+            mfaEnabled: data.mfa_obrigatorio || false,
+            gracePeriodDays: data.mfa_dias_carencia || 7,
+            applyToAdminsOnly: data.mfa_publico_alvo === 'admins'
+          });
         }
       } catch (err) {
         console.error("Erro ao carregar configurações de MFA", err);
@@ -51,6 +69,12 @@ export default function MFASettingsPage() {
       }).eq('id', profile.empresa_id);
       
       if (error) throw error;
+      
+      setOriginalSettings({
+        mfaEnabled,
+        gracePeriodDays,
+        applyToAdminsOnly
+      });
       toast.success('Políticas de MFA atualizadas com sucesso!');
     } catch (err) {
       toast.error('Ocorreu um erro ao salvar as configurações.');
@@ -64,130 +88,97 @@ export default function MFASettingsPage() {
   }
 
   return (
-    <div className="max-w-6xl space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <span>Administração</span>
-            <span>/</span>
-            <Link href="/dashboard/administracao/seguranca" className="hover:text-rose-400 transition-colors">Segurança</Link>
-            <span>/</span>
-            <span className="text-zinc-300">Políticas de MFA</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Fingerprint className="w-8 h-8 text-rose-500" />
-            Políticas de MFA
-          </h1>
-          <p className="text-zinc-400 mt-2">
-            Configure a obrigatoriedade da autenticação em múltiplos fatores (MFA/2FA) para sua organização.
-          </p>
-        </div>
-        {perms.p_editar && (
+    <div className="max-w-6xl space-y-4 animate-in fade-in duration-500">
+      <div className="flex justify-end mb-4 min-h-[36px]">
+        {perms.p_editar && hasChanges && (
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md shadow-rose-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-all shadow-md shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed animate-in fade-in slide-in-from-right-4 duration-300"
           >
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Salvar
+            Salvar Alterações
           </button>
         )}
       </div>
 
-      <div className="bg-[#13131f] border border-white/5 rounded-2xl p-6 md:p-8 space-y-8">
+      <div className="bg-background border border-border/60 rounded-2xl p-6 shadow-sm max-w-4xl">
         
-        {/* Bloco 1: Toggle Principal */}
-        <div className="flex items-start gap-4 p-5 bg-white/[0.02] border border-white/5 rounded-xl">
-          <div className={`p-3 rounded-xl flex-shrink-0 transition-colors ${mfaEnabled ? 'bg-rose-500/10' : 'bg-zinc-500/10'}`}>
-            <Shield className={`w-6 h-6 ${mfaEnabled ? 'text-rose-400' : 'text-zinc-500'}`} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-white">Exigir Autenticação em 2 Fatores (MFA)</h3>
-            <p className="text-sm text-zinc-400 mt-1 mb-4">
-              Quando ativado, os colaboradores serão obrigados a configurar o 2FA (Google Authenticator, Authy, etc) para acessar a plataforma.
+        {/* Toggle Principal */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-border/60">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Exigir Autenticação em 2 Fatores (MFA)</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Torna o 2FA (Google Authenticator, Authy, etc) obrigatório para o acesso à plataforma.
             </p>
-            <label className="relative inline-flex items-center cursor-pointer p-1.5 border border-white/10 rounded-full hover:border-white/20 transition-colors">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
-                checked={mfaEnabled}
-                onChange={(e) => setMfaEnabled(e.target.checked)}
-                disabled={!perms.p_editar}
-              />
-              <div className="w-12 h-6 bg-red-500/80 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-2 after:left-2 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500/80"></div>
-              <span className={`ml-3 mr-2 text-sm font-semibold ${mfaEnabled ? 'text-emerald-400' : 'text-red-400'}`}>
-                {mfaEnabled ? 'Ativado' : 'Desativado'}
-              </span>
-            </label>
           </div>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input 
+              type="checkbox" 
+              className="sr-only peer" 
+              checked={mfaEnabled}
+              onChange={(e) => setMfaEnabled(e.target.checked)}
+              disabled={!perms.p_editar}
+            />
+            <div className="w-11 h-6 bg-red-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
         </div>
 
-        {/* Bloco 2: Configurações Avançadas (Só mostra se MFA estiver ativado) */}
-        <div className={`transition-all duration-500 space-y-6 ${mfaEnabled ? 'opacity-100 max-h-[500px]' : 'opacity-50 pointer-events-none'}`}>
-          <h3 className="text-lg font-bold text-white border-b border-white/5 pb-3">Regras de Aplicação</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Configurações Avançadas */}
+        <div className={`pt-6 transition-all duration-300 ${mfaEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-white">Público-Alvo</h4>
-                  <p className="text-xs text-zinc-500 mt-1 mb-3">Defina se a regra se aplica a todos ou apenas aos administradores.</p>
-                  
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-black/20 cursor-pointer hover:bg-white/5 transition-colors">
-                      <input 
-                        type="radio" 
-                        name="mfa_target" 
-                        checked={!applyToAdminsOnly} 
-                        onChange={() => setApplyToAdminsOnly(false)} 
-                        className="text-rose-500 focus:ring-rose-500 bg-zinc-800 border-zinc-700" 
-                      />
-                      <span className="text-sm text-zinc-300">Toda a Organização (Recomendado)</span>
-                    </label>
-                    <label className="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-black/20 cursor-pointer hover:bg-white/5 transition-colors">
-                      <input 
-                        type="radio" 
-                        name="mfa_target" 
-                        checked={applyToAdminsOnly} 
-                        onChange={() => setApplyToAdminsOnly(true)} 
-                        className="text-rose-500 focus:ring-rose-500 bg-zinc-800 border-zinc-700" 
-                      />
-                      <span className="text-sm text-zinc-300">Apenas Administradores do Sistema</span>
-                    </label>
-                  </div>
-                </div>
+            {/* Público Alvo */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">Público-Alvo</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/30 cursor-pointer transition-colors">
+                  <input 
+                    type="radio" 
+                    name="mfa_target" 
+                    checked={!applyToAdminsOnly} 
+                    onChange={() => setApplyToAdminsOnly(false)} 
+                    className="text-emerald-500 focus:ring-emerald-500 bg-background border-border" 
+                  />
+                  <span className="text-sm text-foreground">Toda a Organização (Recomendado)</span>
+                </label>
+                <label className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/30 cursor-pointer transition-colors">
+                  <input 
+                    type="radio" 
+                    name="mfa_target" 
+                    checked={applyToAdminsOnly} 
+                    onChange={() => setApplyToAdminsOnly(true)} 
+                    className="text-emerald-500 focus:ring-emerald-500 bg-background border-border" 
+                  />
+                  <span className="text-sm text-foreground">Apenas Administradores do Sistema</span>
+                </label>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-zinc-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-white">Período de Graça (Grace Period)</h4>
-                  <p className="text-xs text-zinc-500 mt-1 mb-3">Tempo que o usuário tem para configurar o 2FA antes do bloqueio da conta.</p>
-                  
-                  <select 
-                    value={gracePeriodDays} 
-                    onChange={(e) => setGracePeriodDays(Number(e.target.value))}
-                    className="w-full bg-[#06112a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:border-rose-500/50 outline-none"
-                  >
-                    <option value={0}>Imediato (Sem carência)</option>
-                    <option value={3}>3 dias</option>
-                    <option value={7}>7 dias (Recomendado)</option>
-                    <option value={14}>14 dias</option>
-                  </select>
-                </div>
-              </div>
+            {/* Período de Graça */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">Período de Graça (Grace Period)</label>
+              <select 
+                value={gracePeriodDays} 
+                onChange={(e) => setGracePeriodDays(Number(e.target.value))}
+                className="w-full bg-background border border-border/60 rounded-lg px-3 py-2.5 text-sm text-foreground focus:border-emerald-500/50 outline-none hover:border-border transition-colors"
+              >
+                <option value={0}>Imediato (Sem carência)</option>
+                <option value={3}>3 dias</option>
+                <option value={7}>7 dias (Recomendado)</option>
+                <option value={14}>14 dias</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                Tempo que o usuário tem para configurar o 2FA antes do bloqueio da conta.
+              </p>
             </div>
 
           </div>
 
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3 mt-4">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3 mt-8">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-            <div className="text-sm text-amber-200/90 leading-relaxed">
-              <strong>Atenção:</strong> Ao exigir o MFA para todos, usuários que não configurarem dentro do período de graça definido perderão o acesso ao sistema até a configuração ser concluída via suporte.
+            <div className="text-sm text-amber-600 dark:text-amber-200/90 leading-relaxed">
+              <strong>Atenção:</strong> Ao exigir o MFA, usuários que não configurarem dentro do período de graça definido perderão o acesso ao sistema até a configuração ser concluída.
             </div>
           </div>
 

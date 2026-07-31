@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Breadcrumb } from '@/components/ui';
+import { useAuthStore } from '@/store/authStore';
 
 const API = 'http://localhost:3002';
 
@@ -34,6 +35,9 @@ export default function EditarProjetoPage() {
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [projetoTitulo, setProjetoTitulo] = useState('');
+  
+  const company = useAuthStore(state => state.company);
+  const currencySymbol = new Intl.NumberFormat(company?.idioma || 'pt-BR', { style: 'currency', currency: company?.moeda || 'BRL' }).formatToParts(0).find(x => x.type === 'currency')?.value || 'R$';
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<ProjetoForm>();
 
@@ -229,7 +233,7 @@ export default function EditarProjetoPage() {
               <input {...register('data_fim')} type="date" className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>Orçamento Previsto (R$)</label>
+              <label className={labelClass}>Orçamento Previsto ({currencySymbol})</label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input {...register('orcamento_previsto')} type="number" step="0.01" min="0" className={`${inputClass} pl-10`} />

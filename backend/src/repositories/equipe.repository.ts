@@ -15,6 +15,29 @@ export class EquipeRepository {
       .order('nome', { ascending: true });
 
     if (error) throw new Error(`Erro ao buscar equipes: ${error.message}`);
+
+    // Conta também colaboradores vinculados pelo campo de texto `equipe` em perfis
+    if (data && data.length > 0) {
+      const { data: perfisData } = await supabaseAdmin
+        .from('perfis')
+        .select('equipe')
+        .eq('empresa_id', empresaId)
+        .not('equipe', 'is', null);
+
+      const perfisComEquipe = perfisData ?? [];
+
+      return data.map((equipe: any) => {
+        // Conta membros via equipe_integrantes
+        const integrantesCount = equipe.equipe_integrantes?.length ?? 0;
+        // Conta membros via campo texto perfis.equipe (exclui duplicatas com integrantes já contados)
+        const perfisByNome = perfisComEquipe.filter((p: any) => p.equipe === equipe.nome).length;
+        // Usa o maior número (ou soma, dependendo da lógica de negócio)
+        // Como podem coexistir os dois modelos, mostra o max para evitar duplicatas
+        const totalMembros = Math.max(integrantesCount, perfisByNome);
+        return { ...equipe, _membros_count: totalMembros };
+      });
+    }
+
     return data;
   }
 

@@ -134,6 +134,17 @@ export class ColaboradorService {
     return { id: userId, message: 'Colaborador criado com sucesso.' };
   }
 
+  async vincular(adminId: string, colaboradorId: string, campos: Record<string, string | null>) {
+    const empresaId = await this.getEmpresaId(adminId);
+    const { error } = await supabaseAdmin
+      .from('perfis')
+      .update(campos)
+      .eq('id', colaboradorId)
+      .eq('empresa_id', empresaId);
+    if (error) throw new Error(`Erro ao vincular: ${error.message}`);
+    return { message: 'Vínculo atualizado com sucesso.' };
+  }
+
   async atualizar(adminId: string, colaboradorId: string, payload: unknown) {
     const empresaId = await this.getEmpresaId(adminId);
     const validado = colaboradorSchema.parse(payload) as ColaboradorDTO;

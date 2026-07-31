@@ -113,4 +113,23 @@ export class ColaboradorController {
       res.status(500).json({ error: err.message });
     }
   };
+
+  vincular = async (req: AuthRequest, res: Response) => {
+    try {
+      const CAMPOS_PERMITIDOS = ['departamento', 'cargo', 'equipe'] as const;
+      const campos: Partial<Record<typeof CAMPOS_PERMITIDOS[number], string | null>> = {};
+      for (const campo of CAMPOS_PERMITIDOS) {
+        if (campo in req.body) {
+          campos[campo] = req.body[campo] ?? null;
+        }
+      }
+      if (Object.keys(campos).length === 0) {
+        return res.status(400).json({ error: 'Nenhum campo de vínculo informado.' });
+      }
+      const data = await this.service.vincular(req.userId!, req.params.id, campos);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
 }

@@ -143,34 +143,35 @@ export default function ExecucoesTimelinePage() {
     <div className="w-full space-y-8 animate-in fade-in duration-500 pb-20">
       
       {/* HEADER */}
-      <div className="flex flex-col border-b border-border/50 pb-6 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-4">
+      <div className="flex flex-col shrink-0 sticky top-0 bg-background/95 backdrop-blur-md z-40 pt-4">
         
         {/* Top Row */}
-        <div className="flex justify-between items-start w-full mb-2">
-          <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Timeline do Portfólio' }]} />
+        <div className="flex flex-col w-full mb-4">
+          <div className="mb-4">
+            <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Timeline do Portfólio' }]} />
+          </div>
           <ExecucoesTabs />
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
-              <CalendarClock className="w-7 h-7 text-emerald-500" />
+            <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Roadmap Temporal
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
+            <p className="text-muted-foreground mt-1 text-xs">
               Mapeamento preditivo de entregas classificado por risco e SLA.
             </p>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto relative">
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Rastrear execução específica..."
+            placeholder="Rastrear execução..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full h-10 bg-muted/20 border border-border/60 rounded-lg pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-emerald-500/50 focus:bg-background shadow-sm transition-all"
+            className="w-full h-8 bg-transparent border border-border/40 rounded-md pl-8 pr-3 text-xs text-foreground focus:outline-none focus:border-foreground transition-all"
           />
           </div>
         </div>
@@ -200,27 +201,27 @@ export default function ExecucoesTimelinePage() {
                   <div className="md:w-[180px] shrink-0 pt-2 flex flex-row md:flex-col items-center md:items-end gap-4 md:gap-1 relative z-20 bg-background md:bg-transparent pr-4 md:pr-6">
                     
                     {/* O Node da Timeline */}
-                    <div className={`absolute left-0 md:-right-[44px] md:left-auto top-2 w-12 h-12 rounded-full border-4 border-background bg-background flex items-center justify-center shadow-sm z-20`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bucket.color.replace('text', 'bg').replace('500', '500/10')}`}>
-                        <Icon className={`w-4 h-4 ${bucket.color}`} />
+                    <div className={`absolute left-0 md:-right-[35px] md:left-auto top-3 w-8 h-8 rounded-full border-2 border-background bg-background flex items-center justify-center z-20`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${bucket.color.replace('text', 'bg').replace('500', '500/10')}`}>
+                        <Icon className={`w-3 h-3 ${bucket.color}`} />
                       </div>
                     </div>
 
-                    <div className="ml-16 md:ml-0 md:text-right w-full">
-                      <h3 className={`text-sm font-black uppercase tracking-widest ${bucket.color}`}>
+                    <div className="ml-12 md:ml-0 md:text-right w-full">
+                      <h3 className={`text-xs font-semibold uppercase tracking-widest ${bucket.color}`}>
                         {bucket.label}
                       </h3>
-                      <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">
+                      <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
                         {bucket.items.length} {bucket.items.length === 1 ? 'entrega' : 'entregas'}
                       </p>
                     </div>
                   </div>
 
                   {/* Cards Area (Direita) */}
-                  <div className="flex-1 ml-12 md:ml-0 space-y-3">
+                  <div className="flex-1 ml-12 md:ml-0 space-y-2">
                     {bucket.items.length === 0 ? (
-                      <div className="h-20 rounded-xl border border-dashed border-border/50 bg-muted/5 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-muted-foreground italic">Nenhuma entrega mapeada neste período.</span>
+                      <div className="h-14 rounded border border-dashed border-border/40 bg-transparent flex items-center justify-center">
+                        <span className="text-[10px] font-medium text-muted-foreground">Nenhuma entrega mapeada neste período.</span>
                       </div>
                     ) : (
                       bucket.items.map(proj => {
@@ -231,60 +232,59 @@ export default function ExecucoesTimelinePage() {
                           <Link
                             key={proj.id}
                             href={`/dashboard/projetos/${proj.id}`}
-                            className="group block bg-background border border-border/60 hover:border-emerald-500/40 rounded-xl p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                            className="group block bg-background border border-border/40 hover:border-foreground/40 rounded p-3 transition-colors relative"
                           >
-                            {/* Hover Glow Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-
                             <div className="flex flex-col sm:flex-row justify-between gap-4 relative z-10">
                               
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="text-[10px] font-bold font-mono text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/50">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[9px] font-mono text-muted-foreground bg-muted/50 px-1 rounded">
                                     {proj.codigo}
                                   </span>
                                   {proj.departamento && (
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                                       {proj.departamento.nome}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-sm font-bold text-foreground group-hover:text-emerald-500 transition-colors flex items-center gap-2">
+                                <h4 className="text-xs font-semibold text-foreground hover:text-foreground/80 transition-colors flex items-center gap-1.5">
                                   {proj.titulo}
-                                  <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -ml-2 transition-all" />
+                                  <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -ml-1 transition-all" />
                                 </h4>
                                 
-                                <div className="flex flex-wrap items-center gap-3 mt-3">
-                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${st.bg} ${st.color} border-current/20`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                  <span className="text-[9px] font-semibold text-muted-foreground">
                                     {proj.status}
                                   </span>
-                                  {proj.prioridade === 'Urgente' && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-500 uppercase">
-                                      <AlertCircle className="w-3 h-3" /> Máxima
-                                    </span>
-                                  )}
-                                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground bg-muted/20 px-2 py-0.5 rounded-md border border-border/40">
-                                    <User className="w-3 h-3" />
+                                  <span className="text-[9px] text-border/40">•</span>
+                                  <span className="text-[9px] font-semibold text-muted-foreground">
                                     {proj.responsavel?.nome_completo || 'Sem responsável'}
-                                  </div>
+                                  </span>
+                                  {proj.prioridade === 'Urgente' && (
+                                    <>
+                                      <span className="text-[9px] text-border/40">•</span>
+                                      <span className="inline-flex items-center gap-1 text-[9px] font-bold text-red-500 uppercase">
+                                        Risco Máximo
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
 
-                              <div className="sm:w-32 shrink-0 flex flex-col justify-center gap-2">
-                                <div className="flex items-center justify-between text-[10px] font-bold">
-                                  <span className="text-muted-foreground uppercase tracking-wider">Progresso</span>
-                                  <span className={pct === 100 ? 'text-purple-500' : 'text-emerald-500'}>{pct}%</span>
+                              <div className="sm:w-28 shrink-0 flex flex-col justify-center gap-1.5">
+                                <div className="flex items-center justify-between text-[10px] font-semibold">
+                                  <span className="text-muted-foreground">Progresso</span>
+                                  <span className="text-foreground">{pct}%</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                                   <div 
-                                    className={`h-full ${pct === 100 ? 'bg-purple-500' : 'bg-emerald-500'} transition-all duration-1000 ease-out`} 
+                                    className={`h-full ${pct === 100 ? 'bg-muted-foreground' : 'bg-foreground'} transition-all duration-1000 ease-out`} 
                                     style={{ width: `${pct}%` }} 
                                   />
                                 </div>
                                 {proj.data_fim && (
-                                  <div className="text-right mt-1">
-                                    <span className="text-[10px] font-mono font-medium text-muted-foreground">
+                                  <div className="text-right mt-0.5">
+                                    <span className="text-[9px] font-mono text-muted-foreground">
                                       {new Date(proj.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}
                                     </span>
                                   </div>

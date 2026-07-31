@@ -55,9 +55,11 @@ export default function ProjetoJiraViewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [projeto, setProjeto] = useState<any>(null);
   
-  const { profile } = useAuthStore();
+  const { profile, company } = useAuthStore();
   const permissoesProjeto = profile?.permissoes?.find(p => p.modulo === 'projetos');
   const podeCriar = profile?.is_admin || permissoesProjeto?.p_criar;
+  
+  const currencySymbol = new Intl.NumberFormat(company?.idioma || 'pt-BR', { style: 'currency', currency: company?.moeda || 'BRL' }).formatToParts(0).find(x => x.type === 'currency')?.value || 'R$';
   const podeEditar = profile?.is_admin || permissoesProjeto?.p_editar;
   
   const [colaboradores, setColaboradores] = useState<any[]>([]);
@@ -413,26 +415,22 @@ export default function ProjetoJiraViewPage() {
     return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
   };
 
-  const inputClass = "w-full h-8 bg-muted/20 border border-border/50 hover:border-border focus:bg-background focus:border-emerald-500 rounded px-2 text-sm text-foreground transition-all outline-none";
-  const selectClass = "w-full h-8 bg-muted/20 border border-border/50 hover:border-border focus:bg-background focus:border-emerald-500 rounded px-2 text-sm text-foreground transition-all cursor-pointer appearance-none outline-none";
+  const inputClass = "w-full h-7 bg-background border border-transparent hover:border-border/60 focus:border-foreground rounded px-2 text-xs text-foreground transition-all outline-none";
+  const selectClass = "w-full h-7 bg-background border border-transparent hover:border-border/60 focus:border-foreground rounded px-2 text-xs text-foreground transition-all cursor-pointer appearance-none outline-none [&>option]:bg-background [&>option]:text-foreground";
 
   const renderAccordionItem = (id: string, icon: any, title: string, children: React.ReactNode) => {
     const isOpen = activeAccordion === id;
-    const Icon = icon;
     return (
-      <div className="mb-1">
+      <div className="border-b border-border/30 last:border-0">
         <div 
-          className="group cursor-pointer flex items-center justify-between text-[13px] font-semibold text-foreground py-2 px-2 hover:bg-muted/40 rounded transition-colors"
+          className="group cursor-pointer flex items-center justify-between text-xs font-semibold text-foreground py-2.5 hover:bg-muted/30 transition-colors"
           onClick={() => toggleAccordion(id)}
         >
-          <div className="flex items-center gap-2.5">
-            <Icon className={`w-4 h-4 transition-colors ${isOpen ? 'text-emerald-500' : 'text-muted-foreground group-hover:text-foreground'}`} />
-            {title}
-          </div>
-          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          {title}
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
-        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[800px] opacity-100 mt-1 mb-3' : 'max-h-0 opacity-0'}`}>
-          <div className="px-2 pb-2 space-y-3">
+        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[800px] opacity-100 pb-3' : 'max-h-0 opacity-0'}`}>
+          <div className="space-y-2.5">
             {children}
           </div>
         </div>
@@ -453,28 +451,28 @@ export default function ProjetoJiraViewPage() {
           <div className="mb-6">
             
             {/* Breadcrumb (Top Left) */}
-            <div className="text-[13px] text-muted-foreground flex items-center gap-2 mb-2 ml-1">
-              <Link href="/dashboard/projetos/visao-geral" className="hover:underline cursor-pointer">Projetos</Link>
+            <div className="text-xs font-mono text-muted-foreground flex items-center gap-2 mb-2">
+              <Link href="/dashboard/projetos/visao-geral" className="hover:text-foreground transition-colors">PROJETOS</Link>
               <span>/</span>
-              <span className="text-emerald-600 font-medium">{projeto.codigo || 'PRJ-000'}</span>
+              <span className="text-foreground">{projeto.codigo || 'PRJ-000'}</span>
             </div>
 
             <input 
               {...register('titulo')}
-              className="text-[28px] font-semibold text-foreground leading-tight mb-4 w-full bg-transparent border border-transparent hover:border-border hover:bg-muted/30 focus:bg-background focus:border-emerald-500 rounded-lg px-3 py-1 -ml-3 transition-all outline-none"
+              className="text-2xl font-bold text-foreground leading-tight mb-3 w-full bg-transparent border border-transparent hover:border-border/40 focus:border-border rounded px-1 -ml-1 transition-all outline-none"
               placeholder="Nome do Projeto"
             />
             
             <div className="flex flex-wrap items-center gap-2 mb-6">
-              <label className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/60 hover:bg-muted text-foreground rounded text-sm font-medium transition-colors cursor-pointer border border-border/50">
-                <Paperclip className="w-4 h-4" /> Anexar
+              <label className="flex items-center gap-1.5 px-2.5 py-1.5 bg-transparent border border-border/40 hover:bg-muted rounded text-xs font-medium transition-colors cursor-pointer text-muted-foreground hover:text-foreground">
+                <Paperclip className="w-3.5 h-3.5" /> Anexar
                 <input type="file" multiple className="hidden" onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   setArquivos(prev => [...prev, ...files]);
                 }} />
               </label>
-              <button type="button" className="flex items-center justify-center w-8 h-8 bg-muted/60 hover:bg-muted text-foreground rounded transition-colors border border-border/50">
-                <MoreHorizontal className="w-4 h-4" />
+              <button type="button" className="flex items-center justify-center w-7 h-7 bg-transparent border border-border/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded transition-colors">
+                <MoreHorizontal className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -504,19 +502,15 @@ export default function ProjetoJiraViewPage() {
                   {(projeto.anexos?.length || 0) + arquivos.length}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col gap-2">
                 {/* Anexos Existentes */}
                 {projeto.anexos?.map((arq: any, idx: number) => (
-                  <a href={arq.url} target="_blank" rel="noreferrer" key={`ext-${idx}`} className="group relative w-40 h-28 border border-border rounded-lg overflow-hidden bg-muted/30 hover:shadow-md hover:border-emerald-500/40 transition-all flex flex-col justify-end">
-                    {arq.mime_type?.startsWith('image/') ? (
-                      <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style={{ backgroundImage: `url(${arq.url})` }} />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground group-hover:text-emerald-500 transition-colors">
-                        <Paperclip className="w-8 h-8" />
+                  <a href={arq.url} target="_blank" rel="noreferrer" key={`ext-${idx}`} className="group flex items-center justify-between p-2 border border-border/40 hover:border-border/80 hover:bg-muted/30 rounded-md transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-muted-foreground">
+                        {arq.mime_type?.startsWith('image/') ? <div className="w-full h-full bg-cover bg-center rounded" style={{ backgroundImage: `url(${arq.url})` }} /> : <Paperclip className="w-4 h-4" />}
                       </div>
-                    )}
-                    <div className="relative z-10 w-full p-2 bg-background/90 backdrop-blur text-[11px] font-medium text-foreground truncate border-t border-border group-hover:bg-emerald-500/10 transition-colors">
-                      {arq.nome}
+                      <span className="text-xs font-medium text-foreground group-hover:text-emerald-500 transition-colors">{arq.nome}</span>
                     </div>
                   </a>
                 ))}
@@ -526,23 +520,17 @@ export default function ProjetoJiraViewPage() {
                   const previewUrl = isImage ? URL.createObjectURL(arq) : '';
 
                   return (
-                  <div key={`new-${idx}`} className="group relative w-40 h-28 border-2 border-dashed border-emerald-500/50 rounded-lg overflow-hidden bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors flex flex-col justify-end">
-                    <button type="button" onClick={() => setArquivos(a => a.filter((_, i) => i !== idx))} className="absolute top-1.5 right-1.5 z-20 w-5 h-5 bg-red-500 text-white rounded flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow">X</button>
-                    {isImage ? (
-                      <div 
-                        className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110 cursor-pointer" 
-                        style={{ backgroundImage: `url(${previewUrl})` }} 
-                        onClick={() => window.open(previewUrl, '_blank')}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-emerald-500/50">
-                        <Download className="w-8 h-8" />
+                    <div key={`new-${idx}`} className="group flex items-center justify-between p-2 border border-border/40 bg-muted/10 rounded-md transition-colors">
+                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => isImage && window.open(previewUrl, '_blank')}>
+                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-muted-foreground">
+                          {isImage ? <div className="w-full h-full bg-cover bg-center rounded" style={{ backgroundImage: `url(${previewUrl})` }} /> : <Download className="w-4 h-4" />}
+                        </div>
+                        <span className="text-xs font-medium text-foreground">{arq.name}</span>
                       </div>
-                    )}
-                    <div className="relative z-10 w-full p-2 bg-background/90 backdrop-blur text-[11px] font-medium text-foreground truncate border-t border-border">
-                      {arq.name}
+                      <button type="button" onClick={() => setArquivos(a => a.filter((_, i) => i !== idx))} className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-red-500 rounded hover:bg-red-500/10 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                  </div>
                   );
                 })}
               </div>
@@ -555,14 +543,15 @@ export default function ProjetoJiraViewPage() {
             
             {/* Input de Novo Comentário (Sempre Visível) */}
             <div className="mb-6">
-              <div className="w-full border border-border rounded-lg bg-background shadow-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all overflow-hidden">
+              <div className="w-full border border-border/40 rounded-md bg-transparent focus-within:border-foreground transition-all overflow-hidden flex flex-col">
                 <textarea 
                   value={novoComentario}
                   onChange={e => setNovoComentario(e.target.value)}
-                  placeholder="Adicionar comentário..." 
-                  className="w-full min-h-[140px] p-4 text-[14px] leading-relaxed bg-transparent outline-none resize-y text-foreground placeholder:text-muted-foreground"
+                  placeholder="Escreva um comentário ou atualização..." 
+                  className="w-full min-h-[80px] p-3 text-xs leading-relaxed bg-transparent outline-none resize-y text-foreground placeholder:text-muted-foreground"
                 />
-                <div className="flex items-center justify-end px-3 py-2 bg-muted/30 border-t border-border">
+                <div className="flex items-center justify-between px-3 py-2 bg-muted/10 border-t border-border/40">
+                  <span className="text-[10px] text-muted-foreground font-medium">Use Markdown para formatar.</span>
                   <button type="button" onClick={async () => {
                     if(!novoComentario.trim()) return;
                     try {
@@ -587,7 +576,7 @@ export default function ProjetoJiraViewPage() {
                     } catch (err) {
                       toast.error('Erro na conexão.');
                     }
-                  }} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition-colors">
+                  }} className="px-3 py-1.5 bg-foreground text-background hover:bg-foreground/90 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors">
                     <Send className="w-3 h-3" /> Enviar
                   </button>
                 </div>
@@ -595,12 +584,12 @@ export default function ProjetoJiraViewPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-6 border-b border-border mb-6 overflow-x-auto no-scrollbar">
-              <button type="button" onClick={() => setActiveTab('workspace')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'workspace' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Workspace</button>
-              <button type="button" onClick={() => setActiveTab('sprints')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'sprints' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Histórico de Sprints</button>
-              <button type="button" onClick={() => setActiveTab('tudo')} className={`px-4 py-2 font-semibold text-[13px] border-b-2 transition-colors ${activeTab === 'tudo' ? 'border-emerald-500 text-emerald-500' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Tudo</button>
-              <button type="button" onClick={() => setActiveTab('comentarios')} className={`pb-3 text-[14px] font-medium transition-colors whitespace-nowrap ${activeTab === 'comentarios' ? 'text-foreground border-b-2 border-emerald-600' : 'text-muted-foreground hover:text-foreground'}`}>Comentários</button>
-              <button type="button" onClick={() => setActiveTab('historico')} className={`pb-3 text-[14px] font-medium transition-colors whitespace-nowrap ${activeTab === 'historico' ? 'text-foreground border-b-2 border-emerald-600' : 'text-muted-foreground hover:text-foreground'}`}>Histórico</button>
+            <div className="flex items-center gap-6 border-b border-border/40 mb-6 overflow-x-auto no-scrollbar">
+              <button type="button" onClick={() => setActiveTab('workspace')} className={`pb-2 text-xs font-semibold transition-colors border-b-2 ${activeTab === 'workspace' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/80'}`}>Workspace</button>
+              <button type="button" onClick={() => setActiveTab('sprints')} className={`pb-2 text-xs font-semibold transition-colors border-b-2 ${activeTab === 'sprints' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/80'}`}>Sprints</button>
+              <button type="button" onClick={() => setActiveTab('tudo')} className={`pb-2 text-xs font-semibold transition-colors border-b-2 ${activeTab === 'tudo' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/80'}`}>Atividades</button>
+              <button type="button" onClick={() => setActiveTab('comentarios')} className={`pb-2 text-xs font-semibold transition-colors border-b-2 ${activeTab === 'comentarios' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/80'}`}>Comentários</button>
+              <button type="button" onClick={() => setActiveTab('historico')} className={`pb-2 text-xs font-semibold transition-colors border-b-2 ${activeTab === 'historico' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/80'}`}>Log de Auditoria</button>
             </div>
 
             {/* CONTEÚDO DAS TABS */}
@@ -700,53 +689,54 @@ export default function ProjetoJiraViewPage() {
                     const progresso = totalPts === 0 ? 0 : Math.round((donePts / totalPts) * 100);
 
                     return (
-                      <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
-                        <div className="bg-muted/20 border-b border-border/50 p-4 flex justify-between items-center">
+                      <div className="bg-transparent">
+                        <div className="border-b border-border/40 pb-4 mb-4 flex justify-between items-end">
                           <div>
-                            <h4 className="text-[14px] font-black text-foreground">Sprint Atual (Sprint {projeto?.sprint_atual || 1})</h4>
-                            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Iteração ágil de {projeto?.titulo}</p>
-                            <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
-                              <span><strong className="text-emerald-500">{donePts}</strong> / {totalPts} Story Points concluídos</span>
+                            <h4 className="text-sm font-bold text-foreground">Sprint Atual (Sprint {projeto?.sprint_atual || 1})</h4>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              <span><strong className="text-foreground">{donePts}</strong> / {totalPts} Story Points concluídos</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden" title={`${progresso}% Concluído`}>
-                              <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progresso}%` }} />
+                          <div className="flex items-center gap-4">
+                            <div className="w-32 h-1 bg-muted rounded-full overflow-hidden" title={`${progresso}% Concluído`}>
+                              <div className="h-full bg-foreground transition-all duration-500" style={{ width: `${progresso}%` }} />
                             </div>
-                            {podeCriar && (
-                              <button type="button" onClick={() => setIsTaskModalOpen(true)} className="bg-background hover:bg-muted border border-border/60 text-foreground text-[11px] font-bold px-3 py-1.5 rounded transition-colors shadow-sm">
-                                + Nova Tarefa
-                              </button>
-                            )}
-                            {podeEditar && (
-                              <button type="button" onClick={() => setIsEndSprintModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded transition-colors shadow flex items-center gap-1.5">
-                                <Check className="w-3.5 h-3.5" /> Concluir Sprint
-                              </button>
-                            )}
+                            <div className="flex gap-2">
+                              {podeCriar && (
+                                <button type="button" onClick={() => setIsTaskModalOpen(true)} className="bg-transparent hover:bg-muted border border-border/40 text-foreground text-xs font-semibold px-3 py-1.5 rounded transition-colors">
+                                  Nova Tarefa
+                                </button>
+                              )}
+                              {podeEditar && (
+                                <button type="button" onClick={() => setIsEndSprintModalOpen(true)} className="bg-foreground hover:bg-foreground/90 text-background text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1.5">
+                                  <Check className="w-3.5 h-3.5" /> Concluir
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="p-4 space-y-2">
-                          {tarefas.length === 0 && <p className="text-xs text-muted-foreground p-2">Nenhuma tarefa no backlog da sprint.</p>}
+                        <div className="space-y-1.5">
+                          {tarefas.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma tarefa no backlog da sprint.</p>}
                           {tarefas.map((task) => (
-                            <div key={task.id} className={`flex items-center justify-between p-3 border rounded-lg transition-all group ${task.status === 'Concluído' ? 'bg-muted/5 border-border/30' : 'border-border/60 bg-background hover:border-emerald-500/50 hover:shadow-sm'}`}>
+                            <div key={task.id} className={`flex items-center justify-between p-2 border rounded-md transition-all group ${task.status === 'Concluído' ? 'bg-muted/5 border-transparent' : 'border-border/40 bg-background hover:border-foreground/30'}`}>
                               <div className="flex items-center gap-3 w-full">
-                                <div onClick={() => handleToggleTaskStatus(task.id, task.status)} className={`shrink-0 cursor-pointer w-5 h-5 rounded flex items-center justify-center transition-all ${task.status === 'Concluído' ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'border-2 border-muted-foreground group-hover:border-emerald-500'}`}>
-                                  {task.status === 'Concluído' && <Check className="w-3.5 h-3.5" />}
+                                <div onClick={() => handleToggleTaskStatus(task.id, task.status)} className={`shrink-0 cursor-pointer w-4 h-4 rounded-sm flex items-center justify-center transition-all ${task.status === 'Concluído' ? 'bg-foreground text-background' : 'border border-muted-foreground group-hover:border-foreground'}`}>
+                                  {task.status === 'Concluído' && <Check className="w-3 h-3" />}
                                 </div>
-                                <span onClick={() => setSelectedTask(task)} className={`flex-1 text-[13px] font-semibold transition-all cursor-pointer hover:text-emerald-500 ${task.status === 'Concluído' ? 'text-muted-foreground line-through opacity-70 hover:opacity-100' : 'text-foreground'}`}>
+                                <span onClick={() => setSelectedTask(task)} className={`flex-1 text-xs font-semibold transition-all cursor-pointer hover:text-foreground ${task.status === 'Concluído' ? 'text-muted-foreground line-through opacity-70' : 'text-foreground'}`}>
                                   {task.titulo}
                                 </span>
                               </div>
                               <div className="flex items-center gap-4 shrink-0">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${task.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${task.status === 'Concluído' ? 'bg-foreground/10 text-foreground' : 'bg-muted text-muted-foreground'}`}>
                                   {task.story_points || 0} pts
                                 </span>
                                 {task.responsavel ? (
-                                  <div className="w-6 h-6 bg-slate-700 text-white text-[9px] font-bold flex items-center justify-center rounded-full shadow-sm" title={task.responsavel.nome_completo}>
-                                    {initials(task.responsavel.nome_completo)}
-                                  </div>
+                                  <span className="text-[10px] font-medium text-muted-foreground" title={task.responsavel.nome_completo}>
+                                    {task.responsavel.nome_completo.split(' ')[0]}
+                                  </span>
                                 ) : (
-                                  <div className="w-6 h-6 bg-background border border-dashed border-border/80 text-muted-foreground text-[9px] font-bold flex items-center justify-center rounded-full hover:border-emerald-500 hover:text-emerald-500 transition-colors" title="Atribuir responsável">+</div>
+                                  <span className="text-[10px] text-muted-foreground border border-dashed border-border/80 px-1 rounded hover:border-foreground hover:text-foreground transition-colors cursor-pointer" title="Atribuir">+</span>
                                 )}
                               </div>
                             </div>
@@ -758,10 +748,10 @@ export default function ProjetoJiraViewPage() {
                   
                   if (met === 'Kanban') {
                     return (
-                      <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm p-4">
+                      <div className="bg-transparent mt-2">
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-bold text-foreground text-sm">Board Operacional (Visão de Fluxo)</h3>
-                          <button type="button" onClick={() => setIsTaskModalOpen(true)} className="text-emerald-600 text-[11px] font-bold hover:underline">+ Nova Tarefa</button>
+                          <h3 className="font-semibold text-foreground text-sm">Board Operacional</h3>
+                          <button type="button" onClick={() => setIsTaskModalOpen(true)} className="text-foreground text-[11px] font-bold hover:underline">Nova Tarefa</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {['A Fazer', 'Em Progresso', 'Feito'].map((col) => {
@@ -774,18 +764,18 @@ export default function ProjetoJiraViewPage() {
                             return (
                               <div 
                                 key={col} 
-                                className={`bg-muted/20 border border-border/40 rounded-lg p-3 min-h-[300px] transition-colors`}
+                                className="bg-muted/10 border border-border/30 rounded-md p-2 min-h-[300px]"
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={(e) => handleDropKanban(e, col)}
                               >
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 flex justify-between items-center">
+                                <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2.5 flex justify-between items-center px-1">
                                   {col} 
-                                  <span className="bg-muted text-foreground px-2 py-0.5 rounded-full">{colTasks.length}</span>
+                                  <span className="text-foreground">{colTasks.length}</span>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                   {colTasks.length === 0 && (
-                                    <div className="h-24 border-2 border-dashed border-border/40 rounded-lg flex items-center justify-center">
-                                      <span className="text-[10px] text-muted-foreground font-semibold">Solte tarefas aqui</span>
+                                    <div className="h-20 border border-dashed border-border/40 rounded-md flex items-center justify-center">
+                                      <span className="text-[10px] text-muted-foreground">Solte tarefas aqui</span>
                                     </div>
                                   )}
                                   {colTasks.map(t => (
@@ -794,23 +784,17 @@ export default function ProjetoJiraViewPage() {
                                       draggable
                                       onDragStart={(e) => handleDragStart(e, t.id)}
                                       onClick={() => setSelectedTask(t)}
-                                      className="bg-background border border-border/60 rounded-lg p-3 shadow-sm cursor-grab active:cursor-grabbing hover:border-emerald-500/50 hover:shadow-md transition-all group"
+                                      className="bg-background border border-border/40 rounded-md p-2.5 shadow-sm cursor-grab active:cursor-grabbing hover:border-foreground/30 transition-colors group"
                                     >
-                                      <p className={`text-[12px] font-semibold leading-tight mb-3 transition-colors ${t.status === 'Concluído' ? 'text-muted-foreground line-through' : 'text-foreground group-hover:text-emerald-500'}`}>{t.titulo}</p>
+                                      <p className={`text-xs font-semibold leading-tight mb-2.5 ${t.status === 'Concluído' ? 'text-muted-foreground line-through' : 'text-foreground group-hover:text-foreground/80'}`}>{t.titulo}</p>
                                       <div className="flex justify-between items-center">
-                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                                          t.prioridade === 'Urgente' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 
-                                          t.prioridade === 'Alta' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 
-                                          'bg-muted text-muted-foreground border border-border/50'
-                                        }`}>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                                           {t.prioridade || 'Normal'}
                                         </span>
-                                        {t.responsavel ? (
-                                          <div className="w-6 h-6 bg-slate-700 text-white text-[9px] font-bold flex items-center justify-center rounded-full shadow-sm" title={t.responsavel.nome_completo}>
-                                            {initials(t.responsavel.nome_completo)}
-                                          </div>
-                                        ) : (
-                                          <div className="w-6 h-6 bg-background border border-dashed border-border/80 text-[10px] text-muted-foreground flex items-center justify-center rounded-full">+</div>
+                                        {t.responsavel && (
+                                          <span className="text-[10px] font-medium text-muted-foreground" title={t.responsavel.nome_completo}>
+                                            {t.responsavel.nome_completo.split(' ')[0]}
+                                          </span>
                                         )}
                                       </div>
                                     </div>
@@ -1073,35 +1057,43 @@ export default function ProjetoJiraViewPage() {
               <div className="relative w-full">
                 <select 
                   {...register('status')} 
-                  className="w-full appearance-none bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 text-[12px] font-bold uppercase px-4 h-9 rounded-md transition-colors cursor-pointer pr-8 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                  className="w-full appearance-none bg-background border border-border/60 hover:border-border focus:border-foreground text-xs font-semibold text-foreground px-3 h-8 rounded transition-colors cursor-pointer pr-8 outline-none shadow-sm"
                 >
-                  {STATUS.map(s => <option key={s} value={s} className="bg-background text-foreground font-semibold">{s}</option>)}
+                  {STATUS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <ChevronDown className="w-4 h-4 text-white absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-90" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
 
               {/* Responsável Select */}
               <div className="relative w-full">
                 <select 
                   {...register('responsavel_id')} 
-                  className="w-full appearance-none bg-background border border-border hover:border-emerald-500 text-[12px] font-semibold text-foreground px-4 h-9 rounded-md transition-colors cursor-pointer pr-8 outline-none focus:ring-1 focus:ring-emerald-500 shadow-sm"
+                  className="w-full appearance-none bg-background border border-border/60 hover:border-border focus:border-foreground text-xs font-medium text-foreground px-3 h-8 rounded transition-colors cursor-pointer pr-8 outline-none shadow-sm"
                 >
                   <option value="">Atribuir Responsável...</option>
                   {colaboradores.map(c => <option key={c.id} value={c.id}>{c.nome_completo}</option>)}
                 </select>
-                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-90" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
 
               {/* Barra de Progresso */}
-              <div className="bg-muted/10 border border-border p-3 rounded-lg shadow-sm mt-1">
-                <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground mb-2">
-                  <span>Progresso do Workspace</span>
-                  <span className="text-emerald-500">72% Configurado</span>
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-600 w-[72%] rounded-full transition-all duration-1000" />
-                </div>
-              </div>
+              {(() => {
+                const progressoWorkspace = tarefas.length > 0 
+                  ? Math.round((tarefas.filter(t => t.status === 'Concluído').length / tarefas.length) * 100)
+                  : 0;
+                
+                return (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                      <span>Progresso do Workspace</span>
+                      <span className="text-emerald-500">{progressoWorkspace}%</span>
+                    </div>
+                    <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progressoWorkspace}%` }} />
+                    </div>
+                  </div>
+                );
+              })()}
 
             </div>
 
@@ -1177,7 +1169,7 @@ export default function ProjetoJiraViewPage() {
                 <>
                   <div className="grid grid-cols-[110px_1fr] items-center gap-2">
                     <label className="text-muted-foreground text-[12px] font-medium flex items-center gap-1"><DollarSign className="w-3 h-3" /> Orçamento</label>
-                    <input type="number" step="0.01" {...register('orcamento_previsto')} className={inputClass} placeholder="R$ 0,00" />
+                    <input type="number" step="0.01" {...register('orcamento_previsto')} className={inputClass} placeholder={`${currencySymbol} 0,00`} />
                   </div>
                   <div className="grid grid-cols-[110px_1fr] items-center gap-2">
                     <label className="text-muted-foreground text-[12px] font-medium">Data Início</label>

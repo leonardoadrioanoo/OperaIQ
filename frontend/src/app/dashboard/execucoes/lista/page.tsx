@@ -255,22 +255,23 @@ export default function ExecucoesListaPage() {
     <div className="w-full space-y-6 animate-in fade-in duration-500 pb-12">
       
       {/* HEADER & TITLES */}
-      <div className="flex flex-col border-b border-border/50 pb-4">
+      <div className="flex flex-col">
         
         {/* Top Row */}
-        <div className="flex justify-between items-start w-full mb-2">
-          <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Rastreamento de Entregas' }]} />
+        <div className="flex flex-col w-full mb-4">
+          <div className="mb-4">
+            <Breadcrumb items={[{ label: 'Execuções' }, { label: 'Rastreamento de Entregas' }]} />
+          </div>
           <ExecucoesTabs />
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
-              <ListTodo className="w-6 h-6 text-emerald-500" />
+            <h1 className="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Controladoria de Execução
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm">
+            <p className="text-muted-foreground mt-1 text-xs">
               Auditoria corporativa de progresso, burn-rate financeiro, cronograma de SLAs e risco.
             </p>
           </div>
@@ -303,73 +304,73 @@ export default function ExecucoesListaPage() {
             </div>
           )}
           
-          <button onClick={exportToCSV} className="h-9 px-3 bg-background border border-border/60 hover:bg-muted rounded-md text-sm font-semibold transition-colors flex items-center gap-2 text-foreground">
-            <Download className="w-4 h-4" /> Exportar (CSV)
+          <button onClick={exportToCSV} className="h-8 px-3 bg-transparent border border-border/40 hover:bg-muted rounded-md text-xs font-semibold transition-colors flex items-center gap-2 text-foreground">
+            <Download className="w-3.5 h-3.5" /> Exportar (CSV)
           </button>
         </div>
         </div>
       </div>
 
       {/* FILTER TABS & SEARCH */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         
         {/* TABS DE CICLO DE VIDA */}
-        <div className="flex p-1 bg-muted/20 border border-border/50 rounded-lg">
+        <div className="flex border border-border/40 rounded-md p-1 bg-transparent">
           {(['ativos', 'atrasados', 'concluidos', 'todos'] as TabFilter[]).map(tab => (
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); setSelectedIds(new Set()); }}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-[12px] font-bold capitalize transition-all ${activeTab === tab ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-bold capitalize transition-all ${activeTab === tab ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
             >
-              {tab === 'atrasados' && <AlertCircle className={`w-3.5 h-3.5 ${activeTab === tab ? 'text-red-500' : ''}`} />}
-              {tab === 'concluidos' && <CheckCircle2 className={`w-3.5 h-3.5 ${activeTab === tab ? 'text-purple-500' : ''}`} />}
+              {tab === 'atrasados' && <AlertCircle className={`w-3.5 h-3.5 ${activeTab === tab ? 'text-background' : ''}`} />}
+              {tab === 'concluidos' && <CheckCircle2 className={`w-3.5 h-3.5 ${activeTab === tab ? 'text-background' : ''}`} />}
               {tab}
-              <span className={`px-1.5 py-0.5 rounded text-[10px] ${activeTab === tab ? 'bg-muted text-foreground' : 'bg-transparent border border-border/50'}`}>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] ${activeTab === tab ? 'bg-background/20 text-background' : 'bg-transparent border border-border/50'}`}>
                 {counts[tab]}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Filtrar por código ou título..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full h-9 bg-background border border-border/60 rounded-md pl-9 pr-4 text-sm text-foreground focus:outline-none focus:border-emerald-500/50 shadow-sm transition-colors"
+            className="w-full h-8 bg-transparent border border-border/40 rounded-md pl-8 pr-3 text-xs text-foreground focus:outline-none focus:border-foreground transition-colors"
           />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+        <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-foreground" /></div>
       ) : (
-        <div className="bg-background border border-border/50 rounded-xl shadow-sm overflow-visible flex flex-col relative z-0">
+        <div className="bg-transparent border-t border-border/40 flex flex-col relative z-0">
           
           <div className="overflow-x-auto min-h-[300px]">
-            <table className="w-full text-left text-sm whitespace-nowrap">
+            <table className="w-full text-left text-xs whitespace-nowrap">
               <thead>
-                <tr className="border-b border-border/50 bg-muted/10 text-muted-foreground">
-                  <th className="px-4 py-3 w-10 text-center">
+                <tr className="border-b border-border/40 text-muted-foreground font-semibold">
+                  <th className="px-3 py-3 w-8 text-center">
                     <input 
                       type="checkbox" 
                       checked={filteredProjetos.length > 0 && selectedIds.size === filteredProjetos.length}
                       onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background cursor-pointer"
+                      className="w-3.5 h-3.5 rounded border-border/40 text-foreground focus:ring-foreground bg-background cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">Projeto (Code)</th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">Status / Risco</th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">Meta de Progresso</th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">Gestão Financeira</th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px]">Responsável</th>
-                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[11px] text-right">SLA (Prazo)</th>
-                  <th className="px-4 py-3 w-12 text-center">Ações</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px]">Projeto</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px]">Status</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px]">Progresso</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px]">Orçamento</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px]">Responsável</th>
+                  <th className="px-3 py-3 uppercase tracking-wider text-[10px] text-right">Prazo</th>
+                  <th className="px-3 py-3 w-8 text-center"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
+              <tbody className="divide-y divide-border/20">
                 {filteredProjetos.map(proj => {
                   const sc = STATUS_CONFIG[proj.status] || STATUS_CONFIG['Rascunho'];
                   
@@ -385,26 +386,26 @@ export default function ExecucoesListaPage() {
                   return (
                     <tr key={proj.id} className={`hover:bg-muted/30 transition-colors group ${isSelected ? 'bg-emerald-500/5' : ''}`}>
                       
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-3 py-2.5 text-center">
                         <input 
                           type="checkbox" 
                           checked={isSelected}
                           onChange={() => toggleSelect(proj.id)}
-                          className="w-4 h-4 rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background cursor-pointer"
+                          className="w-3.5 h-3.5 rounded border-border/40 text-foreground focus:ring-foreground bg-background cursor-pointer"
                         />
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2.5">
                         <div className="flex flex-col">
                           <span 
-                            className="font-bold text-foreground group-hover:text-emerald-500 transition-colors cursor-pointer flex items-center gap-1.5"
+                            className="font-semibold text-foreground hover:text-foreground/80 transition-colors cursor-pointer flex items-center gap-1.5"
                             onClick={() => router.push(`/dashboard/projetos/${proj.id}`)}
                           >
                             {proj.titulo}
                             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100" />
                           </span>
                           <span className="text-[10px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
-                            <span className="bg-muted px-1 rounded">{proj.codigo}</span>
+                            <span className="bg-muted/50 px-1 rounded">{proj.codigo}</span>
                             {proj.departamento && (
                               <span className="uppercase tracking-wider font-semibold truncate max-w-[120px]">
                                 {proj.departamento.nome}
@@ -414,32 +415,27 @@ export default function ExecucoesListaPage() {
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2.5">
                         <div className="flex flex-col items-start gap-1">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] font-bold text-[11px] ${sc.bg} ${sc.color} border border-current/10`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] font-semibold text-[10px] ${sc.bg} ${sc.color}`}>
                             {proj.status}
                           </span>
-                          {proj.prioridade === 'Urgente' && (
-                            <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider flex items-center gap-1"><AlertCircle className="w-2.5 h-2.5"/> Risco Máximo</span>
-                          )}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 min-w-[150px]">
+                      <td className="px-3 py-2.5 min-w-[120px]">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-bold text-foreground bg-background px-1.5 py-0.5 border border-border/50 rounded shadow-sm">{pct}% Concluído</span>
-                          <TrendingUp className={`w-3.5 h-3.5 ${pct === 100 ? 'text-purple-500' : 'text-emerald-500'}`} />
+                          <span className="text-[10px] font-semibold text-foreground">{pct}%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden border border-border/20">
-                          <div className={`h-full ${pct === 100 ? 'bg-purple-500' : 'bg-emerald-500'} transition-all`} style={{ width: `${pct}%` }} />
+                        <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${pct === 100 ? 'bg-muted-foreground' : 'bg-foreground'} transition-all`} style={{ width: `${pct}%` }} />
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2.5">
                         {orcPrevisto > 0 ? (
                           <div className="flex flex-col">
-                            <div className="flex items-center justify-between gap-2 text-[11px] font-bold font-mono">
+                            <div className="flex items-center justify-between gap-2 text-[10px] font-semibold font-mono">
                               <span className={isOverBudget ? 'text-red-500' : 'text-foreground'}>
                                 {orcRealizado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
                               </span>
@@ -447,25 +443,25 @@ export default function ExecucoesListaPage() {
                                 {orcPrevisto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
                               </span>
                             </div>
-                            <div className="w-full h-1 bg-muted rounded-full overflow-hidden mt-1 max-w-[150px]">
-                              <div className={`h-full ${isOverBudget ? 'bg-red-500' : 'bg-blue-500'} rounded-full`} style={{ width: `${Math.min(burnRate, 100)}%` }} />
+                            <div className="w-full h-1 bg-muted rounded-full overflow-hidden mt-1 max-w-[120px]">
+                              <div className={`h-full ${isOverBudget ? 'bg-red-500' : 'bg-muted-foreground'} rounded-full`} style={{ width: `${Math.min(burnRate, 100)}%` }} />
                             </div>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-muted-foreground italic flex items-center gap-1 bg-muted/50 w-fit px-2 py-0.5 rounded">
-                            <DollarSign className="w-3 h-3" /> N/A (Não orçado)
+                          <span className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                            —
                           </span>
                         )}
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                            <span className="text-[10px] font-bold text-emerald-600">
+                          <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">
+                            <span className="text-[9px] font-bold text-foreground">
                               {proj.responsavel?.nome_completo?.charAt(0) || '?'}
                             </span>
                           </div>
-                          <span className="text-[11px] font-bold text-foreground">
+                          <span className="text-[10px] font-semibold text-foreground">
                             {proj.responsavel?.nome_completo || 'Não atribuído'}
                           </span>
                         </div>
@@ -529,9 +525,8 @@ export default function ExecucoesListaPage() {
             </table>
           </div>
           
-          <div className="px-4 py-3 border-t border-border/50 bg-muted/20 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-            <span>Listando {filteredProjetos.length} de {projetos.length} execuções registradas.</span>
-            <span>Auditoria OperaIQ Enterprise</span>
+          <div className="pt-4 flex items-center justify-between text-[10px] font-semibold text-muted-foreground">
+            <span>{filteredProjetos.length} execuções listadas.</span>
           </div>
 
         </div>

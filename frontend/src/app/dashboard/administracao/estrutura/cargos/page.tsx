@@ -26,6 +26,7 @@ type CargoForm = z.infer<typeof cargoSchema>;
 export default function CargosPage() {
   const [cargos, setCargos] = useState<any[]>([]);
   const [departamentos, setDepartamentos] = useState<any[]>([]);
+  const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,6 +35,10 @@ export default function CargosPage() {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [columnFilters, setColumnFilters] = useState<Record<string, string | null>>({});
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'detalhes' | 'colaboradores'>('detalhes');
+  const [activeCargo, setActiveCargo] = useState<any | null>(null);
+  const [colabSearch, setColabSearch] = useState('');
+  const [isLinking, setIsLinking] = useState(false);
 
   const { profile } = useAuthStore();
   const perms = getModulePermissions(profile, 'Administração');
@@ -58,6 +63,14 @@ export default function CargosPage() {
       });
       if (resDeps.ok) setDepartamentos(await resDeps.json());
 
+      const resColabs = await fetch('http://localhost:3002/api/colaboradores', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      if (resColabs.ok) {
+        const collData = await resColabs.json();
+        setColaboradores(Array.isArray(collData) ? collData : collData.colaboradores || []);
+      }
+
     } catch (err) {
       toast.error('Falha ao carregar dados.');
     } finally {
@@ -70,8 +83,11 @@ export default function CargosPage() {
   }, []);
 
   const openModal = (cargo?: any) => {
+    setActiveTab('detalhes');
+    setColabSearch('');
     if (cargo) {
       setEditingId(cargo.id);
+      setActiveCargo(cargo);
       reset({
         nome: cargo.nome,
         departamento_id: cargo.departamento_id,
@@ -81,6 +97,7 @@ export default function CargosPage() {
       });
     } else {
       setEditingId(null);
+      setActiveCargo(null);
       reset({ status: 'ativo', nome: '', descricao: '', nivel_hierarquico: 1, departamento_id: '' });
     }
     setIsModalOpen(true);
@@ -89,6 +106,42 @@ export default function CargosPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setActiveCargo(null);
+    setActiveTab('detalhes');
+  };
+
+  const handleVincular = async (colabId: string, cargoNome: string) => {
+    setIsLinking(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${colabId}/vincular`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ cargo: cargoNome }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      toast.success('Colaborador vinculado ao cargo.');
+      await fetchData();
+    } catch (e: any) { toast.error(e.message || 'Erro ao vincular colaborador.'); }
+    finally { setIsLinking(false); }
+  };
+
+  const handleDesvincular = async (colabId: string) => {
+    setIsLinking(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:3002/api/colaboradores/${colabId}/vincular`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ cargo: null }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      toast.success('Colaborador desvinculado do cargo.');
+      await fetchData();
+    } catch (e: any) { toast.error(e.message || 'Erro ao desvincular colaborador.'); }
+    finally { setIsLinking(false); }
   };
 
   const onSubmit = async (data: CargoForm) => {
@@ -214,32 +267,10 @@ export default function CargosPage() {
   }, [cargos, searchTerm, sortConfig, columnFilters]);
 
   return (
-    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <span>Administração</span>
-            <span>/</span>
-            <Link href="/dashboard/administracao/estrutura" className="hover:text-emerald-400">Estrutura Organizacional</Link>
-            <span>/</span>
-            <span className="text-zinc-300">Cargos</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6 text-emerald-500" />
-            Cargos
-          </h1>
-        </div>
-        {perms.p_criar && (
-          <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
-            <Plus className="w-4 h-4" />
-            Novo Cargo
-          </button>
-        )}
-      </div>
-
-      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
+    <div className="space-y-4">
+      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full sm:max-w-sm">
             <Search className="w-4 h-4 text-zinc-500 shrink-0" />
             <input
               type="text"
@@ -254,7 +285,15 @@ export default function CargosPage() {
               </button>
             )}
           </div>
-          <span className="ml-auto text-xs text-zinc-500">{filteredCargos.length} de {cargos.length}</span>
+          
+          <div className="flex items-center gap-4 self-end sm:self-auto">
+            {perms.p_criar && (
+              <button onClick={() => openModal()} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-all">
+                <Plus className="w-4 h-4" />
+                Novo Cargo
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -297,6 +336,13 @@ export default function CargosPage() {
                     align="center"
                   />
                   <DataTableHeader
+                    label="Colaboradores"
+                    sortKey="colaboradores"
+                    currentSort={sortConfig}
+                    onSort={requestSort}
+                    align="center"
+                  />
+                  <DataTableHeader
                     label="Status"
                     sortKey="status"
                     filterKey="status"
@@ -323,6 +369,12 @@ export default function CargosPage() {
                     <td className="px-3 py-2 text-center whitespace-nowrap">
                       <span className="inline-block px-2 py-0.5 rounded-full bg-white/5 text-xs font-semibold">
                         Nível {cargo.nivel_hierarquico}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 text-xs">
+                        <Users className="w-3.5 h-3.5 text-zinc-500" />
+                        {colaboradores.filter(c => c.cargo === cargo.nome).length}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-center whitespace-nowrap">
@@ -384,77 +436,168 @@ export default function CargosPage() {
         )}
       </div>
 
+      {!isLoading && (
+        <div className="flex justify-end pr-2">
+          <span className="text-xs font-medium text-zinc-500">
+            Mostrando {filteredCargos.length} de {cargos.length} registros
+          </span>
+        </div>
+      )}
+
       {/* Modal Criar/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-background border border-border/60 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border/60 shrink-0">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Users className="w-5 h-5 text-emerald-500" />
-                {editingId ? 'Editar Cargo' : 'Novo Cargo'}
+                {editingId ? activeCargo?.nome || 'Editar Cargo' : 'Novo Cargo'}
               </h3>
               <button onClick={closeModal} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
             </div>
-            
-            <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto p-5 space-y-4">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    label="Departamento *"
-                    isEditing={true}
-                    register={register}
-                    name="departamento_id"
-                    options={departamentos.map(d => ({ value: d.id, label: d.nome }))}
-                    error={errors.departamento_id?.message}
-                  />
 
+            {/* Tabs */}
+            {editingId && (
+              <div className="flex border-b border-border/60 shrink-0">
+                {(['detalhes', 'colaboradores'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 ${
+                      activeTab === tab
+                        ? 'border-emerald-500 text-emerald-400'
+                        : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    {tab === 'detalhes' ? 'Detalhes' : `Colaboradores (${colaboradores.filter(c => c.cargo === activeCargo?.nome).length})`}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ── ABA DETALHES ── */}
+            {activeTab === 'detalhes' && (
+              <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto p-5 space-y-4">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      label="Departamento *"
+                      isEditing={true}
+                      register={register}
+                      name="departamento_id"
+                      options={departamentos.map(d => ({ value: d.id, label: d.nome }))}
+                      error={errors.departamento_id?.message}
+                    />
+                    <FormField
+                      label="Nome do Cargo *"
+                      isEditing={true}
+                      register={register}
+                      name="nome"
+                      error={errors.nome?.message}
+                    />
+                  </div>
                   <FormField
-                    label="Nome do Cargo *"
+                    label="Descrição"
                     isEditing={true}
                     register={register}
-                    name="nome"
-                    error={errors.nome?.message}
+                    name="descricao"
+                    type="textarea"
+                    textareaRows={2}
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      label="Nível Hierárquico (1 = Mais Alto)"
+                      isEditing={true}
+                      register={register}
+                      name="nivel_hierarquico"
+                      type="number"
+                    />
+                    <FormField
+                      label="Status"
+                      isEditing={true}
+                      register={register}
+                      name="status"
+                      options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]}
+                    />
+                  </div>
                 </div>
+                <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
+                  <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">Cancelar</button>
+                  <button type="submit" disabled={isSaving} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Salvar Cargo
+                  </button>
+                </div>
+              </form>
+            )}
 
-                <FormField
-                  label="Descrição"
-                  isEditing={true}
-                  register={register}
-                  name="descricao"
-                  type="textarea"
-                  textareaRows={2}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    label="Nível Hierárquico (1 = Mais Alto)"
-                    isEditing={true}
-                    register={register}
-                    name="nivel_hierarquico"
-                    type="number"
-                  />
-
-                  <FormField
-                    label="Status"
-                    isEditing={true}
-                    register={register}
-                    name="status"
-                    options={[{ value: 'ativo', label: 'Ativo' }, { value: 'inativo', label: 'Inativo' }]}
-                  />
+            {/* ── ABA COLABORADORES ── */}
+            {activeTab === 'colaboradores' && activeCargo && (
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <div className="p-5 flex-1 overflow-y-auto space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Vinculados a este Cargo</h4>
+                    <div className="space-y-1.5">
+                      {colaboradores.filter(c => c.cargo === activeCargo.nome).length === 0 ? (
+                        <p className="text-sm text-zinc-500 py-4 text-center">Nenhum colaborador neste cargo.</p>
+                      ) : (
+                        colaboradores.filter(c => c.cargo === activeCargo.nome).map(c => (
+                          <div key={c.id} className="flex items-center justify-between p-2.5 bg-muted/40 rounded-lg border border-border/50">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
+                              <p className="text-xs text-zinc-500">{c.departamento || 'Sem departamento'}</p>
+                            </div>
+                            {perms.p_editar && (
+                              <button
+                                onClick={() => handleDesvincular(c.id)}
+                                disabled={isLinking}
+                                className="px-2.5 py-1 text-xs font-semibold text-rose-400 border border-rose-500/30 rounded-md hover:bg-rose-500/10 transition-colors disabled:opacity-40"
+                              >
+                                Desvincular
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  {perms.p_editar && (
+                    <div>
+                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Vincular Colaborador</h4>
+                      <input
+                        type="text"
+                        placeholder="Buscar colaborador..."
+                        value={colabSearch}
+                        onChange={e => setColabSearch(e.target.value)}
+                        className="w-full bg-[#0c0c16] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50 mb-3"
+                      />
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {colaboradores
+                          .filter(c => c.cargo !== activeCargo.nome)
+                          .filter(c => !colabSearch || c.nome_completo.toLowerCase().includes(colabSearch.toLowerCase()))
+                          .slice(0, 20)
+                          .map(c => (
+                            <div key={c.id} className="flex items-center justify-between p-2.5 bg-muted/20 rounded-lg border border-border/30">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">{c.nome_completo}</p>
+                                <p className="text-xs text-zinc-500">{c.cargo ? `Cargo atual: ${c.cargo}` : 'Sem cargo'} · {c.departamento || ''}</p>
+                              </div>
+                              <button
+                                onClick={() => handleVincular(c.id, activeCargo.nome)}
+                                disabled={isLinking}
+                                className="px-2.5 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/30 rounded-md hover:bg-emerald-500/10 transition-colors disabled:opacity-40"
+                              >
+                                Vincular
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className="pt-4 flex justify-between gap-3 border-t border-white/5">
-                <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" disabled={isSaving} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-lg shadow-emerald-900/20 transition-all">
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Salvar Cargo
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
       )}

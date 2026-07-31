@@ -130,59 +130,38 @@ export default function UsuariosPage() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-        <div>
-          <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500">
-            <span>Administração</span>
-            <span>/</span>
-            <Link href="/dashboard/administracao/perfis" className="hover:text-emerald-400">Perfis e Acessos</Link>
-            <span>/</span>
-            <span className="text-zinc-300">Colaboradores</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-3">
-            <Users className="w-6 h-6 text-emerald-500" />
-            Colaboradores
-          </h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            Gerencie os usuários da sua empresa, perfis de acesso e permissões.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Link 
-            href="/dashboard/administracao/perfis/usuarios/novo"
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Colaborador
-          </Link>
-        </div>
-      </div>
-
+    <div className="space-y-4 animate-in fade-in duration-500">
       {/* Toolbar */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full max-w-sm">
-          <Search className="w-4 h-4 text-zinc-500 shrink-0" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, e-mail ou cargo..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="bg-transparent text-sm text-foreground placeholder:text-zinc-500 focus:outline-none w-full"
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="text-zinc-500 hover:text-white transition-colors">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+      <div className="bg-background border border-border/60 rounded-2xl p-4 md:p-6 shadow-sm mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2 border border-border/60 rounded-lg px-3 py-1.5 bg-background hover:border-emerald-500/30 transition-colors w-full sm:max-w-sm">
+            <Search className="w-4 h-4 text-zinc-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, e-mail ou cargo..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="bg-transparent text-sm text-foreground placeholder:text-zinc-500 focus:outline-none w-full"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-zinc-500 hover:text-white transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-4 self-end sm:self-auto">
+            <Link 
+              href="/dashboard/administracao/perfis/usuarios/novo"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Novo Colaborador
+            </Link>
+          </div>
         </div>
-        <span className="ml-auto text-xs text-zinc-500">{filteredUsers.length} de {users.length}</span>
-      </div>
 
-      {/* Table */}
-      <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm">
+        {/* Table */}
         <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-left text-sm text-muted-foreground">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
@@ -351,6 +330,14 @@ export default function UsuariosPage() {
           </table>
         </div>
       </div>
+
+      {!isLoading && (
+        <div className="flex justify-end pr-2">
+          <span className="text-xs font-medium text-zinc-500">
+            Mostrando {filteredUsers.length} de {users.length} registros
+          </span>
+        </div>
+      )}
     </div>
   );
 }

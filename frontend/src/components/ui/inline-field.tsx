@@ -18,7 +18,7 @@ const FIELD_BASE =
   "h-12 w-full min-w-0 rounded-lg border border-border/60 px-3 text-sm text-white transition-colors outline-none";
 
 const INPUT_CLASSES =
-  `${FIELD_BASE} bg-transparent focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 placeholder:text-muted-foreground`;
+  `${FIELD_BASE} bg-transparent focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 placeholder:text-muted-foreground [&:-webkit-autofill]:shadow-[inset_0_0_0_1000px_#020514] [&:-webkit-autofill]:[-webkit-text-fill-color:white]`;
 
 const SELECT_CLASSES =
   `${FIELD_BASE} bg-transparent appearance-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:cursor-not-allowed`;

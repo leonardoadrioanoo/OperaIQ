@@ -40,14 +40,14 @@ export interface PermissaoMatrixProps {
 // Alterar aqui altera em todos os lugares que usam este componente
 // ─────────────────────────────────────────────────────────────────────────────
 export const PERM_COLUMNS: { key: keyof PermissaoFlags; label: string; color: string }[] = [
-  { key: 'p_visualizar', label: 'Visualizar', color: 'text-blue-400'   },
-  { key: 'p_criar',      label: 'Criar',      color: 'text-emerald-400' },
-  { key: 'p_editar',     label: 'Editar',     color: 'text-amber-400'  },
-  { key: 'p_excluir',    label: 'Excluir',    color: 'text-red-400'    },
-  { key: 'p_aprovar',    label: 'Aprovar',    color: 'text-emerald-400' },
-  { key: 'p_exportar',   label: 'Exportar',   color: 'text-cyan-400'   },
-  { key: 'p_importar',   label: 'Importar',   color: 'text-orange-400' },
-  { key: 'p_gerenciar',  label: 'Gerenciar',  color: 'text-pink-400'   },
+  { key: 'p_visualizar', label: 'Visualizar', color: 'text-foreground' },
+  { key: 'p_criar',      label: 'Criar',      color: 'text-foreground' },
+  { key: 'p_editar',     label: 'Editar',     color: 'text-foreground' },
+  { key: 'p_excluir',    label: 'Excluir',    color: 'text-foreground' },
+  { key: 'p_aprovar',    label: 'Aprovar',    color: 'text-foreground' },
+  { key: 'p_exportar',   label: 'Exportar',   color: 'text-foreground' },
+  { key: 'p_importar',   label: 'Importar',   color: 'text-foreground' },
+  { key: 'p_gerenciar',  label: 'Gerenciar',  color: 'text-foreground' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

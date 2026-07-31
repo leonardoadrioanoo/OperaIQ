@@ -5,13 +5,14 @@ import {
   Briefcase, Plus, Search, Clock, Users, MoreVertical, Loader2,
   TrendingUp, CheckCircle2, CircleDashed, Pause, XCircle,
   X, Edit2, ExternalLink, Building2, DollarSign, Calendar,
-  Flag, Tag, ChevronRight, ArrowUpDown, Download, ChevronDown, PlayCircle
+  Flag, Tag, ChevronRight, ArrowUpDown, Download, ChevronDown, PlayCircle, Trash2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, DataTableHeader } from '@/components/ui';
+import { useAuthStore } from '@/store/authStore';
 
 const API = 'http://localhost:3002';
 
@@ -55,12 +56,11 @@ const PRIORIDADE_CONFIG: Record<string, { color: string; dot: string }> = {
 
 const STATUS_LIST = ['Todos', 'Rascunho', 'Planejamento', 'Em Andamento', 'Pausado', 'Concluído', 'Cancelado'];
 
-// ─── Detail Field ─────────────────────────────────────────────────────────────
 function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="py-3 border-b border-border/60 last:border-0">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
-      <div className="text-sm text-foreground">{children}</div>
+    <div className="flex flex-col py-2 border-b border-border/40 last:border-0">
+      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">{label}</span>
+      <div className="text-xs font-semibold text-foreground">{children}</div>
     </div>
   );
 }
@@ -76,6 +76,10 @@ function ProjectSlidePanel({
   onDelete: (id: string) => void;
 }) {
   if (!projeto) return null;
+  const company = useAuthStore(state => state.company);
+  const locale = company?.idioma || 'pt-BR';
+  const currency = company?.moeda || 'BRL';
+
   const st = STATUS_CONFIG[projeto.status] || STATUS_CONFIG['Rascunho'];
   const pr = PRIORIDADE_CONFIG[projeto.prioridade] || PRIORIDADE_CONFIG['Normal'];
 
@@ -95,77 +99,38 @@ function ProjectSlidePanel({
       <div className="fixed top-0 right-0 h-full w-[360px] z-[110] bg-background border-l border-border/60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
 
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-border/60 shrink-0">
-          <div className="flex-1 min-w-0 pr-3">
-            <span className="font-mono text-[11px] text-muted-foreground">{projeto.codigo}</span>
-            <h2 className="text-sm font-bold text-foreground mt-0.5 leading-snug line-clamp-2">
-              {projeto.titulo}
-            </h2>
+        <div className="flex flex-col p-5 border-b border-border/60 shrink-0 bg-muted/10 relative">
+          <div className="absolute top-4 right-4 flex items-center gap-1">
+            <Link href={`/dashboard/projetos/${projeto.id}`} className="p-1 text-muted-foreground hover:text-foreground transition-colors"><ExternalLink className="w-4 h-4" /></Link>
+            <button onClick={onClose} className="p-1 text-muted-foreground hover:text-foreground transition-colors"><X className="w-4 h-4" /></button>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-
-            <Link
-              href={`/dashboard/projetos/${projeto.id}`}
-              title="Abrir página completa"
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Link>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Status bar */}
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/20 border-b border-border/60 shrink-0">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border ${st.color}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-            {st.label}
-          </span>
-          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${pr.color}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${pr.dot}`} />
-            {projeto.prioridade}
-          </span>
-          {diasRestantes !== null && (
-            <span className={`ml-auto text-[11px] font-medium ${diasRestantes < 0 ? 'text-red-400' : diasRestantes < 7 ? 'text-amber-400' : 'text-muted-foreground'}`}>
-              {diasRestantes < 0 ? `${Math.abs(diasRestantes)}d atrasado` : `${diasRestantes}d restantes`}
+          <span className="font-mono text-[10px] text-muted-foreground mb-1">{projeto.codigo}</span>
+          <h2 className="text-sm font-bold text-foreground leading-snug pr-12">{projeto.titulo}</h2>
+          
+          <div className="flex items-center gap-3 mt-3">
+            <span className="flex items-center gap-1.5 text-xs text-foreground font-medium">
+              <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} /> {st.label}
             </span>
-          )}
+            <span className="text-muted-foreground text-[10px]">•</span>
+            <span className={`flex items-center gap-1.5 text-xs font-medium ${pr.color}`}>
+              {pr.label || projeto.prioridade}
+            </span>
+          </div>
         </div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-0">
 
           <DetailField label="Responsável">
-            {projeto.responsavel ? (
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0">
-                  {projeto.responsavel.nome_completo.charAt(0)}
-                </div>
-                <span>{projeto.responsavel.nome_completo}</span>
-              </div>
-            ) : <span className="text-muted-foreground">Não definido</span>}
+            {projeto.responsavel ? projeto.responsavel.nome_completo : <span className="text-muted-foreground font-normal">Não definido</span>}
           </DetailField>
 
           <DetailField label="Gestor do Projeto">
-            {projeto.gerente ? (
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0">
-                  {projeto.gerente.nome_completo.charAt(0)}
-                </div>
-                <span>{projeto.gerente.nome_completo}</span>
-              </div>
-            ) : <span className="text-muted-foreground">Não definido</span>}
+            {projeto.gerente ? projeto.gerente.nome_completo : <span className="text-muted-foreground font-normal">Não definido</span>}
           </DetailField>
 
           <DetailField label="Departamento">
-            {projeto.departamento
-              ? <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-muted-foreground" />{projeto.departamento.nome}</span>
-              : <span className="text-muted-foreground">—</span>}
+            {projeto.departamento ? projeto.departamento.nome : <span className="text-muted-foreground font-normal">—</span>}
           </DetailField>
 
           <DetailField label="Tipo / Categoria">
@@ -175,27 +140,23 @@ function ProjectSlidePanel({
           </DetailField>
 
           <DetailField label="Metodologia">
-            <span>{projeto.metodologia || <span className="text-muted-foreground">—</span>}</span>
+            {projeto.metodologia || <span className="text-muted-foreground font-normal">—</span>}
           </DetailField>
 
           <DetailField label="Período">
             {projeto.data_inicio || projeto.data_fim ? (
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-mono">
                 {projeto.data_inicio ? new Date(projeto.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                 {' → '}
                 {projeto.data_fim ? new Date(projeto.data_fim + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
               </span>
-            ) : <span className="text-muted-foreground">Não definido</span>}
+            ) : <span className="text-muted-foreground font-normal">Não definido</span>}
           </DetailField>
 
           <DetailField label="Orçamento Previsto">
             {projeto.orcamento_previsto && projeto.orcamento_previsto > 0
-              ? <span className="flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(projeto.orcamento_previsto)}
-                </span>
-              : <span className="text-muted-foreground">—</span>}
+              ? <span className="font-mono">{new Intl.NumberFormat(locale, { style: 'currency', currency }).format(projeto.orcamento_previsto)}</span>
+              : <span className="text-muted-foreground font-normal">—</span>}
           </DetailField>
 
           <DetailField label="Visibilidade">
@@ -203,31 +164,32 @@ function ProjectSlidePanel({
           </DetailField>
 
           <DetailField label="Criado em">
-            <span className="text-muted-foreground">
-              {new Date(projeto.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            <span className="font-mono text-muted-foreground font-normal">
+              {new Date(projeto.criado_em).toLocaleDateString('pt-BR')}
             </span>
           </DetailField>
 
           <DetailField label="Atualizado em">
-            <span className="text-muted-foreground">
-              {new Date(projeto.atualizado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            <span className="font-mono text-muted-foreground font-normal">
+              {new Date(projeto.atualizado_em).toLocaleDateString('pt-BR')}
             </span>
           </DetailField>
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-border/60 shrink-0 flex items-center gap-2">
+        <div className="p-4 border-t border-border/60 shrink-0 flex items-center gap-3">
           <Link
             href={`/dashboard/projetos/${projeto.id}`}
-            className="flex-1 flex items-center justify-center gap-2 h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 h-9 bg-foreground text-background hover:bg-foreground/90 rounded-md text-xs font-semibold transition-colors"
           >
-            Abrir Projeto <ChevronRight className="w-4 h-4" />
+            Abrir Espaço <ChevronRight className="w-3.5 h-3.5" />
           </Link>
           <button
             onClick={() => { onClose(); onDelete(projeto.id); }}
-            className="h-9 px-3 rounded-lg text-red-500 border border-border/60 hover:bg-red-500/10 hover:border-red-500/40 transition-colors"
+            className="p-2 text-muted-foreground hover:text-red-500 rounded-md transition-colors"
+            title="Excluir"
           >
-            <XCircle className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -610,53 +572,55 @@ export default function ProjetosVisaoGeralPage() {
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">Governança central, planejamento e estruturação macro.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={exportToCSV} className="h-10 px-4 bg-background border border-border/60 hover:bg-muted rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-            <Download className="w-4 h-4" /> CSV
+        <div className="flex items-center gap-2">
+          <button onClick={exportToCSV} className="h-9 px-3 bg-background border border-border/60 hover:bg-muted rounded-md text-xs font-semibold transition-colors flex items-center gap-2">
+            <Download className="w-3.5 h-3.5" /> Exportar
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
+            className="h-9 px-4 bg-foreground text-background hover:bg-foreground/90 rounded-md text-xs font-semibold flex items-center gap-2 transition-colors"
           >
-            <Plus className="w-4 h-4" /> Novo Projeto
+            <Plus className="w-3.5 h-3.5" /> Novo Projeto
           </button>
         </div>
       </div>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Registrado', value: projetos.length,  color: 'text-foreground',   bg: 'bg-background',       icon: <Briefcase className="w-5 h-5 text-emerald-500" />    },
-          { label: 'Fila Ativa',       value: totalAtivos,      color: 'text-emerald-500',   bg: 'bg-emerald-500/10',    icon: <TrendingUp className="w-5 h-5 text-emerald-500" />   },
-          { label: 'Em Retenção',      value: totalPausados,    color: 'text-amber-500',    bg: 'bg-amber-500/10',     icon: <Pause className="w-5 h-5 text-amber-500" />         },
-          { label: 'Entregues',        value: totalConcluidos,  color: 'text-emerald-500',  bg: 'bg-emerald-500/10',   icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />},
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-background border border-border/60 rounded-xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-            <div className={`w-10 h-10 rounded-lg ${kpi.bg} flex items-center justify-center shrink-0`}>{kpi.icon}</div>
-            <div>
-              <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{kpi.label}</p>
+      {/* KPI CARDS (Executivo / Hard Level) */}
+      <div className="bg-background border border-border/60 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/60">
+          {[
+            { label: 'Total Registrado', value: projetos.length, color: 'text-foreground', icon: <Briefcase className="w-4 h-4 text-emerald-500" /> },
+            { label: 'Fila Ativa', value: totalAtivos, color: 'text-foreground', icon: <TrendingUp className="w-4 h-4 text-emerald-500" /> },
+            { label: 'Em Retenção', value: totalPausados, color: 'text-foreground', icon: <Pause className="w-4 h-4 text-amber-500" /> },
+            { label: 'Entregues', value: totalConcluidos, color: 'text-foreground', icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" /> },
+          ].map(kpi => (
+            <div key={kpi.label} className="p-4 flex flex-col gap-1 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center gap-2 mb-1">
+                {kpi.icon}
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{kpi.label}</span>
+              </div>
+              <p className={`text-2xl font-mono font-bold ${kpi.color}`}>{kpi.value}</p>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* TABS DE STATUS (Enterprise Underline Style) */}
-      <div className="flex items-center gap-6 border-b border-border/60 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+      {/* TABS DE STATUS (Minimalista) */}
+      <div className="flex items-center gap-6 border-b border-border/60 w-full overflow-x-auto scrollbar-none">
         {STATUS_LIST.map(s => (
           <button
             key={s}
             onClick={() => { setStatusFiltro(s); setSelectedIds(new Set()); }}
-            className={`relative flex items-center gap-2 py-3 text-[13px] font-bold transition-all whitespace-nowrap
-              ${statusFiltro === s ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'}
+            className={`relative flex items-center gap-1.5 pb-3 text-xs font-semibold transition-all whitespace-nowrap
+              ${statusFiltro === s ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}
             `}
           >
             {s}
-            <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono ${statusFiltro === s ? 'bg-emerald-500/10 text-emerald-600 font-black' : 'bg-muted/50 text-muted-foreground border border-border/50'}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${statusFiltro === s ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}>
               {counts[s] || 0}
             </span>
             {statusFiltro === s && (
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-t-full shadow-[0_-2px_12px_rgba(16,185,129,0.4)]" />
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground rounded-t-full" />
             )}
           </button>
         ))}
@@ -666,13 +630,13 @@ export default function ProjetosVisaoGeralPage() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Pesquisar por código ou título..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-10 bg-background border border-border/60 rounded-lg pl-9 pr-4 text-sm text-foreground focus:outline-none focus:border-emerald-500/50 shadow-sm transition-colors"
+            className="w-full h-8 bg-background border border-border/60 rounded-md pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
 
@@ -720,11 +684,11 @@ export default function ProjetosVisaoGeralPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-background border border-border/60 rounded-2xl overflow-visible shadow-sm z-0 relative flex flex-col">
+        <div className="bg-background border border-border/60 rounded-xl overflow-hidden shadow-sm z-0 relative flex flex-col">
           <div className="overflow-x-auto min-h-[300px]">
-            <table className="w-full text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-border/60 bg-muted/30">
+            <table className="w-full text-left text-sm text-muted-foreground whitespace-nowrap">
+              <thead className="bg-muted/50 text-muted-foreground text-xs uppercase font-medium">
+                <tr>
                   <th className="px-3 py-2 w-10 text-center whitespace-nowrap">
                     <input 
                       type="checkbox" 
@@ -846,7 +810,7 @@ export default function ProjetosVisaoGeralPage() {
                       onClick={() => setSelectedProjeto(isPanelOpen ? null : proj)}
                       className={`transition-colors cursor-pointer group ${isSelected ? 'bg-emerald-500/5' : isPanelOpen ? 'bg-muted/50 border-l-2 border-l-emerald-500' : 'hover:bg-muted/30'}`}
                     >
-                      <td className="px-3 py-2 text-center whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-1.5 text-center whitespace-nowrap" onClick={e => e.stopPropagation()}>
                         <input 
                           type="checkbox" 
                           checked={isSelected}
@@ -854,20 +818,20 @@ export default function ProjetosVisaoGeralPage() {
                           className="w-4 h-4 rounded border-border text-emerald-500 focus:ring-emerald-500 bg-background cursor-pointer"
                         />
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <div className="text-zinc-300 font-mono text-xs">{proj.codigo || '-'}</div>
+                      <td className="px-3 py-1.5 whitespace-nowrap">
+                        <div className="text-muted-foreground font-mono text-[11px]">{proj.codigo || '-'}</div>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <p className={`font-bold transition-colors ${isPanelOpen ? 'text-emerald-500' : 'text-foreground group-hover:text-emerald-500'} flex items-center gap-1.5`}>
+                      <td className="px-3 py-1.5 whitespace-nowrap">
+                        <p className={`text-xs font-semibold transition-colors ${isPanelOpen ? 'text-foreground' : 'text-foreground/90 group-hover:text-foreground'} flex items-center gap-1.5`}>
                           {proj.titulo}
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                         </p>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <div className="text-zinc-300">{proj.departamento?.nome || '-'}</div>
+                      <td className="px-3 py-1.5 whitespace-nowrap">
+                        <div className="text-muted-foreground text-xs">{proj.departamento?.nome || '-'}</div>
                       </td>
-                      <td className="px-3 py-2 whitespace-nowrap hidden md:table-cell">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border ${st.color}`}>
+                      <td className="px-3 py-1.5 whitespace-nowrap hidden md:table-cell">
+                        <span className="flex items-center gap-1.5 text-xs text-foreground">
                           <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />{st.label}
                         </span>
                       </td>
